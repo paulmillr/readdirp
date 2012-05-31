@@ -1,12 +1,12 @@
 {
   "author": "Thorsten Lorenz <thlorenz@gmx.de> (thorstenlorenz.wordpress.com)",
-  "name": "fs-rec",
+  "name": "fsrec",
   "description": "Recursive versions of fs module functions.",
   "version": "0.0.0",
-  "homepage": "https://github.com/thlorenz/fs-rec",
+  "homepage": "https://github.com/thlorenz/fsrec",
   "repository": {
     "type": "git",
-    "url": "git://github.com/thlorenz/fs-rec.git"
+    "url": "git://github.com/thlorenz/fsrec.git"
   },
   "main": "index.js",
   "dependencies": {},
