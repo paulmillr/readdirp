@@ -98,6 +98,12 @@ describe('reading root', function () {
                     done();
                 })
             })
+            it('["!*.ext1", "!*.ext3"]', function (done) {
+                fsrec.readdir(opts( { fileFilter: [ '!*.ext1', '!*.ext3' ] } ), function (res) {
+                    res.files.length.should.equal(ext2Files);
+                    done();
+                })
+            })
             
         })
     })
