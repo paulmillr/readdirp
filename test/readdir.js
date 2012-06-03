@@ -9,6 +9,8 @@ var path  = require('path')
   , ext1Files = 4
   , ext2Files = 3
   , ext3Files = 2
+  , rootDir2Files = 2
+  , nameHasLength9Dirs = 2
   ;
 
 /* 
@@ -108,16 +110,34 @@ describe('reading root', function () {
             })
         })
 
-        /* problematic when using mocha watcher, passes otherwise
         describe('normal mixed with negated', function () {
-            it('["*.ext1", "!*.ext3"] throws error', function (done) {
+            it('["*.ext1", "!*.ext3"] returns error', function (done) {
                 fsrec.readdir(opts( { fileFilter: [ '*.ext1', '!*.ext3' ] } ), function (err, res) {
                     err[0].toString().should.include('Cannot mix negated with non negated glob filters'); 
                     done();
                 })
             })
         })
-        */
+    })
+
+    describe('using function filter', function () {
+        it('fileFilter -> name contains root_dir2', function (done) {
+            fsrec.readdir(
+                opts( { fileFilter: function (fi) { return fi.name.indexOf('root_dir2') >= 0; } }), 
+                function (err, res) {
+                    res.files.should.have.length(rootDir2Files);
+                    done();
+            })
+        })
+
+        it('directoryFilter -> name has length 9', function (done) {
+            fsrec.readdir(
+                opts( { directoryFilter: function (di) { return di.name.length === 9; } }), 
+                function (err, res) {
+                    res.directories.should.have.length(nameHasLength9Dirs);
+                    done();
+            })
+        })
     })
 })
 
