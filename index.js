@@ -1,1 +1,1 @@
-module.exports = require('./lib/fs-rec');
+module.exports = require('./lib/readdir');
