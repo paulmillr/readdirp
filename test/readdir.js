@@ -6,6 +6,7 @@ var path  = require('path')
   , totalDirs = 6
   , totalFiles = 9
   , ext1Files = 4
+  , ext2Files = 3
   , ext3Files = 2
   ;
 
@@ -49,9 +50,15 @@ describe('reading root', function () {
                 done();
             })
         })
+        it('gets all files', function (done) {
+            fsrec.readdir(opts(), function (res) {
+                res.files.length.should.equal(totalFiles);
+                done();
+            })
+        })
     })
 
-    describe('using file filter', function () {
+    describe('using glob filter', function () {
 
         describe('normal', function () {
             it('"*.ext1"', function (done) {
@@ -67,6 +74,21 @@ describe('reading root', function () {
                     done();
                 })
             })
+
+            it('"root_dir1"', function (done) {
+                fsrec.readdir(opts( { directoryFilter: 'root_dir1' }), function(res) {
+                    res.directories.length.should.equal(1);
+                    done();
+                })
+            })
+
+            it('["root_dir1", "*dir1_subdir1"]', function (done) {
+                fsrec.readdir(opts( { directoryFilter: [ 'root_dir1', '*dir1_subdir1' ]}), function(res) {
+                    res.directories.length.should.equal(2);
+                    done();
+                })
+            })
+
         })
 
         describe('negated', function () {
