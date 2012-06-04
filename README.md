@@ -105,3 +105,5 @@ Directories that do not pass a filter will not be recursed into.
     });
 ```
 
+For more examples see the [readdir tests](https://github.com/thlorenz/fsrec/blob/master/test/readdir.js)
+
