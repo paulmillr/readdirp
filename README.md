@@ -9,7 +9,12 @@
 
 # fsrec [![Build Status](https://secure.travis-ci.org/thlorenz/fsrec.png)](http://travis-ci.org/thlorenz/fsrec)
 
-Recursive versions of fs (node filesystem module) functions 'readdir' and 'mkdir'.
+Recursive versions of [fs module](http://nodejs.org/docs/v0.6.6/api/fs.html) functions, so far `readdir`.
+
+`mkdir` will not be implemented as there is already a great module for this:
+[mkdirp](https://github.com/substack/node-mkdirp), so use that alongside fsrec.
+
+`readFile` is yet to come and to request other other recursive versions of fs functions please do so [here](https://github.com/thlorenz/fsrec/issues/new).
 
 # readdir
 
