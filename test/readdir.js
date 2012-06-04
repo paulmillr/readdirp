@@ -127,6 +127,15 @@ describe('reading root', function () {
                 })
             })
         })
+
+        describe('** glob pattern', function () {
+            it('ignores ** "**/*.ext1"', function (done) {
+                fsrec.readdir(opts( { fileFilter: '**/*.ext1' } ), function (err, res) {
+                    res.files.should.have.length(ext1Files);
+                    done();
+                })
+            })
+        })
     })
 
     describe('using function filter', function () {
