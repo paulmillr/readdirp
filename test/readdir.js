@@ -11,6 +11,7 @@ var path  = require('path')
   , ext3Files = 2
   , rootDir2Files = 2
   , nameHasLength9Dirs = 2
+  , depth1Files = 8
   ;
 
 /* 
@@ -31,6 +32,8 @@ Structure of test bed:
         ├── root_file2.ext2
         └── root_file3.ext3
 */
+
+// console.log('\033[2J'); // clear console
 
 function opts (extend) {
     var o = { root: root };
@@ -136,6 +139,15 @@ describe('reading root', function () {
                 function (err, res) {
                     res.directories.should.have.length(nameHasLength9Dirs);
                     done();
+            })
+        })
+    })
+
+    describe('specifying maximum depth', function () {
+        it('depth 1 does not return files at depth 2', function (done) {
+            fsrec.readdir(opts( { depth: 1 } ), function (err, res) {
+                res.files.should.have.length(depth1Files);
+                done();
             })
         })
     })
