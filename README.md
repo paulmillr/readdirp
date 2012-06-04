@@ -1,30 +1,27 @@
 **Table of Contents**  *generated with [DocToc](http://doctoc.herokuapp.com/)*
 
-- [Methods](#methods)
-	- [readdir](#readdir)
-		- [Signature](#signature)
-			- [options](#options)
-			- [callback](#callback)
-		- [Filters](#filters)
-		- [Examples](#examples)
+- [readdir](#readdir)
+	- [Signature](#signature)
+		- [options](#options)
+		- [callback](#callback)
+	- [Filters](#filters)
+	- [Examples](#examples)
 
 # fsrec [![Build Status](https://secure.travis-ci.org/thlorenz/fsrec.png)](http://travis-ci.org/thlorenz/fsrec)
 
 Recursive versions of fs (node filesystem module) functions 'readdir' and 'mkdir'.
 
-# Methods
-
-## readdir
+# readdir
 
 - reads given root recursively and returns list of files and directories with stats attached
 
-### Signature
+## Signature
 
 ```javascript
-    fs.readdir (options, callback);
+fs.readdir (options, callback);
 ```
 
-#### options
+### options
     
 - **root**: path in which to start reading and recursing into subdirectories
 
@@ -34,7 +31,7 @@ Recursive versions of fs (node filesystem module) functions 'readdir' and 'mkdir
 
 - **depth**: depth at which to stop recursing even if more subdirectories are found
 
-#### callback
+### callback
 - function with err and res parameters, e.g., `function (err, res) { ... }`
 - **err**: array of errors that occurred during the operation, **res may still be present, even if errors occurred**
 - **res**: collection of file/directory entry infos which each have the following structure:
@@ -53,7 +50,7 @@ Recursive versions of fs (node filesystem module) functions 'readdir' and 'mkdir
             fullPath      :  '/Users/thlorenz/dev/javascript/projects/fsrec/test/bed/root_dir1/root_dir1_subdir1',
             stat          :  [ ... ]
                     
-### Filters
+## Filters
     
 There are three different ways to specify filters for files and directories respectively. 
 
@@ -77,7 +74,7 @@ There are three different ways to specify filters for files and directories resp
 
 Directories that do not pass a filter will not be recursed into.
 
-### Examples
+## Examples
 
 ```javascript
     fsrec.readdir(opts( { root: './test/bed', fileFilter: '*.js' } ), function (err, res) {
