@@ -1,5 +1,6 @@
 **Table of Contents**  *generated with [DocToc](http://doctoc.herokuapp.com/)*
 
+- [Installation](#installation)
 - [readdir](#readdir)
 	- [Signature](#signature)
 		- [options](#options)
@@ -15,6 +16,10 @@ Recursive versions of [fs module](http://nodejs.org/docs/v0.6.6/api/fs.html) fun
 [mkdirp](https://github.com/substack/node-mkdirp), so use that alongside fsrec.
 
 `readFile` is yet to come and to request other other recursive versions of fs functions please do so [here](https://github.com/thlorenz/fsrec/issues/new).
+
+# Installation
+
+    npm install fsrec
 
 # readdir
 
@@ -82,6 +87,8 @@ Directories that do not pass a filter will not be recursed into.
 ## Examples
 
 ```javascript
+    var fsrec = require('fsrec');
+
     fsrec.readdir(opts( { root: './test/bed', fileFilter: '*.js' } ), function (err, res) {
         // do something with JavaScript files and all directories
     });
