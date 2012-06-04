@@ -9,6 +9,9 @@
     "url": "git://github.com/thlorenz/fsrec.git"
   },
   "main": "index.js",
+  "scripts": {
+      "test": "mocha"
+  },
   "dependencies": {
       "minimatch": ">=0.2.4"
   },
