@@ -5,7 +5,7 @@ var path  = require('path')
   , fsrec = require('../index.js')
   , root  = path.join(__dirname, '../test/bed')
   , totalDirs = 6
-  , totalFiles = 9
+  , totalFiles = 12 
   , ext1Files = 4
   , ext2Files = 3
   , ext3Files = 2
@@ -16,21 +16,27 @@ var path  = require('path')
 
 /* 
 Structure of test bed:
-    bed ── root_dir1
-        │   ├── root_dir1_file1.ext1
-        │   ├── root_dir1_file2.ext2
-        │   ├── root_dir1_file3.ext3
-        │   ├── root_dir1_subdir1
-        │   │   └── root1_dir1_subdir1_file1.ext1
-        │   └── root_dir1_subdir2
-        ├── root_dir2
-        │   ├── root_dir2_file1.ext1
-        │   ├── root_dir2_file2.ext2
-        │   ├── root_dir2_subdir1
-        │   └── root_dir2_subdir2
-        ├── root_file1.ext1
-        ├── root_file2.ext2
-        └── root_file3.ext3
+    .
+    ├── root_dir1
+    │   ├── root_dir1_file1.ext1
+    │   ├── root_dir1_file2.ext2
+    │   ├── root_dir1_file3.ext3
+    │   ├── root_dir1_subdir1
+    │   │   └── root1_dir1_subdir1_file1.ext1
+    │   └── root_dir1_subdir2
+    │       └── .gitignore
+    ├── root_dir2
+    │   ├── root_dir2_file1.ext1
+    │   ├── root_dir2_file2.ext2
+    │   ├── root_dir2_subdir1
+    │   │   └── .gitignore
+    │   └── root_dir2_subdir2
+    │       └── .gitignore
+    ├── root_file1.ext1
+    ├── root_file2.ext2
+    └── root_file3.ext3
+
+    6 directories, 13 files
 */
 
 // console.log('\033[2J'); // clear console
@@ -107,7 +113,7 @@ describe('reading root', function () {
 
             it('["!*.ext1", "!*.ext3"]', function (done) {
                 fsrec.readdir(opts( { fileFilter: [ '!*.ext1', '!*.ext3' ] } ), function (err, res) {
-                    res.files.should.have.length(ext2Files);
+                    res.files.should.have.length(totalFiles - ext1Files - ext3Files);
                     done();
                 })
             })
