@@ -168,20 +168,21 @@ describe('reading root', function () {
     })
 
     describe('progress callbacks', function () {
-        var pluckName = function(fi) { return fi.name; },
-            processedFiles = [],
-            op = opts( { 
-                fileProcessed : function(fi) { 
+        var pluckName = function(fi) { return fi.name; }
+          , processedFiles = []
+          ;
+
+        it('calls back for each processed file', function (done) {
+            fsrec.readdir(
+                opts() 
+              , function(fi) { 
                     processedFiles.push(fi);
                 } 
-            });
-
-        it('calls with each processed file', function (done) {
-            fsrec.readdir(op, function (err, res) {
-                processedFiles.should.have.length(res.files.length);
-                processedFiles.map(pluckName).sort().should.eql(res.files.map(pluckName).sort());
-                done();
-            })
+              , function (err, res) {
+                    processedFiles.should.have.length(res.files.length);
+                    processedFiles.map(pluckName).sort().should.eql(res.files.map(pluckName).sort());
+                    done();
+                })
         })
     })
 })
