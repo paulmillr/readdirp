@@ -28,8 +28,12 @@ Recursive versions of [fs module](http://nodejs.org/docs/v0.6.6/api/fs.html) fun
 ## Signature
 
 ```javascript
-fs.readdir (options, callback);
+fs.readdir (options, callback1, <callback2>);
 ```
+
+If callback2 (optional) is given, callback1 functions as the **fileProcessed** callback, and callback2 as the **allProcessed** callback.
+If only callback1 is given, it functions as the **allProcessed** callback.
+
 
 ### options
     
@@ -41,7 +45,8 @@ fs.readdir (options, callback);
 
 - **depth**: depth at which to stop recursing even if more subdirectories are found
 
-### callback
+### allProcessed 
+
 - function with err and res parameters, e.g., `function (err, res) { ... }`
 - **err**: array of errors that occurred during the operation, **res may still be present, even if errors occurred**
 - **res**: collection of file/directory entry infos which each have the following structure:
