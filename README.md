@@ -33,7 +33,7 @@ Recursive versions of [fs module](http://nodejs.org/docs/v0.6.6/api/fs.html) fun
 fs.readdir (options, callback1 [, callback2]);
 ```
 
-If callback2 (optional) is given, callback1 functions as the **fileProcessed** callback, and callback2 as the **allProcessed** callback.
+If callback2 is given, callback1 functions as the **fileProcessed** callback, and callback2 as the **allProcessed** callback.
 
 If only callback1 is given, it functions as the **allProcessed** callback.
 
