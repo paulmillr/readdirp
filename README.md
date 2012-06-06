@@ -52,7 +52,7 @@ If only callback1 is given, it functions as the **allProcessed** callback.
 
 - function with err and res parameters, e.g., `function (err, res) { ... }`
 - **err**: array of errors that occurred during the operation, **res may still be present, even if errors occurred**
-- **res**: collection of file/directory [entry infos](#entry-info) which each have the following structure:
+- **res**: collection of file/directory [entry infos](#entry-info)
 
 ### fileProcessed
 
