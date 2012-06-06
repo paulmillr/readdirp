@@ -2,12 +2,11 @@
 
 - [Installation](#installation)
 - [readdir](#readdir)
-	- [Signature](#signature)
-		- [options](#options)
-		- [callbacks](#callbacks)
-			- [allProcessed ](#allprocessed)
-			- [fileProcessed](#fileprocessed)
-		- [entry info](#entry-info)
+	- [options](#options)
+	- [callbacks](#callbacks)
+		- [allProcessed ](#allprocessed)
+		- [fileProcessed](#fileprocessed)
+	- [entry info](#entry-info)
 	- [Filters](#filters)
 	- [Examples](#examples)
 
@@ -26,15 +25,13 @@ Recursive versions of [fs module](http://nodejs.org/docs/v0.6.6/api/fs.html) fun
 
 # readdir
 
-- reads given root recursively and returns list of files and directories with stats attached
-
-## Signature
+Reads given root recursively and returns list of files and directories with stats attached and has the following signature:
 
 ```javascript
 fs.readdir (options, callback1 [, callback2]);
 ```
 
-### options
+## options
     
 - **root**: path in which to start reading and recursing into subdirectories
 
@@ -44,23 +41,23 @@ fs.readdir (options, callback1 [, callback2]);
 
 - **depth**: depth at which to stop recursing even if more subdirectories are found
 
-### callbacks
+## callbacks
 
 If callback2 is given, callback1 functions as the **fileProcessed** callback, and callback2 as the **allProcessed** callback.
 
 If only callback1 is given, it functions as the **allProcessed** callback.
 
-#### allProcessed 
+### allProcessed 
 
 - function with err and res parameters, e.g., `function (err, res) { ... }`
 - **err**: array of errors that occurred during the operation, **res may still be present, even if errors occurred**
 - **res**: collection of file/directory [entry infos](#entry-info)
 
-#### fileProcessed
+### fileProcessed
 
 - function with [entry info](#entry-info) parameter e.g., `function (entryInfo) { ... }`
 
-### entry info
+## entry info
 
 Has the following properties:
 
