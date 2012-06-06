@@ -25,7 +25,7 @@ Recursive versions of [fs module](http://nodejs.org/docs/v0.6.6/api/fs.html) fun
 
 # readdir
 
-Reads given root recursively and returns list of files and directories with stats attached and has the following signature:
+Reads given root recursively and returns list of files and directories with stats attached.
 
 ```javascript
 fs.readdir (options, callback1 [, callback2]);
@@ -114,7 +114,7 @@ Directories that do not pass a filter will not be recursed into.
     });
 
     // Combined negated directory filters
-    fsrec.readdir(opts( { root: './test/bed', fileFilter: [ '!.git', '!*modules' ] } ), function (err, res) {
+    fsrec.readdir(opts( { root: './test/bed', directoryFilter: [ '!.git', '!*modules' ] } ), function (err, res) {
         // do something with all files and directories found outside '.git' or any modules directory 
     });
 
