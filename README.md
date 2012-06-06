@@ -138,7 +138,7 @@ Directories that do not pass a filter will not be recursed into.
           } 
         , function (err, res) {
             // all done, move on or do final step for all files and directories here
-        })
+          })
     );
 ```
 
