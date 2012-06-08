@@ -228,7 +228,7 @@ describe('details for reading one file trailing / on root', function () {
 })
 
 describe('details for reading one file no trailing / on root', function () {
-    var op =  { root: './test/bed', fileFilter: 'root_dir1_file1.ext1' }
+    var op =  { root: './test/bed/', fileFilter: 'root_dir1_file1.ext1' }
       , expected = {  
           fullParentDir :  'test/bed/root_dir1'
         , name          :  'root_dir1_file1.ext1'
