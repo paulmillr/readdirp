@@ -61,20 +61,20 @@ If only callback1 is given, it functions as the **allProcessed** callback.
 
 Has the following properties:
 
-- **parentDir**: directory in which entry was found
-- **fullParentDir**: full path of parent directory
-- **name**: name of the file/directory
-- **path**: path to the file/directory relative to root directory
-- **fullPath**: full path to the file/directory
-- **stat**: built in [stat object](http://nodejs.org/docs/v0.4.9/api/fs.html#fs.Stats)
+- **parentDir**        :  directory in which entry was found
+- **workingParentDir** :  path of parent directory relative to working directory
+- **name**             :  name of the file/directory
+- **path**             :  path to the file/directory relative to root directory
+- **workingPath**      :  path to the file/directory relative to working directory
+- **stat**             :  built in [stat object](http://nodejs.org/docs/v0.4.9/api/fs.html#fs.Stats)
 - **Example**:
             
-        parentDir     :  '/root_dir1',
-        fullParentDir :  '/Users/thlorenz/dev/javascript/projects/fsrec/test/bed/root_dir1',
-        name          :  'root_dir1_subdir1',
-        path          :  '/root_dir1/root_dir1_subdir1',
-        fullPath      :  '/Users/thlorenz/dev/javascript/projects/fsrec/test/bed/root_dir1/root_dir1_subdir1',
-        stat          :  [ ... ]
+        parentDir        :  '/root_dir1',
+        workingParentDir :  'test/bed/root_dir1',
+        name             :  'root_dir1_subdir1',
+        path             :  '/root_dir1/root_dir1_subdir1',
+        workingPath      :  'test/bed/root_dir1/root_dir1_subdir1',
+        stat             :  [ ... ]
                     
 ## Filters
     

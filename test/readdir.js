@@ -188,19 +188,19 @@ describe('reading root', function () {
 })
 
 
-describe('details for reading one file trailing / on root', function () {
+describe('details for reading one file', function () {
     var op =  { root: './test/bed/', fileFilter: 'root_dir1_file1.ext1' }
       , expected = {  
-          fullParentDir :  'test/bed/root_dir1'
-        , name          :  'root_dir1_file1.ext1'
-        , path          :  'root_dir1/root_dir1_file1.ext1'
-        , fullPath      :  'test/bed/root_dir1/root_dir1_file1.ext1'
+          workingParentDir :  'test/bed/root_dir1'
+        , name             :  'root_dir1_file1.ext1'
+        , path             :  'root_dir1/root_dir1_file1.ext1'
+        , workingPath      :  'test/bed/root_dir1/root_dir1_file1.ext1'
         }
       ;
 
     it('has correct full parent dir', function (done) {
         fsrec.readdir ( op, function(err, res) {
-            res.files[0].fullParentDir.should.equal(expected.fullParentDir);
+            res.files[0].workingParentDir.should.equal(expected.workingParentDir);
             done();
         });
     })
@@ -221,47 +221,42 @@ describe('details for reading one file trailing / on root', function () {
 
     it('has correct full path', function (done) {
         fsrec.readdir (op, function(err, res) {
-            res.files[0].fullPath.should.equal(expected.fullPath);
+            res.files[0].workingPath.should.equal(expected.workingPath);
             done();
         });
     })
 })
 
-describe('details for reading one file no trailing / on root', function () {
-    var op =  { root: './test/bed/', fileFilter: 'root_dir1_file1.ext1' }
-      , expected = {  
-          fullParentDir :  'test/bed/root_dir1'
-        , name          :  'root_dir1_file1.ext1'
-        , path          :  'root_dir1/root_dir1_file1.ext1'
-        , fullPath      :  'test/bed/root_dir1/root_dir1_file1.ext1'
-        }
-      ;
-
-    it('has correct full parent dir', function (done) {
-        fsrec.readdir ( op, function(err, res) {
-            res.files[0].fullParentDir.should.equal(expected.fullParentDir);
-            done();
-        });
-    })
-
-    it('has correct name', function (done) {
-        fsrec.readdir (op, function(err, res) {
-            res.files[0].name.should.equal(expected.name);
-            done();
-        });
-    })
+describe('resolving of full paths', function () {
+    var expected = {  workingParentDir: 'test/bed/root_dir1' , workingPath:  'test/bed/root_dir1/root_dir1_file1.ext1' };
+    var opts = [ 
+      { root: './test/bed' }
+    , { root: './test/bed' }
+    , { root: 'test/bed'}
+    , { root: 'test/bed/'}
+    , { root: './test/../test/bed/'} 
+    , { root: '.'} 
+    ];
     
-    it('has correct path', function (done) {
-        fsrec.readdir (op, function(err, res) {
-            res.files[0].path.should.equal(expected.path);
-            done();
-        });
-    })
+    opts.forEach(function(op) {
 
-    it('has correct full path', function (done) {
-        fsrec.readdir (op, function(err, res) {
-            res.files[0].fullPath.should.equal(expected.fullPath);
-            done();
-        });
+        op.fileFilter = 'root_dir1_file1.ext1';
+
+        describe('full paths for ' + op.root, function () {
+            it('has correct full parent dir', function (done) {
+                fsrec.readdir ( op, function(err, res) {
+                    res.files[0].workingParentDir.should.equal(expected.workingParentDir);
+                    done();
+                });
+            })
+
+            it('has correct full path', function (done) {
+                fsrec.readdir (op, function(err, res) {
+                    res.files[0].workingPath.should.equal(expected.workingPath);
+                    done();
+                });
+            })
+            
+        })
     })
 })
