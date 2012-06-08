@@ -2,7 +2,7 @@
   "author": "Thorsten Lorenz <thlorenz@gmx.de> (thorstenlorenz.wordpress.com)",
   "name": "fsrec",
   "description": "Recursive versions of fs module functions.",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "homepage": "https://github.com/thlorenz/fsrec",
   "repository": {
     "type": "git",
