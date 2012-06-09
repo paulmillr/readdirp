@@ -1,17 +1,18 @@
 /*jshint asi:true */
 
 
-var path  = require('path') 
-  , fsrec = require('../index.js')
-  , root  = path.join(__dirname, '../test/bed')
-  , totalDirs = 6
-  , totalFiles = 12 
-  , ext1Files = 4
-  , ext2Files = 3
-  , ext3Files = 2
-  , rootDir2Files = 2
-  , nameHasLength9Dirs = 2
-  , depth1Files = 8
+var path  =  require('path')
+  , fs    =  require('fs')
+  , fsrec =  require('../index.js')
+  , root  =  path.join(__dirname, '../test/bed')
+  , totalDirs          =  6
+  , totalFiles         =  12
+  , ext1Files          =  4
+  , ext2Files          =  3
+  , ext3Files          =  2
+  , rootDir2Files      =  2
+  , nameHasLength9Dirs =  2
+  , depth1Files        =  8
   ;
 
 /* 
@@ -187,76 +188,52 @@ describe('reading root', function () {
     })
 })
 
-
-describe('details for reading one file', function () {
-    var op =  { root: './test/bed/', fileFilter: 'root_dir1_file1.ext1' }
-      , expected = {  
-          workingParentDir :  'test/bed/root_dir1'
-        , name             :  'root_dir1_file1.ext1'
-        , path             :  'root_dir1/root_dir1_file1.ext1'
-        , workingPath      :  'test/bed/root_dir1/root_dir1_file1.ext1'
-        }
-      ;
-
-    it('has correct full parent dir', function (done) {
-        fsrec.readdir ( op, function(err, res) {
-            res.files[0].workingParentDir.should.equal(expected.workingParentDir);
-            done();
-        });
-    })
-
-    it('has correct name', function (done) {
-        fsrec.readdir (op, function(err, res) {
-            res.files[0].name.should.equal(expected.name);
-            done();
-        });
-    })
-    
-    it('has correct path', function (done) {
-        fsrec.readdir (op, function(err, res) {
-            res.files[0].path.should.equal(expected.path);
-            done();
-        });
-    })
-
-    it('has correct full path', function (done) {
-        fsrec.readdir (op, function(err, res) {
-            res.files[0].workingPath.should.equal(expected.workingPath);
-            done();
-        });
-    })
-})
-
-describe('resolving of full paths', function () {
-    var expected = {  workingParentDir: 'test/bed/root_dir1' , workingPath:  'test/bed/root_dir1/root_dir1_file1.ext1' };
-    var opts = [ 
-      { root: './test/bed' }
-    , { root: './test/bed' }
-    , { root: 'test/bed'}
-    , { root: 'test/bed/'}
-    , { root: './test/../test/bed/'} 
-    , { root: '.'} 
-    ];
+describe('resolving of name, full and relative paths', function () {
+    var expected = {  
+        name          :  'root_dir1_file1.ext1'
+      , parentDirName :  'root_dir1'
+      , path          :  'root_dir1/root_dir1_file1.ext1'
+      , fullPath      :  'test/bed/root_dir1/root_dir1_file1.ext1'
+    }
+    , opts = [ 
+         { root: './test/bed'          ,  prefix: ''         }
+      ,  { root: './test/bed'          ,  prefix: ''         }
+      ,  { root: 'test/bed'            ,  prefix: ''         }
+      ,  { root: 'test/bed/'           ,  prefix: ''         }
+      ,  { root: './test/../test/bed/' ,  prefix: ''         }
+      ,  { root: '.'                   ,  prefix: 'test/bed' }
+    ]
+    ;
     
     opts.forEach(function(op) {
 
         op.fileFilter = 'root_dir1_file1.ext1';
 
         describe('full paths for ' + op.root, function () {
-            it('has correct full parent dir', function (done) {
-                fsrec.readdir ( op, function(err, res) {
-                    res.files[0].workingParentDir.should.equal(expected.workingParentDir);
-                    done();
-                });
-            })
-
-            it('has correct full path', function (done) {
+            it('has correct name', function (done) {
                 fsrec.readdir (op, function(err, res) {
-                    res.files[0].workingPath.should.equal(expected.workingPath);
+                    res.files[0].name.should.equal(expected.name);
                     done();
                 });
             })
             
+            it('has correct path', function (done) {
+                fsrec.readdir (op, function(err, res) {
+                    res.files[0].path.should.equal(path.join(op.prefix, expected.path));
+                    done();
+                });
+            })
+
+            it('has correct full parent dir and full path', function (done) {
+                fs.realpath(op.root, function(err, fullRoot) {
+                    fsrec.readdir ( op, function(err, res) {
+                        res.files[0].fullParentDir.should.equal(path.join(fullRoot, op.prefix, expected.parentDirName));
+                        res.files[0].fullPath.should.equal(path.join(fullRoot, op.prefix, expected.parentDirName, expected.name));
+                        done();
+                    });
+                });
+            })
+
         })
     })
 })
