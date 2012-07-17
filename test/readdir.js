@@ -129,6 +129,23 @@ describe('reading root', function () {
             })
         })
 
+        describe('handles leading and trailing spaces', function () {
+
+            it('[" *.ext1", "*.ext3 "]', function (done) {
+                fsrec.readdir(opts( { fileFilter: [ '*.ext1', '*.ext3' ] } ), function (err, res) {
+                    res.files.should.have.length(ext1Files + ext3Files);
+                    done();
+                })
+            })
+
+            it('[" !*.ext1", " !*.ext3 "]', function (done) {
+                fsrec.readdir(opts( { fileFilter: [ ' !*.ext1', ' !*.ext3' ] } ), function (err, res) {
+                    res.files.should.have.length(totalFiles - ext1Files - ext3Files);
+                    done();
+                })
+            })
+        })
+
         describe('** glob pattern', function () {
             it('ignores ** "**/*.ext1"', function (done) {
                 fsrec.readdir(opts( { fileFilter: '**/*.ext1' } ), function (err, res) {
