@@ -2,7 +2,7 @@
   "author": "Thorsten Lorenz <thlorenz@gmx.de> (thorstenlorenz.wordpress.com)",
   "name": "fsrec",
   "description": "Recursive versions of fs module functions.",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "homepage": "https://github.com/thlorenz/fsrec",
   "repository": {
     "type": "git",
@@ -10,19 +10,18 @@
   },
   "main": "index.js",
   "scripts": {
-      "test": "mocha"
+    "test": "mocha"
   },
   "dependencies": {
-      "minimatch": ">=0.2.4"
+    "minimatch": ">=0.2.4"
   },
   "devDependencies": {
-      "mocha": ">=1.1.0",
-      "should": ">=0.6.3"
+    "mocha": ">=1.1.0",
+    "should": ">=0.6.3"
   },
   "optionalDependencies": {},
   "engines": {
     "node": ">=0.6"
   },
   "license": "MIT"
-
 }
