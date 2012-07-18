@@ -8,14 +8,14 @@
     "type": "git",
     "url": "git://github.com/thlorenz/readdirp.git"
   },
-  "keywords": {
+  "keywords": [
     "recursive",
     "fs",
     "readdir",
     "filesystem",
     "find",
     "filter"
-  },
+  ],
   "main": "readdirp.js",
   "scripts": {
     "test": "mocha"
