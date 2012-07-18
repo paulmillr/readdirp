@@ -1,12 +1,20 @@
 {
   "author": "Thorsten Lorenz <thlorenz@gmx.de> (thorstenlorenz.wordpress.com)",
   "name": "readdirp",
-  "description": "Recursive versions of fs module functions.",
+  "description": "Recursive version of fs.readdir.",
   "version": "0.1.0",
   "homepage": "https://github.com/thlorenz/readdirp",
   "repository": {
     "type": "git",
     "url": "git://github.com/thlorenz/readdirp.git"
+  },
+  "keywords": {
+    "recursive",
+    "fs",
+    "readdir",
+    "filesystem",
+    "find",
+    "filter"
   },
   "main": "readdirp.js",
   "scripts": {
