@@ -1,7 +1,7 @@
 **Table of Contents**  *generated with [DocToc](http://doctoc.herokuapp.com/)*
 
 - [Installation](#installation)
-- [readdir](#readdir)
+- [API](#api)
 	- [options](#options)
 	- [callbacks](#callbacks)
 		- [allProcessed ](#allprocessed)
@@ -10,26 +10,21 @@
 	- [Filters](#filters)
 	- [Examples](#examples)
 
-# fsrec [![Build Status](https://secure.travis-ci.org/thlorenz/fsrec.png)](http://travis-ci.org/thlorenz/fsrec)
+# readdirp [![Build Status](https://secure.travis-ci.org/thlorenz/readdirp.png)](http://travis-ci.org/thlorenz/readdirp)
 
-Recursive versions of [fs module](http://nodejs.org/docs/v0.6.6/api/fs.html) functions, so far `readdir`.
+Recursive version of [fs.readdir](http://nodejs.org/docs/latest/api/fs.html#fs_fs_readdir_path_callback).
 
-`mkdir` will not be implemented as there is already a great module for this:
-[mkdirp](https://github.com/substack/node-mkdirp), so use that alongside fsrec.
-
-`readFile` is yet to come and to request other other recursive versions of fs functions please do so [here](https://github.com/thlorenz/fsrec/issues/new).
+Meant to be one of the recursive versions of fs functions, e.g., like [mkdirp](https://github.com/substack/node-mkdirp).
 
 # Installation
 
-    npm install fsrec
+    npm install readdirp
 
-# readdir
+# API
+
+***readdirp (options, callback1 [, callback2])***
 
 Reads given root recursively and returns list of files and directories with stats attached.
-
-```javascript
-fs.readdir (options, callback1 [, callback2]);
-```
 
 ## options
     
@@ -61,19 +56,19 @@ If only callback1 is given, it functions as the **allProcessed** callback.
 
 Has the following properties:
 
-- **parentDir**        :  directory in which entry was found (relative to given root)
+- **parentDir**     :  directory in which entry was found (relative to given root)
 - **fullParentDir** :  full path to parent directory
-- **name**             :  name of the file/directory
-- **path**             :  path to the file/directory (relative to given root)
+- **name**          :  name of the file/directory
+- **path**          :  path to the file/directory (relative to given root)
 - **fullPath**      :  full path to the file/directory found
-- **stat**             :  built in [stat object](http://nodejs.org/docs/v0.4.9/api/fs.html#fs.Stats)
-- **Example**: (assuming root was `/User/dev/fsrec`)
+- **stat**          :  built in [stat object](http://nodejs.org/docs/v0.4.9/api/fs.html#fs.Stats)
+- **Example**: (assuming root was `/User/dev/readdirp`)
         
         parentDir     :  'test/bed/root_dir1',
-        fullParentDir :  '/User/dev/fsrec/test/bed/root_dir1',
+        fullParentDir :  '/User/dev/readdirp/test/bed/root_dir1',
         name          :  'root_dir1_subdir1',
         path          :  'test/bed/root_dir1/root_dir1_subdir1',
-        fullPath      :  '/User/dev/fsrec/test/bed/root_dir1/root_dir1_subdir1',
+        fullPath      :  '/User/dev/readdirp/test/bed/root_dir1/root_dir1_subdir1',
         stat          :  [ ... ]
                     
 ## Filters
@@ -101,37 +96,37 @@ Directories that do not pass a filter will not be recursed into.
 ## Examples
 
 ```javascript
-    var fsrec = require('fsrec');
+    var readdirp = require('readdirp');
 
     // Glob file filter
-    fsrec.readdir(opts( { root: './test/bed', fileFilter: '*.js' } ), function (err, res) {
+    readdirp(opts( { root: './test/bed', fileFilter: '*.js' } ), function (err, res) {
         // do something with JavaScript files and all directories
     });
 
     // Combined glob file filters
-    fsrec.readdir(opts( { root: './test/bed', fileFilter: [ '*.js', '*.json' ] } ), function (err, res) {
+    readdirp(opts( { root: './test/bed', fileFilter: [ '*.js', '*.json' ] } ), function (err, res) {
         // do something with JavaScript and Json files and all directories
     });
 
     // Combined negated directory filters
-    fsrec.readdir(opts( { root: './test/bed', directoryFilter: [ '!.git', '!*modules' ] } ), function (err, res) {
+    readdirp(opts( { root: './test/bed', directoryFilter: [ '!.git', '!*modules' ] } ), function (err, res) {
         // do something with all files and directories found outside '.git' or any modules directory 
     });
 
     // Function directory filter
-    fsrec.readdir(
+    readdirp(
         opts( { root: './test/bed', directoryFilter: function (di) { return di.name.length === 9; } }), 
         function (err, res) {
         // do something with all files and directories found inside or matching directories whose name has length 9
     })
 
     // Limiting depth
-    fsrec.readdir({ root: './test/bed', depth: 1 }, function (err, res) {
+    readdirp({ root: './test/bed', depth: 1 }, function (err, res) {
         // do something with all files and directories found up to 1 subdirectory deep
     });
 
     // Using file processed callback
-    fsrec.readdir(
+    readdirp(
           { root: '.' }
         , function(fileInfo) { 
             // do something with file here
@@ -142,5 +137,5 @@ Directories that do not pass a filter will not be recursed into.
     );
 ```
 
-For more examples see the [readdir tests](https://github.com/thlorenz/fsrec/blob/master/test/readdir.js)
+For more examples see the [readdirp tests](https://github.com/thlorenz/readdirp/blob/master/test/readdirp.js)
 

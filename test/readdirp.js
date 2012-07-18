@@ -1,10 +1,10 @@
 /*jshint asi:true */
 
 
-var path  =  require('path')
-  , fs    =  require('fs')
-  , fsrec =  require('../index.js')
-  , root  =  path.join(__dirname, '../test/bed')
+var path     =  require('path')
+  , fs       =  require('fs')
+  , readdirp =  require('../readdirp.js')
+  , root     =  path.join(__dirname, '../test/bed')
   , totalDirs          =  6
   , totalFiles         =  12
   , ext1Files          =  4
@@ -58,13 +58,13 @@ describe('reading root', function () {
     describe('without filters', function () {
 
         it('gets all directories', function (done) {
-            fsrec.readdir(opts(), function (err, res) {
+            readdirp(opts(), function (err, res) {
                 res.directories.should.have.length(totalDirs);
                 done();
             })
         })
         it('gets all files', function (done) {
-            fsrec.readdir(opts(), function (err, res) {
+            readdirp(opts(), function (err, res) {
                 res.files.should.have.length(totalFiles);
                 done();
             })
@@ -75,28 +75,28 @@ describe('reading root', function () {
 
         describe('normal', function () {
             it('"*.ext1"', function (done) {
-                fsrec.readdir(opts( { fileFilter: '*.ext1' } ), function (err, res) {
+                readdirp(opts( { fileFilter: '*.ext1' } ), function (err, res) {
                     res.files.should.have.length(ext1Files);
                     done();
                 })
             })
 
             it('["*.ext1", "*.ext3"]', function (done) {
-                fsrec.readdir(opts( { fileFilter: [ '*.ext1', '*.ext3' ] } ), function (err, res) {
+                readdirp(opts( { fileFilter: [ '*.ext1', '*.ext3' ] } ), function (err, res) {
                     res.files.should.have.length(ext1Files + ext3Files);
                     done();
                 })
             })
 
             it('"root_dir1"', function (done) {
-                fsrec.readdir(opts( { directoryFilter: 'root_dir1' }), function (err, res) {
+                readdirp(opts( { directoryFilter: 'root_dir1' }), function (err, res) {
                     res.directories.should.have.length(1);
                     done();
                 })
             })
 
             it('["root_dir1", "*dir1_subdir1"]', function (done) {
-                fsrec.readdir(opts( { directoryFilter: [ 'root_dir1', '*dir1_subdir1' ]}), function (err, res) {
+                readdirp(opts( { directoryFilter: [ 'root_dir1', '*dir1_subdir1' ]}), function (err, res) {
                     res.directories.should.have.length(2);
                     done();
                 })
@@ -106,14 +106,14 @@ describe('reading root', function () {
 
         describe('negated', function () {
             it('"!*.ext1"', function (done) {
-                fsrec.readdir(opts( { fileFilter: '!*.ext1' } ), function (err, res) {
+                readdirp(opts( { fileFilter: '!*.ext1' } ), function (err, res) {
                     res.files.should.have.length(totalFiles - ext1Files);
                     done();
                 })
             })
 
             it('["!*.ext1", "!*.ext3"]', function (done) {
-                fsrec.readdir(opts( { fileFilter: [ '!*.ext1', '!*.ext3' ] } ), function (err, res) {
+                readdirp(opts( { fileFilter: [ '!*.ext1', '!*.ext3' ] } ), function (err, res) {
                     res.files.should.have.length(totalFiles - ext1Files - ext3Files);
                     done();
                 })
@@ -122,7 +122,7 @@ describe('reading root', function () {
 
         describe('normal mixed with negated', function () {
             it('["*.ext1", "!*.ext3"] returns error', function (done) {
-                fsrec.readdir(opts( { fileFilter: [ '*.ext1', '!*.ext3' ] } ), function (err, res) {
+                readdirp(opts( { fileFilter: [ '*.ext1', '!*.ext3' ] } ), function (err, res) {
                     err[0].toString().should.include('Cannot mix negated with non negated glob filters'); 
                     done();
                 })
@@ -132,14 +132,14 @@ describe('reading root', function () {
         describe('handles leading and trailing spaces', function () {
 
             it('[" *.ext1", "*.ext3 "]', function (done) {
-                fsrec.readdir(opts( { fileFilter: [ '*.ext1', '*.ext3' ] } ), function (err, res) {
+                readdirp(opts( { fileFilter: [ '*.ext1', '*.ext3' ] } ), function (err, res) {
                     res.files.should.have.length(ext1Files + ext3Files);
                     done();
                 })
             })
 
             it('[" !*.ext1", " !*.ext3 "]', function (done) {
-                fsrec.readdir(opts( { fileFilter: [ ' !*.ext1', ' !*.ext3' ] } ), function (err, res) {
+                readdirp(opts( { fileFilter: [ ' !*.ext1', ' !*.ext3' ] } ), function (err, res) {
                     res.files.should.have.length(totalFiles - ext1Files - ext3Files);
                     done();
                 })
@@ -148,7 +148,7 @@ describe('reading root', function () {
 
         describe('** glob pattern', function () {
             it('ignores ** "**/*.ext1"', function (done) {
-                fsrec.readdir(opts( { fileFilter: '**/*.ext1' } ), function (err, res) {
+                readdirp(opts( { fileFilter: '**/*.ext1' } ), function (err, res) {
                     res.files.should.have.length(ext1Files);
                     done();
                 })
@@ -158,7 +158,7 @@ describe('reading root', function () {
 
     describe('using function filter', function () {
         it('fileFilter -> name contains root_dir2', function (done) {
-            fsrec.readdir(
+            readdirp(
                 opts( { fileFilter: function (fi) { return fi.name.indexOf('root_dir2') >= 0; } }), 
                 function (err, res) {
                     res.files.should.have.length(rootDir2Files);
@@ -167,7 +167,7 @@ describe('reading root', function () {
         })
 
         it('directoryFilter -> name has length 9', function (done) {
-            fsrec.readdir(
+            readdirp(
                 opts( { directoryFilter: function (di) { return di.name.length === 9; } }), 
                 function (err, res) {
                     res.directories.should.have.length(nameHasLength9Dirs);
@@ -178,7 +178,7 @@ describe('reading root', function () {
 
     describe('specifying maximum depth', function () {
         it('depth 1 does not return files at depth 2', function (done) {
-            fsrec.readdir(opts( { depth: 1 } ), function (err, res) {
+            readdirp(opts( { depth: 1 } ), function (err, res) {
                 res.files.should.have.length(depth1Files);
                 done();
             })
@@ -191,7 +191,7 @@ describe('reading root', function () {
           ;
 
         it('calls back for each processed file', function (done) {
-            fsrec.readdir(
+            readdirp(
                 opts() 
               , function(fi) { 
                     processedFiles.push(fi);
@@ -228,14 +228,14 @@ describe('resolving of name, full and relative paths', function () {
 
         describe('full paths for ' + op.root, function () {
             it('has correct name', function (done) {
-                fsrec.readdir (op, function(err, res) {
+                readdirp (op, function(err, res) {
                     res.files[0].name.should.equal(expected.name);
                     done();
                 });
             })
             
             it('has correct path', function (done) {
-                fsrec.readdir (op, function(err, res) {
+                readdirp (op, function(err, res) {
                     res.files[0].path.should.equal(path.join(op.prefix, expected.path));
                     done();
                 });
@@ -243,7 +243,7 @@ describe('resolving of name, full and relative paths', function () {
 
             it('has correct full parent dir and full path', function (done) {
                 fs.realpath(op.root, function(err, fullRoot) {
-                    fsrec.readdir ( op, function(err, res) {
+                    readdirp ( op, function(err, res) {
                         res.files[0].fullParentDir.should.equal(path.join(fullRoot, op.prefix, expected.parentDirName));
                         res.files[0].fullPath.should.equal(path.join(fullRoot, op.prefix, expected.parentDirName, expected.name));
                         done();

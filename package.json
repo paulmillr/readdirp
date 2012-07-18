@@ -1,14 +1,14 @@
 {
   "author": "Thorsten Lorenz <thlorenz@gmx.de> (thorstenlorenz.wordpress.com)",
-  "name": "fsrec",
+  "name": "readdirp",
   "description": "Recursive versions of fs module functions.",
   "version": "0.0.6",
-  "homepage": "https://github.com/thlorenz/fsrec",
+  "homepage": "https://github.com/thlorenz/readdirp",
   "repository": {
     "type": "git",
-    "url": "git://github.com/thlorenz/fsrec.git"
+    "url": "git://github.com/thlorenz/readdirp.git"
   },
-  "main": "index.js",
+  "main": "readdirp.js",
   "scripts": {
     "test": "mocha"
   },
