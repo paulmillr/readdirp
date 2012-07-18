@@ -1,3 +1,17 @@
+# readdirp [![Build Status](https://secure.travis-ci.org/thlorenz/readdirp.png)](http://travis-ci.org/thlorenz/readdirp)
+
+Recursive version of [fs.readdir](http://nodejs.org/docs/latest/api/fs.html#fs_fs_readdir_path_callback).
+
+Meant to be one of the recursive versions of fs functions, e.g., like [mkdirp](https://github.com/substack/node-mkdirp).
+
+```javascript
+    var readdirp = require('readdirp'); 
+
+    readdirp(opts( { root: './test/bed', fileFilter: '*.js' } ), function (err, res) {
+      // do something with JavaScript files and all directories
+    });
+```
+
 **Table of Contents**  *generated with [DocToc](http://doctoc.herokuapp.com/)*
 
 - [Installation](#installation)
@@ -9,12 +23,6 @@
 	- [entry info](#entry-info)
 	- [Filters](#filters)
 	- [Examples](#examples)
-
-# readdirp [![Build Status](https://secure.travis-ci.org/thlorenz/readdirp.png)](http://travis-ci.org/thlorenz/readdirp)
-
-Recursive version of [fs.readdir](http://nodejs.org/docs/latest/api/fs.html#fs_fs_readdir_path_callback).
-
-Meant to be one of the recursive versions of fs functions, e.g., like [mkdirp](https://github.com/substack/node-mkdirp).
 
 # Installation
 
@@ -93,7 +101,7 @@ There are three different ways to specify filters for files and directories resp
 
 Directories that do not pass a filter will not be recursed into.
 
-## Examples
+## More Examples
 
 ```javascript
     var readdirp = require('readdirp');
