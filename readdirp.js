@@ -1,5 +1,5 @@
-var fs    =  require('fs')
-  , path    =  require('path')
+var fs        =  require('fs')
+  , path      =  require('path')
   , minimatch =  require('minimatch')
   ;
 
@@ -227,39 +227,3 @@ function readdir(opts, callback1, callback2) {
 }
 
 exports = module.exports = readdir;
-
-/* ---- Testing */
-
-/*
-console.log ('\n ++++++++++++++++++++++++++++++++++++++\n ++++++++++++++++++++++++++++++++++++++++++++++++ \n\n');
-
-var op =  { root: './test/bed/', fileFilter: 'root_dir1_file1.ext1', directoryFilter: ['!.git', '!node_modules'] };
-
-readdir(op,  function(err, res) {
-  console.log('Root: ', op.root);
-  console.log(res.files);
-  console.log('\n\n ======================================= \n');
-  op.root = 'test/bed';
-  
-  readdir(op,  function(err, res) {
-  console.log('Root: ', op.root);
-    console.log(res.files);
-    console.log('\n\n ======================================= \n');
-
-    op.root = '.';
-
-    readdir(op,  function(err, res) {
-      console.log('Root: ', op.root);
-      console.log(res.files);
-      console.log('\n\n ======================================= \n');
-
-      op.root = "/Users/thlorenz/Dropboxes/Gmail/Dropbox/dev/javascript/projects/fsrec/test/bed";
-      readdir(op,  function(err, res) {
-          console.log('Root: ', op.root);
-        console.log(res.files);
-        console.log('\n\n ======================================= \n');
-      });
-    });
-  });
-});
-*/
