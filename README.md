@@ -2,15 +2,15 @@
 
 Recursive version of [fs.readdir](http://nodejs.org/docs/latest/api/fs.html#fs_fs_readdir_path_callback).
 
-Meant to be one of the recursive versions of fs functions, e.g., like [mkdirp](https://github.com/substack/node-mkdirp).
-
 ```javascript
     var readdirp = require('readdirp'); 
 
-    readdirp(opts( { root: './test/bed', fileFilter: '*.js' } ), function (err, res) {
+    readdirp({ root: './test/bed', fileFilter: '*.js' }, function (err, res) {
       // do something with JavaScript files and all directories
     });
 ```
+
+Meant to be one of the recursive versions of [fs](http://nodejs.org/docs/latest/api/fs.html) functions, e.g., like [mkdirp](https://github.com/substack/node-mkdirp).
 
 **Table of Contents**  *generated with [DocToc](http://doctoc.herokuapp.com/)*
 
@@ -22,7 +22,7 @@ Meant to be one of the recursive versions of fs functions, e.g., like [mkdirp](h
 		- [fileProcessed](#fileprocessed)
 	- [entry info](#entry-info)
 	- [Filters](#filters)
-	- [Examples](#examples)
+- [More Examples](#more-examples)
 
 # Installation
 
@@ -101,29 +101,29 @@ There are three different ways to specify filters for files and directories resp
 
 Directories that do not pass a filter will not be recursed into.
 
-## More Examples
+# More Examples
 
 ```javascript
     var readdirp = require('readdirp');
 
     // Glob file filter
-    readdirp(opts( { root: './test/bed', fileFilter: '*.js' } ), function (err, res) {
+    readdirp({ root: './test/bed', fileFilter: '*.js' }, function (err, res) {
         // do something with JavaScript files and all directories
     });
 
     // Combined glob file filters
-    readdirp(opts( { root: './test/bed', fileFilter: [ '*.js', '*.json' ] } ), function (err, res) {
+    readdirp({ root: './test/bed', fileFilter: [ '*.js', '*.json' ] }, function (err, res) {
         // do something with JavaScript and Json files and all directories
     });
 
     // Combined negated directory filters
-    readdirp(opts( { root: './test/bed', directoryFilter: [ '!.git', '!*modules' ] } ), function (err, res) {
+    readdirp({ root: './test/bed', directoryFilter: [ '!.git', '!*modules' ] }, function (err, res) {
         // do something with all files and directories found outside '.git' or any modules directory 
     });
 
     // Function directory filter
     readdirp(
-        opts( { root: './test/bed', directoryFilter: function (di) { return di.name.length === 9; } }), 
+        { root: './test/bed', directoryFilter: function (di) { return di.name.length === 9; } }, 
         function (err, res) {
         // do something with all files and directories found inside or matching directories whose name has length 9
     })
