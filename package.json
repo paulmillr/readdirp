@@ -2,14 +2,14 @@
   "author": "Thorsten Lorenz <thlorenz@gmx.de> (thorstenlorenz.wordpress.com)",
   "name": "readdirp",
   "description": "Recursive version of fs.readdir.",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "homepage": "https://github.com/thlorenz/readdirp",
   "repository": {
     "type": "git",
     "url": "git://github.com/thlorenz/readdirp.git"
   },
   "engines": {
-    "node": ">=0.6 && <=0.9"
+    "node": ">=0.4"
   },
   "keywords": [
     "recursive",
@@ -31,8 +31,5 @@
     "should": ">=0.6.3"
   },
   "optionalDependencies": {},
-  "engines": {
-    "node": ">=0.4"
-  },
   "license": "MIT"
 }
