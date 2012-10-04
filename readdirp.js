@@ -1,6 +1,9 @@
+'use strict';
+
 var fs        =  require('fs')
   , path      =  require('path')
   , minimatch =  require('minimatch')
+  , toString  =  Object.prototype.toString
   ;
 
 // Standard helpers
@@ -20,6 +23,34 @@ function isUndefined (obj) {
   return obj === void 0;
 }
 
+function createStreamAPI () {
+  var Stream
+    , stream
+    , callback1
+    , callback2
+    , res = { };
+
+  Stream = require('stream');
+  stream = new Stream();
+  stream.writable = false;
+  stream.readable = true;
+
+  // called for each entry
+  callback1 = function (entry) {
+    stream.emit('data', entry);
+  };
+
+  // called with all found entries when directory walk finished
+  callback2 = function (err, entries) {
+    if (err) return stream.emit('error', err);
+    // since  we already emitted each entry,
+    // all we need to do here is to signal that we are done
+    stream.emit('end');
+  };
+
+  return { stream: stream, callback1: callback1, callback2: callback2 };
+}
+
 /** 
  * Main function which ends up calling readdirRec and reads all files and directories in given root recursively.
  * @param { Object }   opts     Options to specify root (start directory), filters and recursion depth
@@ -29,9 +60,18 @@ function isUndefined (obj) {
  *                                function (err, fileInfos) { ... }
  */
 function readdir(opts, callback1, callback2) {
+  var stream;
 
-  if (isUndefined(opts) || isUndefined(callback1)) {
-    throw new Error ('Need to define opts and at least one callback!');
+  if (isUndefined(opts)){
+    throw new Error ('Need to define opts!');
+  }
+
+  // If no callbacks were given we will use a streaming interface
+  if (isUndefined(callback1)) {
+    var api   =  createStreamAPI();
+    stream    =  api.stream;
+    callback1 =  api.callback1;
+    callback2 =  api.callback2;
   }
 
   opts.root            =  opts.root            || '.';
@@ -224,6 +264,9 @@ function readdir(opts, callback1, callback2) {
       }
     });
   });
+
+  // Note this is undefined, unless no callbacks were supplied and thus a streaming api used instead
+  return stream;
 }
 
-exports = module.exports = readdir;
+module.exports = module.exports = readdir;
