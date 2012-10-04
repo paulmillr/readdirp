@@ -28,7 +28,8 @@
   },
   "devDependencies": {
     "mocha": ">=1.1.0",
-    "should": ">=0.6.3"
+    "should": ">=0.6.3",
+    "tap-stream": "~0.1.0"
   },
   "optionalDependencies": {},
   "license": "MIT"
