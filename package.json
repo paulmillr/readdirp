@@ -21,7 +21,7 @@
   ],
   "main": "readdirp.js",
   "scripts": {
-    "test": "mocha"
+    "test": "tap test/*.js"
   },
   "dependencies": {
     "minimatch": ">=0.2.4"

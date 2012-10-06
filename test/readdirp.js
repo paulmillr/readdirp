@@ -202,12 +202,12 @@ test('resolving of name, full and relative paths', function (t) {
       , fullPath      :  'test/bed/root_dir1/root_dir1_file1.ext1'
       }
     , opts = [ 
-        { root: './test/bed'          ,  prefix: ''     }
-      , { root: './test/bed/'         ,  prefix: ''     }
-      , { root: 'test/bed'            ,  prefix: ''     }
-      , { root: 'test/bed/'           ,  prefix: ''     }
-      , { root: './test/../test/bed/' ,  prefix: ''     }
-      , { root: '.'                   ,  prefix: 'test/bed' }
+        { root: './bed'          ,  prefix: ''     }
+      , { root: './bed/'         ,  prefix: ''     }
+      , { root: 'bed'            ,  prefix: ''     }
+      , { root: 'bed/'           ,  prefix: ''     }
+      , { root: '../test/bed/'   ,  prefix: ''     }
+      , { root: '.'              ,  prefix: 'bed'  }
     ]
   t.plan(opts.length);
   
