@@ -1,6 +1,5 @@
 /*jshint asi:true */
 
-
 var test     =  require('tap').test
   , path     =  require('path')
   , fs       =  require('fs')
