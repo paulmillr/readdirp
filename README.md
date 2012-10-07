@@ -147,13 +147,13 @@ var readdirp = require('readdirp');
 // Glob file filter
 readdirp({ root: './test/bed', fileFilter: '*.js' })
   .on('data', function (entry) {
-    // do something with JavaScript files and all directories
+    // do something with each JavaScript file entry
   });
 
 // Combined glob file filters
 readdirp({ root: './test/bed', fileFilter: [ '*.js', '*.json' ] })
   .on('data', function (entry) {
-    // do something with JavaScript and Json files and all directories
+    // do something with each JavaScript and Json file entry 
   });
 
 // Combined negated directory filters

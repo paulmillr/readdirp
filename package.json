@@ -1,7 +1,7 @@
 {
   "author": "Thorsten Lorenz <thlorenz@gmx.de> (thlorenz.com)",
   "name": "readdirp",
-  "description": "Recursive version of fs.readdir.",
+  "description": "Recursive version of fs.readdir with streaming api.",
   "version": "0.2.0",
   "homepage": "https://github.com/thlorenz/readdirp",
   "repository": {
@@ -14,6 +14,8 @@
   "keywords": [
     "recursive",
     "fs",
+    "stream",
+    "streams",
     "readdir",
     "filesystem",
     "find",
@@ -29,7 +31,7 @@
   "devDependencies": {
     "tap": "~0.3.1",
     "through": "~1.1.0",
-    "tap-stream": "~0.1.0"
+    "minimatch": "~0.2.7"
   },
   "optionalDependencies": {},
   "license": "MIT"
