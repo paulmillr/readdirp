@@ -36,7 +36,8 @@ Meant to be one of the recursive versions of [fs](http://nodejs.org/docs/latest/
 - [More Examples](#more-examples)
 	- [stream api](#stream-api)
 	- [stream api pipe](#stream-api-pipe)
-	- [callback api](#callback-api)
+	- [grep](#grep)
+	- [using callback api](#using-callback-api)
 	- [tests](#tests)
 
 
@@ -185,11 +186,33 @@ readdirp(
 );
 ```
 
+Try more examples by following [instructions](https://github.com/thlorenz/readdirp/blob/master/examples/Readme.md)
+on how to get going.
+
 ## stream api
+
+[stream-api.js](https://github.com/thlorenz/readdirp/blob/master/examples/stream-api.js)
+
+Demonstrates error and data handling by listening to events emitted from the readdirp stream.
 
 ## stream api pipe
 
-## callback api
+[stream-api-pipe.js](https://github.com/thlorenz/readdirp/blob/master/examples/stream-api-pipe.js)
+
+Demonstrates error handling by listening to events emitted from the readdirp stream and how to pipe the data stream into
+another destination stream.
+
+## grep
+
+[grep.js](https://github.com/thlorenz/readdirp/blob/master/examples/grep.js)
+
+Very naive implementation of grep, for demonstration purposes only.
+
+## using callback api
+
+[callback-api.js](https://github.com/thlorenz/readdirp/blob/master/examples/callback-api.js)
+
+Shows how to pass callbacks in order to handle errors and/or data.
 
 ## tests
 
