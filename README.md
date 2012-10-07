@@ -1,13 +1,23 @@
 # readdirp [![Build Status](https://secure.travis-ci.org/thlorenz/readdirp.png)](http://travis-ci.org/thlorenz/readdirp)
 
-Recursive version of [fs.readdir](http://nodejs.org/docs/latest/api/fs.html#fs_fs_readdir_path_callback).
+Recursive version of [fs.readdir](http://nodejs.org/docs/latest/api/fs.html#fs_fs_readdir_path_callback). Exposes a
+**stream api**.
 
 ```javascript
 var readdirp = require('readdirp'); 
+  , path = require('path')
+  , es = require('event-stream');
 
-readdirp({ root: './test/bed', fileFilter: '*.js' }, function (err, res) {
-    // do something with JavaScript files and all directories
-});
+// print out all JavaScript files along with their size
+
+readdirp({ root: path.join(__dirname), fileFilter: '*.js' })
+  .on('warn', function (err) { console.error('non-fatal error', err); })
+  .on('error', function (err) { console.error('fatal error', err); })
+  .pipe(es.mapSync(function (entry) { 
+    return { path: entry.path, size: entry.stat.size };
+  }))
+  .pipe(es.stringify())
+  .pipe(process.stdout);
 ```
 
 Meant to be one of the recursive versions of [fs](http://nodejs.org/docs/latest/api/fs.html) functions, e.g., like [mkdirp](https://github.com/substack/node-mkdirp).
@@ -16,13 +26,19 @@ Meant to be one of the recursive versions of [fs](http://nodejs.org/docs/latest/
 
 - [Installation](#installation)
 - [API](#api)
+	- [entry stream](#entry-stream)
 	- [options](#options)
-	- [callbacks](#callbacks)
-		- [allProcessed ](#allprocessed)
-		- [fileProcessed](#fileprocessed)
 	- [entry info](#entry-info)
 	- [Filters](#filters)
+	- [Callback API](#callback-api)
+		- [allProcessed ](#allprocessed)
+		- [fileProcessed](#fileprocessed)
 - [More Examples](#more-examples)
+	- [stream api](#stream-api)
+	- [stream api pipe](#stream-api-pipe)
+	- [callback api](#callback-api)
+	- [tests](#tests)
+
 
 # Installation
 
@@ -30,9 +46,23 @@ Meant to be one of the recursive versions of [fs](http://nodejs.org/docs/latest/
 
 # API
 
-***readdirp (options, callback1 [, callback2])***
+***var entryStream = readdirp (options)***
 
-Reads given root recursively and returns list of files and directories with stats attached.
+Reads given root recursively and returns a `stream` of [entry info](#entry-info)s.
+
+## entry stream
+
+Behaves as follows:
+  
+- `emit('data')` passes an [entry info](#entry-info) whenever one is found
+- `emit('warn')` passes a non-fatal `Error` that prevents a file/directory from being processed (i.e., if it is
+  inaccessible to the user)
+- `emit('error')` passes a fatal `Error` which also ends the stream (i.e., when illegal options where passed)
+- `emit('end')` called when all entries were found and no more will be emitted (i.e., we are done)
+- the stream is `paused` initially in order to allow `pipe` and `on` handlers be connected before data or errors are
+  emitted
+- the stream is `resumed` automatically during the next event loop 
+- to learn more about streams, consult the [stream-handbook](https://github.com/substack/stream-handbook)
 
 ## options
     
@@ -43,22 +73,6 @@ Reads given root recursively and returns list of files and directories with stat
 - **directoryFilter**: filter to include/exclude directories found and to recurse into (see [Filters](#filters) for more)
 
 - **depth**: depth at which to stop recursing even if more subdirectories are found
-
-## callbacks
-
-If callback2 is given, callback1 functions as the **fileProcessed** callback, and callback2 as the **allProcessed** callback.
-
-If only callback1 is given, it functions as the **allProcessed** callback.
-
-### allProcessed 
-
-- function with err and res parameters, e.g., `function (err, res) { ... }`
-- **err**: array of errors that occurred during the operation, **res may still be present, even if errors occurred**
-- **res**: collection of file/directory [entry infos](#entry-info)
-
-### fileProcessed
-
-- function with [entry info](#entry-info) parameter e.g., `function (entryInfo) { ... }`
 
 ## entry info
 
@@ -101,49 +115,84 @@ There are three different ways to specify filters for files and directories resp
 
 Directories that do not pass a filter will not be recursed into.
 
+## Callback API
+
+Although the stream api is recommended, readdirp also exposes a callback based api.
+
+***readdirp (options, callback1 [, callback2])***
+
+If callback2 is given, callback1 functions as the **fileProcessed** callback, and callback2 as the **allProcessed** callback.
+
+If only callback1 is given, it functions as the **allProcessed** callback.
+
+### allProcessed 
+
+- function with err and res parameters, e.g., `function (err, res) { ... }`
+- **err**: array of errors that occurred during the operation, **res may still be present, even if errors occurred**
+- **res**: collection of file/directory [entry infos](#entry-info)
+
+### fileProcessed
+
+- function with [entry info](#entry-info) parameter e.g., `function (entryInfo) { ... }`
+
+
 # More Examples
+
+`on('error', ..)`, `on('warn', ..)` and `on('end', ..)` handling omitted for brevity
 
 ```javascript
 var readdirp = require('readdirp');
 
 // Glob file filter
-readdirp({ root: './test/bed', fileFilter: '*.js' }, function (err, res) {
-  // do something with JavaScript files and all directories
-});
+readdirp({ root: './test/bed', fileFilter: '*.js' })
+  .on('data', function (entry) {
+    // do something with JavaScript files and all directories
+  });
 
 // Combined glob file filters
-readdirp({ root: './test/bed', fileFilter: [ '*.js', '*.json' ] }, function (err, res) {
-  // do something with JavaScript and Json files and all directories
-});
+readdirp({ root: './test/bed', fileFilter: [ '*.js', '*.json' ] })
+  .on('data', function (entry) {
+    // do something with JavaScript and Json files and all directories
+  });
 
 // Combined negated directory filters
-readdirp({ root: './test/bed', directoryFilter: [ '!.git', '!*modules' ] }, function (err, res) {
-  // do something with all files and directories found outside '.git' or any modules directory 
-});
+readdirp({ root: './test/bed', directoryFilter: [ '!.git', '!*modules' ] })
+  .on('data', function (entry) {
+    // do something with each file entry found outside '.git' or any modules directory 
+  });
 
 // Function directory filter
-readdirp(
-  { root: './test/bed', directoryFilter: function (di) { return di.name.length === 9; } }, 
-  function (err, res) {
-  // do something with all files and directories found inside or matching directories whose name has length 9
-})
+readdirp({ root: './test/bed', directoryFilter: function (di) { return di.name.length === 9; } })
+  .on('data', function (entry) {
+    // do something with each file entry found inside directories whose name has length 9
+  });
 
 // Limiting depth
-readdirp({ root: './test/bed', depth: 1 }, function (err, res) {
-  // do something with all files and directories found up to 1 subdirectory deep
-});
+readdirp({ root: './test/bed', depth: 1 })
+  .on('data', function (entry) {
+    // do something with each file entry found up to 1 subdirectory deep
+  });
 
-// Using file processed callback
+// callback api
 readdirp(
     { root: '.' }
   , function(fileInfo) { 
-      // do something with file here
+      // do something with file entry here
     } 
   , function (err, res) {
-      // all done, move on or do final step for all files and directories here
+      // all done, move on or do final step for all file entries here
     }
 );
 ```
 
-For more examples see the [readdirp tests](https://github.com/thlorenz/readdirp/blob/master/test/readdirp.js)
+## stream api
+
+## stream api pipe
+
+## callback api
+
+## tests
+
+The [readdirp tests](https://github.com/thlorenz/readdirp/blob/master/test/readdirp.js) also will give you a good idea on
+how things work.
 
