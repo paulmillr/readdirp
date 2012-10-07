@@ -52,14 +52,12 @@ function sendError (err) {
     source.buffer.push({ type: 'error', content: err });
 }
 
-source
-  .pipe(target);
+source.pipe(target);
 
 sendData ('hello');
 sendData ('world');
 sendError (new Error('oh no!'));
 
 source.resume();
-
 
 setTimeout(function () { target.emit('drain'); }, 1000);

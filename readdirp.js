@@ -23,34 +23,6 @@ function isUndefined (obj) {
   return obj === void 0;
 }
 
-function createStreamAPI () {
-  var Stream
-    , stream
-    , callback1
-    , callback2
-    , res = { };
-
-  Stream = require('stream');
-  stream = new Stream();
-  stream.writable = false;
-  stream.readable = true;
-
-  // called for each entry
-  callback1 = function (entry) {
-    stream.emit('data', entry);
-  };
-
-  // called with all found entries when directory walk finished
-  callback2 = function (err, entries) {
-    if (err) return stream.emit('error', err);
-    // since  we already emitted each entry,
-    // all we need to do here is to signal that we are done
-    stream.emit('end');
-  };
-
-  return { stream: stream, callback1: callback1, callback2: callback2 };
-}
-
 /** 
  * Main function which ends up calling readdirRec and reads all files and directories in given root recursively.
  * @param { Object }   opts     Options to specify root (start directory), filters and recursion depth
@@ -60,26 +32,10 @@ function createStreamAPI () {
  *                                function (err, fileInfos) { ... }
  */
 function readdir(opts, callback1, callback2) {
-  var stream;
-
-  if (isUndefined(opts)){
-    throw new Error ('Need to define opts!');
-  }
-
-  // If no callbacks were given we will use a streaming interface
-  if (isUndefined(callback1)) {
-    var api   =  createStreamAPI();
-    stream    =  api.stream;
-    callback1 =  api.callback1;
-    callback2 =  api.callback2;
-  }
-
-  opts.root            =  opts.root            || '.';
-  opts.fileFilter      =  opts.fileFilter      || function() { return true; };
-  opts.directoryFilter =  opts.directoryFilter || function() { return true; };
-  opts.depth           =  opts.depth           || 999999999;
-
-  var pending = 0
+  var stream
+    , handleError
+    , handleFatalError
+    , pending = 0
     , errors = []
     , readdirResult = {
         directories: []
@@ -89,6 +45,37 @@ function readdir(opts, callback1, callback2) {
     , allProcessed
     , realRoot
     ;
+
+
+  handleError = function (err) { errors.push(err); };
+
+  // If no callbacks were given we will use a streaming interface
+  if (isUndefined(callback1)) {
+    var api          =  require('./stream-api')();
+    stream           =  api.stream;
+    callback1        =  api.callback1;
+    callback2        =  api.callback2;
+    handleFatalError =  api.handleFatalError;
+  } else {
+    handleFatalError = function (err) {
+      handleError(err);
+      allProcessed(errors, null);
+    };
+  }
+
+  if (isUndefined(opts)){
+    handleFatalError(new Error (
+      'Need to pass at least one argument: opts! \n' +
+      'https://github.com/thlorenz/readdirp#options'
+      )
+    );
+    return stream;
+  }
+
+  opts.root            =  opts.root            || '.';
+  opts.fileFilter      =  opts.fileFilter      || function() { return true; };
+  opts.directoryFilter =  opts.directoryFilter || function() { return true; };
+  opts.depth           =  opts.depth           || 999999999;
 
   if (isUndefined(callback2)) {
     fileProcessed = function() { };
@@ -116,7 +103,10 @@ function readdir(opts, callback1, callback2) {
           return true;
         } else {
           // if we detect illegal filters, bail out immediately
-          throw new Error("Cannot mix negated with non negated glob filters: " + filters);
+          throw new Error(
+            'Cannot mix negated with non negated glob filters: ' + filters + '\n' +
+            'https://github.com/thlorenz/readdirp#filters'
+          );
         }
       }
     }
@@ -174,7 +164,7 @@ function readdir(opts, callback1, callback2) {
 
           fs.stat(fullPath, function (err, stat) {
             if (err) {
-              errors.push(err);
+              handleError(err);
             } else {
               entryInfos.push({
                   name          :  entry
@@ -199,7 +189,7 @@ function readdir(opts, callback1, callback2) {
 
     fs.readdir(currentDir, function (err, entries) {
       if (err) {
-        errors.push(err);
+        handleError(err);
         callCurrentDirProcessed();
         return;
       }
@@ -247,8 +237,8 @@ function readdir(opts, callback1, callback2) {
     opts.directoryFilter = normalizeFilter(opts.directoryFilter);
   } catch (err) {
     // if we detect illegal filters, bail out immediately
-    allProcessed([err], null);
-    return; 
+    handleFatalError(err);
+    return stream;
   }
 
   // If filters were valid get on with the show
@@ -265,8 +255,7 @@ function readdir(opts, callback1, callback2) {
     });
   });
 
-  // Note this is undefined, unless no callbacks were supplied and thus a streaming api used instead
   return stream;
 }
 
-module.exports = module.exports = readdir;
+module.exports = readdir;
