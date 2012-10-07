@@ -47,17 +47,18 @@ function readdir(opts, callback1, callback2) {
     ;
 
 
-  handleError = function (err) { errors.push(err); };
 
   // If no callbacks were given we will use a streaming interface
   if (isUndefined(callback1)) {
     var api          =  require('./stream-api')();
     stream           =  api.stream;
-    callback1        =  api.callback1;
-    callback2        =  api.callback2;
+    callback1        =  api.processEntry;
+    callback2        =  api.done;
+    handleError      =  api.handleError;
     handleFatalError =  api.handleFatalError;
   } else {
-    handleFatalError = function (err) {
+    handleError      =  function (err) { errors.push(err); };
+    handleFatalError =  function (err) {
       handleError(err);
       allProcessed(errors, null);
     };

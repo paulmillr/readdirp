@@ -1,20 +1,22 @@
 /*jshint asi:true */
 
-var test     =  require('tap').test
-  , path     =  require('path')
-  , fs       =  require('fs')
-  , util     =  require('util')
-  , Stream   =  require('stream')
-  , through  =  require('through')
-  , readdirp =  require('..')
-  , root     =  path.join(__dirname, 'bed')
-  // see test/readdirp.js for test bed layout
+var test      =  require('tap').test
+  , path      =  require('path')
+  , fs        =  require('fs')
+  , util      =  require('util')
+  , Stream    =  require('stream')
+  , through   =  require('through')
+  , streamapi =  require('../stream-api')
+  , readdirp  =  require('..')
+  , root       =  path.join(__dirname, 'bed')
   , totalDirs  =  6
   , totalFiles =  12
   , ext1Files  =  4
   , ext2Files  =  3
   , ext3Files  =  2
   ;
+  
+// see test/readdirp.js for test bed layout
 
 function opts (extend) {
   var o = { root: root };
@@ -47,73 +49,128 @@ function capture () {
   return dst;
 }
 
-//console.log('\033[2J'); // clear console
+test('\nintegrated', function (t) {
+  t.test('\n# reading root without filter', function (t) {
+    t.plan(2);
+    readdirp(opts())
+      .on('error', function (err) {
+        t.fail('should not throw error', err);
+      })
+      .pipe(capture())
+      .pipe(through(
+        function (result) { 
+          t.equals(result.entries.length, totalFiles, 'emits all files');
+          t.ok(result.ended, 'ends stream');
+          t.end();
+        }
+      ));
+  })
 
-test('\nreading root without filter', function (t) {
-  t.plan(2);
-  readdirp(opts())
-    .on('error', function (err) {
-      t.fail('should not throw error', err);
-    })
-    .pipe(capture())
-    .pipe(through(
-      function (result) { 
-        t.equals(result.entries.length, totalFiles, 'emits all files');
-        t.ok(result.ended, 'ends stream');
+  t.test('\n# normal: ["*.ext1", "*.ext3"]', function (t) {
+    t.plan(2);
+
+    readdirp(opts( { fileFilter: [ '*.ext1', '*.ext3' ] } ))
+      .on('error', function (err) {
+        t.fail('should not throw error', err);
+      })
+      .pipe(capture())
+      .pipe(through(
+        function (result) { 
+          t.equals(result.entries.length, ext1Files + ext3Files, 'all ext1 and ext3 files');
+          t.ok(result.ended, 'ends stream');
+          t.end();
+        }
+      ))
+  })
+
+  t.test('\n# negated: ["!*.ext1", "!*.ext3"]', function (t) {
+    t.plan(2);
+
+    readdirp(opts( { fileFilter: [ '!*.ext1', '!*.ext3' ] } ))
+      .on('error', function (err) {
+        t.fail('should not throw error', err);
+      })
+      .pipe(capture())
+      .pipe(through(
+        function (result) { 
+          t.equals(result.entries.length, totalFiles - ext1Files - ext3Files, 'all but ext1 and ext3 files');
+          t.ok(result.ended, 'ends stream');
+          t.end();
+        }
+      ))
+  })
+
+  t.test('\n# no options given', function (t) {
+    t.plan(1);
+    readdirp()
+      .on('error', function (err) {
+        t.similar(err.toString() , /Need to pass at least one argument/ , 'emits meaningful error');
         t.end();
-      }
-    ));
-})
+      })
+  })
 
-test('\nnormal: ["*.ext1", "*.ext3"]', function (t) {
-  t.plan(2);
+  t.test('\n# mixed: ["*.ext1", "!*.ext3"]', function (t) {
+    t.plan(1);
 
-  readdirp(opts( { fileFilter: [ '*.ext1', '*.ext3' ] } ))
-    .on('error', function (err) {
-      t.fail('should not throw error', err);
-    })
-    .pipe(capture())
-    .pipe(through(
-      function (result) { 
-        t.equals(result.entries.length, ext1Files + ext3Files, 'all ext1 and ext3 files');
-        t.ok(result.ended, 'ends stream');
+    readdirp(opts( { fileFilter: [ '*.ext1', '!*.ext3' ] } ))
+      .on('error', function (err) {
+        t.similar(err.toString() , /Cannot mix negated with non negated glob filters/ , 'emits meaningful error');
         t.end();
-      }
-    ))
+      })
+  })
 })
 
-test('\nnegated: ["!*.ext1", "!*.ext3"]', function (t) {
-  t.plan(2);
 
-  readdirp(opts( { fileFilter: [ '!*.ext1', '!*.ext3' ] } ))
-    .on('error', function (err) {
-      t.fail('should not throw error', err);
+test('\napi separately', function (t) {
+
+  t.test('\n# handleError', function (t) {
+    t.plan(1);
+
+    var api = streamapi()
+      , warning = new Error('some file caused problems');
+
+    api.stream
+      .on('warn', function (err) {
+        t.equals(err, warning, 'warns with the handled error');
+      })
+    api.handleError(warning);
+  })
+
+  t.test('\n# when stream is paused and then resumed', function (t) {
+    t.plan(6);
+    var api = streamapi()
+      , resumed = false
+      , fatalError = new Error('fatal!')
+      , nonfatalError = new Error('nonfatal!')
+      , processedData = 'some data'
+      ;
+
+    api.stream
+      .on('warn', function (err) {
+        t.equals(err, nonfatalError, 'emits the buffered warning');
+        t.ok(resumed, 'emits warning only after it was resumed');
+      })
+      .on('error', function (err) {
+        t.equals(err, fatalError, 'emits the buffered fatal error');
+        t.ok(resumed, 'emits errors only after it was resumed');
+      })
+      .on('data', function (data) {
+        t.equals(data, processedData, 'emits the buffered data');
+        t.ok(resumed, 'emits data only after it was resumed');
+      })
+    
+    // stream resumes on next tick, so we need to run this code afterwards otherwise our pause gets undone
+    process.nextTick(function () {
+      api.stream.pause();
+
+      api.processEntry(processedData);
+      api.handleError(nonfatalError);
+      api.handleFatalError(fatalError);
+    
+      process.nextTick(function () {
+        resumed = true;
+        api.stream.resume();
+      })
     })
-    .pipe(capture())
-    .pipe(through(
-      function (result) { 
-        t.equals(result.entries.length, totalFiles - ext1Files - ext3Files, 'all but ext1 and ext3 files');
-        t.ok(result.ended, 'ends stream');
-        t.end();
-      }
-    ))
-})
-
-test('\nno options given', function (t) {
-  t.plan(1);
-  readdirp()
-    .on('error', function (err) {
-      t.similar(err.toString() , /Need to pass at least one argument/ , 'emits meaningful error');
-      t.end();
-    })
-})
-
-test('\nmixed: ["*.ext1", "!*.ext3"]', function (t) {
-  t.plan(1);
-
-  readdirp(opts( { fileFilter: [ '*.ext1', '!*.ext3' ] } ))
-    .on('error', function (err) {
-      t.similar(err.toString() , /Cannot mix negated with non negated glob filters/ , 'emits meaningful error');
-      t.end();
-    })
+  })
 })

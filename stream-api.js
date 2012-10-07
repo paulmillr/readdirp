@@ -2,8 +2,9 @@ var Stream = require('stream');
 
 function createStreamAPI () {
   var stream
-    , callback1
-    , callback2
+    , processEntry
+    , done
+    , handleError
     , handleFatalError
     , paused = true
     , buffer = []
@@ -28,19 +29,19 @@ function createStreamAPI () {
   };
 
   // called for each entry
-  callback1 = function (entry) {
+  processEntry = function (entry) {
     return paused ? buffer.push({ type: 'data', data: entry }) : stream.emit('data', entry);
   };
 
   // called with all found entries when directory walk finished
-  callback2 = function (err, entries) {
-    // since  we already emitted each entry,
+  done = function (err, entries) {
+    // since we already emitted each entry and all non fatal errors
     // all we need to do here is to signal that we are done
-
-    // unless there were non-fatal errors, which we should let the user know about at least now
-    // TODO: figure out how to handle non fatal errors for streams
-
     stream.emit('end');
+  };
+
+  handleError = function (err) {
+    return paused ? buffer.push({ type: 'warn', data: err }) : stream.emit('warn', err);
   };
 
   handleFatalError = function (err) {
@@ -51,7 +52,13 @@ function createStreamAPI () {
   // Otherwise we may loose data/errors that are emitted immediately
   process.nextTick(function () { stream.resume(); });
 
-  return { stream: stream, callback1: callback1, callback2: callback2, handleFatalError: handleFatalError };
+  return { 
+      stream           :  stream
+    , processEntry     :  processEntry
+    , done             :  done
+    , handleError      :  handleError
+    , handleFatalError :  handleFatalError
+  };
 }
 
 module.exports = createStreamAPI;
