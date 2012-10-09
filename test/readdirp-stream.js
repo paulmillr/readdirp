@@ -158,19 +158,15 @@ test('\napi separately', function (t) {
         t.equals(data, processedData, 'emits the buffered data');
         t.ok(resumed, 'emits data only after it was resumed');
       })
+      .pause()
     
-    // stream resumes on next tick, so we need to run this code afterwards otherwise our pause gets undone
+    api.processEntry(processedData);
+    api.handleError(nonfatalError);
+    api.handleFatalError(fatalError);
+  
     process.nextTick(function () {
-      api.stream.pause();
-
-      api.processEntry(processedData);
-      api.handleError(nonfatalError);
-      api.handleFatalError(fatalError);
-    
-      process.nextTick(function () {
-        resumed = true;
-        api.stream.resume();
-      })
+      resumed = true;
+      api.stream.resume();
     })
   })
 })

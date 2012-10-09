@@ -7,6 +7,7 @@ function createStreamAPI () {
     , handleError
     , handleFatalError
     , paused = true
+    , controlled = false
     , buffer = []
     ;
 
@@ -15,10 +16,12 @@ function createStreamAPI () {
   stream.readable = true;
 
   stream.pause = function () {
+    controlled = true;
     paused = true;
   };
 
   stream.resume = function () {
+    controlled = true;
     paused = false;
     
     // emit all buffered entries, errors and ends
@@ -50,7 +53,12 @@ function createStreamAPI () {
 
   // Allow stream to be returned and handlers to be attached and/or stream to be piped before emitting messages
   // Otherwise we may loose data/errors that are emitted immediately
-  process.nextTick(function () { stream.resume(); });
+  process.nextTick(function () { 
+    // In case was controlled (paused/resumed) manually, we don't interfer
+    // see https://github.com/thlorenz/readdirp/commit/ab7ff8561d73fca82c2ce7eb4ce9f7f5caf48b55#commitcomment-1964530
+    if (controlled) return;
+    stream.resume(); 
+  });
 
   return { 
       stream           :  stream
