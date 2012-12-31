@@ -76,7 +76,7 @@ function readdir(opts, callback1, callback2) {
   opts.root            =  opts.root            || '.';
   opts.fileFilter      =  opts.fileFilter      || function() { return true; };
   opts.directoryFilter =  opts.directoryFilter || function() { return true; };
-  opts.depth           =  opts.depth           || 999999999;
+  opts.depth           =  typeof opts.depth === 'undefined' ? 999999999 : opts.depth
 
   if (isUndefined(callback2)) {
     fileProcessed = function() { };
