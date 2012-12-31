@@ -14,6 +14,7 @@ var test     =  require('tap').test
   , rootDir2Files      =  2
   , nameHasLength9Dirs =  2
   , depth1Files        =  8
+  , depth0Files        =  3
   ;
 
 /* 
@@ -170,6 +171,15 @@ test('\nreading root specifying maximum depth', function (t) {
     t.plan(1);
       readdirp(opts( { depth: 1 } ), function (err, res) {
         t.equals(res.files.length, depth1Files, 'does not return files at depth 2');
+      })
+  })
+})
+
+test('\nreading root with no recursion', function (t) {
+  t.test('\n# depth 0', function (t) {
+    t.plan(1);
+      readdirp(opts( { depth: 0 } ), function (err, res) {
+        t.equals(res.files.length, depth0Files, 'does not return files at depth 0');
       })
   })
 })
