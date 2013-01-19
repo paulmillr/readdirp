@@ -169,4 +169,45 @@ test('\napi separately', function (t) {
       api.stream.resume();
     })
   })
+
+  t.test('\n# when a stream is destroyed, it emits "closed", but no longer emits "data", "warn" and "error"', function (t) {
+    t.plan(5)
+    var api = streamapi()
+      , destroyed = false
+      , fatalError = new Error('fatal!')
+      , nonfatalError = new Error('nonfatal!')
+      , processedData = 'some data'
+
+    api.stream
+      .on('warn', function (err) {
+        t.notOk(destroyed, 'emits warning until destroyed');
+      })
+      .on('error', function (err) {
+        t.notOk(destroyed, 'emits errors until destroyed');
+      })
+      .on('data', function (data) {
+        t.notOk(destroyed, 'emits data until destroyed');
+      })
+      .on('close', function () {
+        t.ok(destroyed, 'emits close when stream is destroyed');
+      })
+    
+
+    api.processEntry(processedData);
+    api.handleError(nonfatalError);
+    api.handleFatalError(fatalError);
+
+    process.nextTick(function () {
+      destroyed = true
+      api.stream.destroy()
+
+      api.processEntry(processedData);
+      api.handleError(nonfatalError);
+      api.handleFatalError(fatalError);
+
+      process.nextTick(function () {
+        t.pass('emits no more data, warn or error events after it was destroyed')  
+      })
+    })
+  })
 })
