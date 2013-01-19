@@ -178,7 +178,7 @@ test('\napi separately', function (t) {
       , nonfatalError = new Error('nonfatal!')
       , processedData = 'some data'
 
-    api.stream
+    var stream = api.stream
       .on('warn', function (err) {
         t.notOk(destroyed, 'emits warning until destroyed');
       })
@@ -199,9 +199,9 @@ test('\napi separately', function (t) {
 
     process.nextTick(function () {
       destroyed = true
-      api.stream.destroy()
+      stream.destroy()
 
-      t.notOk(api.stream.readable, 'stream is no longer readable after it is destroyed')
+      t.notOk(stream.readable, 'stream is no longer readable after it is destroyed')
 
       api.processEntry(processedData);
       api.handleError(nonfatalError);
