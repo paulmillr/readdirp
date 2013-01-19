@@ -65,7 +65,8 @@ Behaves as follows:
 - `emit('error')` passes a fatal `Error` which also ends the stream (i.e., when illegal options where passed)
 - `emit('end')` called when all entries were found and no more will be emitted (i.e., we are done)
 - `emit('close')` called when the stream is destroyed via `stream.destroy()` (which could be useful if you want to
-  manually abort even on a non fatal error) - no more entries, warning or errors are emitted at that point
+  manually abort even on a non fatal error) - at that point the stream is no longer `readable` and no more entries,
+  warning or errors are emitted
 - the stream is `paused` initially in order to allow `pipe` and `on` handlers be connected before data or errors are
   emitted
 - the stream is `resumed` automatically during the next event loop 

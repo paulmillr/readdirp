@@ -34,6 +34,7 @@ function createStreamAPI () {
 
   stream.destroy = function () {
     closed = true;
+    stream.readable = false;
     stream.emit('close');
   };
 

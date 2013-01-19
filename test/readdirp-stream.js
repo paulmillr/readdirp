@@ -171,7 +171,7 @@ test('\napi separately', function (t) {
   })
 
   t.test('\n# when a stream is destroyed, it emits "closed", but no longer emits "data", "warn" and "error"', function (t) {
-    t.plan(5)
+    t.plan(6)
     var api = streamapi()
       , destroyed = false
       , fatalError = new Error('fatal!')
@@ -200,6 +200,8 @@ test('\napi separately', function (t) {
     process.nextTick(function () {
       destroyed = true
       api.stream.destroy()
+
+      t.notOk(api.stream.readable, 'stream is no longer readable after it is destroyed')
 
       api.processEntry(processedData);
       api.handleError(nonfatalError);
