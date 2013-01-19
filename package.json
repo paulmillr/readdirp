@@ -2,7 +2,7 @@
   "author": "Thorsten Lorenz <thlorenz@gmx.de> (thlorenz.com)",
   "name": "readdirp",
   "description": "Recursive version of fs.readdir with streaming api.",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "homepage": "https://github.com/thlorenz/readdirp",
   "repository": {
     "type": "git",
