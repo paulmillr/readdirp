@@ -10,8 +10,12 @@ var readdirp = require('readdirp');
 
 // print out all JavaScript files along with their size
 
-readdirp({ root: path.join(__dirname), fileFilter: '*.js' })
-  .on('warn', function (err) { console.error('non-fatal error', err); })
+var stream = readdirp({ root: path.join(__dirname), fileFilter: '*.js' });
+stream
+  .on('warn', function (err) { 
+    console.error('non-fatal error', err); 
+    // optionally call stream.destroy() here in order to abort and cause 'close' to be emitted
+  })
   .on('error', function (err) { console.error('fatal error', err); })
   .pipe(es.mapSync(function (entry) { 
     return { path: entry.path, size: entry.stat.size };
@@ -60,6 +64,8 @@ Behaves as follows:
   inaccessible to the user)
 - `emit('error')` passes a fatal `Error` which also ends the stream (i.e., when illegal options where passed)
 - `emit('end')` called when all entries were found and no more will be emitted (i.e., we are done)
+- `emit('close')` called when the stream is destroyed via `stream.destroy()` (which could be useful if you want to
+  manually abort even on a non fatal error) - no more entries, warning or errors are emitted at that point
 - the stream is `paused` initially in order to allow `pipe` and `on` handlers be connected before data or errors are
   emitted
 - the stream is `resumed` automatically during the next event loop 
