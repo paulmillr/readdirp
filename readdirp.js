@@ -44,9 +44,8 @@ function readdir(opts, callback1, callback2) {
     , fileProcessed
     , allProcessed
     , realRoot
+    , aborted = false
     ;
-
-
 
   // If no callbacks were given we will use a streaming interface
   if (isUndefined(callback1)) {
@@ -56,6 +55,8 @@ function readdir(opts, callback1, callback2) {
     callback2        =  api.done;
     handleError      =  api.handleError;
     handleFatalError =  api.handleFatalError;
+
+    stream.on('close', function () { aborted = true; });
   } else {
     handleError      =  function (err) { errors.push(err); };
     handleFatalError =  function (err) {
@@ -76,7 +77,7 @@ function readdir(opts, callback1, callback2) {
   opts.root            =  opts.root            || '.';
   opts.fileFilter      =  opts.fileFilter      || function() { return true; };
   opts.directoryFilter =  opts.directoryFilter || function() { return true; };
-  opts.depth           =  typeof opts.depth === 'undefined' ? 999999999 : opts.depth
+  opts.depth           =  typeof opts.depth === 'undefined' ? 999999999 : opts.depth;
 
   if (isUndefined(callback2)) {
     fileProcessed = function() { };
@@ -147,12 +148,15 @@ function readdir(opts, callback1, callback2) {
   }
 
   function processDir(currentDir, entries, callProcessed) {
+    if (aborted) return;
     var total = entries.length
       , processed = 0
       , entryInfos = []
       ;
 
     fs.realpath(currentDir, function(err, realCurrentDir) {
+      if (aborted) return;
+
       var relDir = path.relative(realRoot, realCurrentDir);
 
       if (entries.length === 0) {
@@ -187,6 +191,7 @@ function readdir(opts, callback1, callback2) {
   }
 
   function readdirRec(currentDir, depth, callCurrentDirProcessed) {
+    if (aborted) return;
 
     fs.readdir(currentDir, function (err, entries) {
       if (err) {
