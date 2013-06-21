@@ -156,6 +156,11 @@ function readdir(opts, callback1, callback2) {
 
     fs.realpath(currentDir, function(err, realCurrentDir) {
       if (aborted) return;
+      if (err) {
+        handleError(err);
+        callProcessed(entryInfos);
+        return;
+      }
 
       var relDir = path.relative(realRoot, realCurrentDir);
 
@@ -249,7 +254,12 @@ function readdir(opts, callback1, callback2) {
 
   // If filters were valid get on with the show
   fs.realpath(opts.root, function(err, res) {
-    
+    if (err) {
+      // if we have an immediate error, bail out immediately
+      handleFatalError(err);
+      return stream;
+    }
+
     realRoot = res;
     readdirRec(opts.root, 0, function () { 
       // All errors are collected into the errors array
