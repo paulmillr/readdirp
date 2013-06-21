@@ -1,6 +1,6 @@
 'use strict';
 
-var fs        =  require('fs')
+var fs        =  require('graceful-fs')
   , path      =  require('path')
   , minimatch =  require('minimatch')
   , toString  =  Object.prototype.toString
