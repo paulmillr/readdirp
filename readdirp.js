@@ -255,7 +255,6 @@ function readdir(opts, callback1, callback2) {
   // If filters were valid get on with the show
   fs.realpath(opts.root, function(err, res) {
     if (err) {
-      // if we have an immediate error, bail out immediately
       handleFatalError(err);
       return stream;
     }
