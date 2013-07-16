@@ -27,7 +27,7 @@
   },
   "dependencies": {
     "minimatch": ">=0.2.4",
-    "graceful-fs": "~1.2.2"
+    "graceful-fs": "~2.0.0"
   },
   "devDependencies": {
     "tap": "~0.3.1",
