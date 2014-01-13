@@ -5,7 +5,7 @@
 Recursive version of [fs.readdir](http://nodejs.org/docs/latest/api/fs.html#fs_fs_readdir_path_callback). Exposes a **stream api**.
 
 ```javascript
-var readdirp = require('readdirp'); 
+var readdirp = require('readdirp')
   , path = require('path')
   , es = require('event-stream');
 
