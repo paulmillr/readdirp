@@ -83,6 +83,8 @@ Behaves as follows:
 
 - **depth**: depth at which to stop recursing even if more subdirectories are found
 
+- **lstat**: use fs.lstat instead of fs.stat
+
 ## entry info
 
 Has the following properties:
