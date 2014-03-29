@@ -34,8 +34,8 @@
     "minimatch": "~0.2.12"
   },
   "devDependencies": {
-    "through": "~2.3.4",
-    "tap": "~0.4.3"
+    "tap": "~0.4.3",
+    "through": "~2.3.4"
   },
   "optionalDependencies": {},
   "license": "MIT"

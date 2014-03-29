@@ -1,11 +1,11 @@
 /*jshint asi:true */
 
-var test     =  require('tap').test
-  , path     =  require('path')
-  , fs       =  require('fs')
-  , util     =  require('util')
-  , readdirp =  require('../readdirp.js')
-  , root     =  path.join(__dirname, '../test/bed')
+var test     = require('tap').test
+  , path     = require('path')
+  , fs       = require('fs')
+  , util     = require('util')
+  , readdirp = require('../readdirp.js')
+  , root     = path.join(__dirname, '../test/bed')
   , totalDirs          =  6
   , totalFiles         =  12
   , ext1Files          =  4
@@ -58,6 +58,15 @@ function opts (extend) {
 test('\nreading root without filter', function (t) {
   t.plan(2);
   readdirp(opts(), function (err, res) {
+    t.equals(res.directories.length, totalDirs, 'all directories');
+    t.equals(res.files.length, totalFiles, 'all files');
+    t.end();
+  }) 
+})
+
+test('\nreading root without filter using lstat', function (t) {
+  t.plan(2);
+  readdirp(opts({ lstat: true }), function (err, res) {
     t.equals(res.directories.length, totalDirs, 'all directories');
     t.equals(res.files.length, totalFiles, 'all files');
     t.end();
