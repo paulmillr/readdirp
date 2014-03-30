@@ -23,7 +23,7 @@
   ],
   "main": "readdirp.js",
   "scripts": {
-    "test-main": "tap test/*.js",
+    "test-main": "(cd test && set -e; for t in ./*.js; do node $t; done)",
     "test-0.8": "nave use 0.8 npm run test-main",
     "test-0.10": "nave use 0.10 npm run test-main",
     "test-all": "npm run test-main && npm run test-0.8 && npm run test-0.10",

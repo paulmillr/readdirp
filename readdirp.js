@@ -8,15 +8,15 @@ var fs        =  require('graceful-fs')
 
 // Standard helpers
 function isFunction (obj) {
-  return toString.call(obj) == '[object Function]';
+  return toString.call(obj) === '[object Function]';
 }
 
 function isString (obj) {
-  return toString.call(obj) == '[object String]';
+  return toString.call(obj) === '[object String]';
 }
 
 function isRegExp (obj) {
-  return toString.call(obj) == '[object RegExp]';
+  return toString.call(obj) === '[object RegExp]';
 }
 
 function isUndefined (obj) {
@@ -78,7 +78,8 @@ function readdir(opts, callback1, callback2) {
   opts.fileFilter      =  opts.fileFilter      || function() { return true; };
   opts.directoryFilter =  opts.directoryFilter || function() { return true; };
   opts.depth           =  typeof opts.depth === 'undefined' ? 999999999 : opts.depth;
-  opts.lstat           =  opts.lstat           || false
+
+  var statfn = opts.lstat === true ? fs.lstat.bind(fs) : fs.stat.bind(fs);
 
   if (isUndefined(callback2)) {
     fileProcessed = function() { };
@@ -170,11 +171,10 @@ function readdir(opts, callback1, callback2) {
       } else {
         entries.forEach(function (entry) { 
 
-          var fullPath = path.join(realCurrentDir, entry),
-            relPath  = path.join(relDir, entry),
-            statFunc = !opts.lstat ? fs.stat : fs.lstat;
+          var fullPath = path.join(realCurrentDir, entry)
+            , relPath  = path.join(relDir, entry);
 
-          statFunc(fullPath, function (err, stat) {
+          statfn(fullPath, function (err, stat) {
             if (err) {
               handleError(err);
             } else {
