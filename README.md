@@ -68,10 +68,10 @@ Behaves as follows:
 - `emit('close')` called when the stream is destroyed via `stream.destroy()` (which could be useful if you want to
   manually abort even on a non fatal error) - at that point the stream is no longer `readable` and no more entries,
   warning or errors are emitted
-- the stream is `paused` initially in order to allow `pipe` and `on` handlers be connected before data or errors are
-  emitted
-- the stream is `resumed` automatically during the next event loop 
-- to learn more about streams, consult the [stream-handbook](https://github.com/substack/stream-handbook)
+- to learn more about streams, consult the very detailed 
+  [nodejs streams documentation](http://nodejs.org/api/stream.html) or the
+  [stream-handbook](https://github.com/substack/stream-handbook)
+  
 
 ## options
     
@@ -83,7 +83,7 @@ Behaves as follows:
 
 - **depth**: depth at which to stop recursing even if more subdirectories are found
 
-- **lstat**: use fs.lstat instead of fs.stat
+- **lstat**: if `true`, readdirp uses `fs.lstat` instead of `fs.stat` in order to stat files
 
 ## entry info
 

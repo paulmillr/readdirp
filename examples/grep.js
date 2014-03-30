@@ -3,8 +3,6 @@ var readdirp =  require('..')
   , util     =  require('util')
   , fs       =  require('fs')
   , path     =  require('path')
-  , Stream   =  require('stream')
-  , tap      =  require('tap-stream')
   , es       =  require('event-stream')
   ;
 

@@ -126,6 +126,7 @@ test('\nintegrated', function (t) {
 
 test('\napi separately', function (t) {
 
+
   t.test('\n# handleError', function (t) {
     t.plan(1);
 
@@ -167,32 +168,33 @@ test('\napi separately', function (t) {
     api.handleError(nonfatalError);
     api.handleFatalError(fatalError);
   
-    process.nextTick(function () {
+    setTimeout(function () {
       resumed = true;
       api.stream.resume();
-    })
+    }, 1)
   })
 
+
   t.test('\n# when a stream is destroyed, it emits "closed", but no longer emits "data", "warn" and "error"', function (t) {
-    t.plan(6)
     var api = streamapi()
-      , destroyed = false
       , fatalError = new Error('fatal!')
       , nonfatalError = new Error('nonfatal!')
       , processedData = 'some data'
+      , plan = 0;
 
+    t.plan(6)
     var stream = api.stream
       .on('warn', function (err) {
-        t.notOk(destroyed, 'emits warning until destroyed');
+        t.ok(!stream._destroyed, 'emits warning until destroyed');
       })
       .on('error', function (err) {
-        t.notOk(destroyed, 'emits errors until destroyed');
+        t.ok(!stream._destroyed, 'emits errors until destroyed');
       })
       .on('data', function (data) {
-        t.notOk(destroyed, 'emits data until destroyed');
+        t.ok(!stream._destroyed, 'emits data until destroyed');
       })
       .on('close', function () {
-        t.ok(destroyed, 'emits close when stream is destroyed');
+        t.ok(stream._destroyed, 'emits close when stream is destroyed');
       })
     
 
@@ -200,8 +202,7 @@ test('\napi separately', function (t) {
     api.handleError(nonfatalError);
     api.handleFatalError(fatalError);
 
-    process.nextTick(function () {
-      destroyed = true
+    setTimeout(function () {
       stream.destroy()
 
       t.notOk(stream.readable, 'stream is no longer readable after it is destroyed')
@@ -212,7 +213,8 @@ test('\napi separately', function (t) {
 
       process.nextTick(function () {
         t.pass('emits no more data, warn or error events after it was destroyed')  
+        t.end();
       })
-    })
+    }, 10)
   })
 })

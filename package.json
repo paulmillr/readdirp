@@ -9,7 +9,7 @@
     "url": "git://github.com/thlorenz/readdirp.git"
   },
   "engines": {
-    "node": ">=0.8"
+    "node": ">=0.6"
   },
   "keywords": [
     "recursive",
@@ -35,7 +35,7 @@
     "readable-stream": "~1.0.26-2"
   },
   "devDependencies": {
-    "tap": "~0.4.3",
+    "tap": "~0.4.8",
     "through2": "~0.4.1"
   },
   "optionalDependencies": {},
