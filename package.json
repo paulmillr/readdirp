@@ -31,11 +31,12 @@
   },
   "dependencies": {
     "graceful-fs": "~2.0.0",
-    "minimatch": "~0.2.12"
+    "minimatch": "~0.2.12",
+    "readable-stream": "~1.0.26-2"
   },
   "devDependencies": {
     "tap": "~0.4.3",
-    "through": "~2.3.4"
+    "through2": "~0.4.1"
   },
   "optionalDependencies": {},
   "license": "MIT"

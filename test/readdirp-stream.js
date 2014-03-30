@@ -1,19 +1,21 @@
 /*jshint asi:true */
 
-var test      =  require('tap').test
-  , path      =  require('path')
-  , fs        =  require('fs')
-  , util      =  require('util')
-  , Stream    =  require('stream')
-  , through   =  require('through')
-  , streamapi =  require('../stream-api')
-  , readdirp  =  require('..')
-  , root       =  path.join(__dirname, 'bed')
-  , totalDirs  =  6
-  , totalFiles =  12
-  , ext1Files  =  4
-  , ext2Files  =  3
-  , ext3Files  =  2
+var debug           //= true;
+var test            = debug  ? function () {} : require('tap').test
+var test_           = !debug ? function () {} : require('tap').test
+  , path            = require('path')
+  , fs              = require('fs')
+  , util            = require('util')
+  , TransformStream = require('readable-stream').Transform
+  , through         = require('through2')
+  , streamapi       = require('../stream-api')
+  , readdirp        = require('..')
+  , root            = path.join(__dirname, 'bed')
+  , totalDirs       = 6
+  , totalFiles      = 12
+  , ext1Files       = 4
+  , ext2Files       = 3
+  , ext3Files       = 2
   ;
   
 // see test/readdirp.js for test bed layout
@@ -31,19 +33,17 @@ function opts (extend) {
 
 function capture () {
   var result = { entries: [], errors: [], ended: false }
-    , dst = new Stream();
+    , dst = new TransformStream({ objectMode: true });
 
-  dst.writable = true;
-  dst.readable = true;
-
-  dst.write = function (entry) {
+  dst._transform = function (entry, _, cb) {
     result.entries.push(entry);
+    cb();
   }
 
-  dst.end = function () {
+  dst._flush = function (cb) {
     result.ended = true;
-    dst.emit('data', result);
-    dst.emit('end');
+    this.push(result); 
+    cb();
   }
 
   return dst;
@@ -52,16 +52,18 @@ function capture () {
 test('\nintegrated', function (t) {
   t.test('\n# reading root without filter', function (t) {
     t.plan(2);
+
     readdirp(opts())
       .on('error', function (err) {
         t.fail('should not throw error', err);
       })
       .pipe(capture())
-      .pipe(through(
-        function (result) { 
+      .pipe(through.obj(
+        function (result, _ , cb) { 
           t.equals(result.entries.length, totalFiles, 'emits all files');
           t.ok(result.ended, 'ends stream');
           t.end();
+          cb();
         }
       ));
   })
@@ -74,11 +76,12 @@ test('\nintegrated', function (t) {
         t.fail('should not throw error', err);
       })
       .pipe(capture())
-      .pipe(through(
-        function (result) { 
+      .pipe(through.obj(
+        function (result, _ , cb) { 
           t.equals(result.entries.length, ext1Files + ext3Files, 'all ext1 and ext3 files');
           t.ok(result.ended, 'ends stream');
           t.end();
+          cb();
         }
       ))
   })
@@ -91,8 +94,8 @@ test('\nintegrated', function (t) {
         t.fail('should not throw error', err);
       })
       .pipe(capture())
-      .pipe(through(
-        function (result) { 
+      .pipe(through.obj(
+        function (result, _ , cb) { 
           t.equals(result.entries.length, totalFiles - ext1Files - ext3Files, 'all but ext1 and ext3 files');
           t.ok(result.ended, 'ends stream');
           t.end();
