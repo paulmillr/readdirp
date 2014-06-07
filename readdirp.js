@@ -216,16 +216,16 @@ function readdir(opts, callback1, callback2) {
         subdirs.forEach(function (di) { 
           if(opts.entryType === 'directories' || opts.entryType === 'both'){
             fileProcessed(di);
-		  }
-		  readdirResult.directories.push(di); 
+          }
+          readdirResult.directories.push(di); 
         });
 
         entryInfos
           .filter(function(ei) { return ei.stat.isFile() && opts.fileFilter(ei); })
           .forEach(function (fi) { 
             if(opts.entryType === 'files' || opts.entryType === 'both'){
-			  fileProcessed(fi);
-			}
+              fileProcessed(fi);
+            }
             readdirResult.files.push(fi); 
           });
 
