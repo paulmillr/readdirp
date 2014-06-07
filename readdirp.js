@@ -78,6 +78,7 @@ function readdir(opts, callback1, callback2) {
   opts.fileFilter      =  opts.fileFilter      || function() { return true; };
   opts.directoryFilter =  opts.directoryFilter || function() { return true; };
   opts.depth           =  typeof opts.depth === 'undefined' ? 999999999 : opts.depth;
+  opts.entryType       =  opts.entryType       || 'files';
 
   var statfn = opts.lstat === true ? fs.lstat.bind(fs) : fs.stat.bind(fs);
 
@@ -213,13 +214,18 @@ function readdir(opts, callback1, callback2) {
           .filter(function (ei) { return ei.stat.isDirectory() && opts.directoryFilter(ei); });
 
         subdirs.forEach(function (di) { 
+          if(opts.entryType === 'directories' || opts.entryType === 'both'){
+            fileProcessed(di);
+          }
           readdirResult.directories.push(di); 
         });
 
         entryInfos
           .filter(function(ei) { return ei.stat.isFile() && opts.fileFilter(ei); })
           .forEach(function (fi) { 
-            fileProcessed(fi);
+            if(opts.entryType === 'files' || opts.entryType === 'both'){
+              fileProcessed(fi);
+            }
             readdirResult.files.push(fi); 
           });
 
