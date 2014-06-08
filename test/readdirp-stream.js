@@ -86,6 +86,96 @@ test('\nintegrated', function (t) {
       ))
   })
 
+  t.test('\n# files only', function (t) {
+    t.plan(2);
+
+    readdirp(opts( { entryType: 'files' } ))
+      .on('error', function (err) {
+        t.fail('should not throw error', err);
+      })
+      .pipe(capture())
+      .pipe(through.obj(
+        function (result, _ , cb) { 
+          t.equals(result.entries.length, totalFiles, 'returned files');
+          t.ok(result.ended, 'ends stream');
+          t.end();
+          cb();
+        }
+      ))
+  })
+
+  t.test('\n# directories only', function (t) {
+    t.plan(2);
+
+    readdirp(opts( { entryType: 'directories' } ))
+      .on('error', function (err) {
+        t.fail('should not throw error', err);
+      })
+      .pipe(capture())
+      .pipe(through.obj(
+        function (result, _ , cb) { 
+          t.equals(result.entries.length, totalDirs, 'returned directories');
+          t.ok(result.ended, 'ends stream');
+          t.end();
+          cb();
+        }
+      ))
+  })
+
+  t.test('\n# both directories + files', function (t) {
+    t.plan(2);
+
+    readdirp(opts( { entryType: 'both' } ))
+      .on('error', function (err) {
+        t.fail('should not throw error', err);
+      })
+      .pipe(capture())
+      .pipe(through.obj(
+        function (result, _ , cb) { 
+          t.equals(result.entries.length, totalDirs + totalFiles, 'returned everything');
+          t.ok(result.ended, 'ends stream');
+          t.end();
+          cb();
+        }
+      ))
+  })
+
+  t.test('\n# directory filter with directories only', function (t) {
+    t.plan(2);
+
+    readdirp(opts( { entryType: 'directories', directoryFilter: [ 'root_dir1', '*dir1_subdir1' ] } ))
+      .on('error', function (err) {
+        t.fail('should not throw error', err);
+      })
+      .pipe(capture())
+      .pipe(through.obj(
+        function (result, _ , cb) {
+          t.equals(result.entries.length, 2, 'two directories');
+          t.ok(result.ended, 'ends stream');
+          t.end();
+          cb();
+        }
+      ))
+  })
+
+  t.test('\n# directory and file filters with both entries', function (t) {
+    t.plan(2);
+
+    readdirp(opts( { entryType: 'both', directoryFilter: [ 'root_dir1', '*dir1_subdir1' ], fileFilter: [ '!*.ext1' ] } ))
+      .on('error', function (err) {
+        t.fail('should not throw error', err);
+      })
+      .pipe(capture())
+      .pipe(through.obj(
+        function (result, _ , cb) {
+          t.equals(result.entries.length, 6, '2 directories and 4 files');
+          t.ok(result.ended, 'ends stream');
+          t.end();
+          cb();
+        }
+      ))
+  })
+
   t.test('\n# negated: ["!*.ext1", "!*.ext3"]', function (t) {
     t.plan(2);
 
