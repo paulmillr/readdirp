@@ -214,7 +214,7 @@ function readdir(opts, callback1, callback2) {
           .filter(function (ei) { return ei.stat.isDirectory() && opts.directoryFilter(ei); });
 
         subdirs.forEach(function (di) { 
-          if(opts.entryType === 'directories' || opts.entryType === 'both'){
+          if(opts.entryType === 'directories' || opts.entryType === 'both') {
             fileProcessed(di);
           }
           readdirResult.directories.push(di); 
