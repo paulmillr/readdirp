@@ -221,7 +221,9 @@ function readdir(opts, callback1, callback2) {
         });
 
         entryInfos
-          .filter(function(ei) { return ei.stat.isFile() && opts.fileFilter(ei); })
+          .filter(function(ei) {
+            return (ei.stat.isFile() || ei.stat.isSymbolicLink()) && opts.fileFilter(ei);
+          })
           .forEach(function (fi) { 
             if(opts.entryType === 'files' || opts.entryType === 'both'){
               fileProcessed(fi);
