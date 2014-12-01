@@ -17,7 +17,7 @@ var test     = require('tap').test
   , depth0Files        =  3
   ;
 
-/* 
+/*
 Structure of test bed:
     .
     ├── root_dir1
@@ -61,7 +61,7 @@ test('\nreading root without filter', function (t) {
     t.equals(res.directories.length, totalDirs, 'all directories');
     t.equals(res.files.length, totalFiles, 'all files');
     t.end();
-  }) 
+  })
 })
 
 test('\nreading root without filter using lstat', function (t) {
@@ -70,7 +70,20 @@ test('\nreading root without filter using lstat', function (t) {
     t.equals(res.directories.length, totalDirs, 'all directories');
     t.equals(res.files.length, totalFiles, 'all files');
     t.end();
-  }) 
+  })
+})
+
+test('\nreading root with symlinks using lstat', function (t) {
+  t.plan(2);
+  fs.symlinkSync(path.join(root, 'root_dir1'), path.join(root, 'dirlink'));
+  fs.symlinkSync(path.join(root, 'root_file1.ext1'), path.join(root, 'link.ext1'));
+  readdirp(opts({ lstat: true }), function (err, res) {
+    t.equals(res.directories.length, totalDirs, 'all directories');
+    t.equals(res.files.length, totalFiles + 2, 'all files + symlinks');
+    fs.unlinkSync(path.join(root, 'dirlink'));
+    fs.unlinkSync(path.join(root, 'link.ext1'));
+    t.end();
+  })
 })
 
 test('\nreading root using glob filter', function (t) {
@@ -162,7 +175,7 @@ test('\n\nreading root using function filter', function (t) {
       }
     )
   })
-  
+
   t.test('\n# directory filter -> "name has length 9"', function (t) {
     t.plan(1);
     readdirp(
@@ -200,10 +213,10 @@ test('\nprogress callbacks', function (t) {
     , processedFiles = [];
 
   readdirp(
-      opts() 
-    , function(fi) { 
+      opts()
+    , function(fi) {
         processedFiles.push(fi);
-      } 
+      }
     , function (err, res) {
         t.equals(processedFiles.length, res.files.length, 'calls back for each file processed');
         t.deepEquals(processedFiles.map(pluckName).sort(),res.files.map(pluckName).sort(), 'same file names');
@@ -213,13 +226,13 @@ test('\nprogress callbacks', function (t) {
 })
 
 test('resolving of name, full and relative paths', function (t) {
-  var expected = {  
+  var expected = {
         name          :  'root_dir1_file1.ext1'
       , parentDirName :  'root_dir1'
       , path          :  'root_dir1/root_dir1_file1.ext1'
       , fullPath      :  'test/bed/root_dir1/root_dir1_file1.ext1'
       }
-    , opts = [ 
+    , opts = [
         { root: './bed'          ,  prefix: ''     }
       , { root: './bed/'         ,  prefix: ''     }
       , { root: 'bed'            ,  prefix: ''     }
@@ -228,7 +241,7 @@ test('resolving of name, full and relative paths', function (t) {
       , { root: '.'              ,  prefix: 'bed'  }
     ]
   t.plan(opts.length);
-  
+
   opts.forEach(function (op) {
     op.fileFilter = 'root_dir1_file1.ext1';
 
