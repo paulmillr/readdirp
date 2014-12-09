@@ -4,6 +4,7 @@ var test     = require('tap').test
   , path     = require('path')
   , fs       = require('fs')
   , util     = require('util')
+  , net      = require('net')
   , readdirp = require('../readdirp.js')
   , root     = path.join(__dirname, '../test/bed')
   , totalDirs          =  6
@@ -84,6 +85,20 @@ test('\nreading root with symlinks using lstat', function (t) {
     fs.unlinkSync(path.join(root, 'link.ext1'));
     t.end();
   })
+})
+
+test('\nreading non-standard fds', function (t) {
+  t.plan(2);
+  var server = net.createServer().listen(path.join(root, 'test.sock'), function(){
+    readdirp(opts({ entryType: 'all' }), function (err, res) {
+      t.equals(res.files.length, totalFiles + 1, 'all files + socket');
+      readdirp(opts({ entryType: 'both' }), function (err, res) {
+        t.equals(res.files.length, totalFiles, 'all regular files only');
+        server.close();
+        t.end();
+      })
+    })
+  });
 })
 
 test('\nreading root using glob filter', function (t) {

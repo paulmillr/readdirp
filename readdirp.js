@@ -213,8 +213,8 @@ function readdir(opts, callback1, callback2) {
         var subdirs = entryInfos
           .filter(function (ei) { return ei.stat.isDirectory() && opts.directoryFilter(ei); });
 
-        subdirs.forEach(function (di) { 
-          if(opts.entryType === 'directories' || opts.entryType === 'both') {
+        subdirs.forEach(function (di) {
+          if(opts.entryType === 'directories' || opts.entryType === 'both' || opts.entryType === 'all') {
             fileProcessed(di);
           }
           readdirResult.directories.push(di); 
@@ -222,10 +222,12 @@ function readdir(opts, callback1, callback2) {
 
         entryInfos
           .filter(function(ei) {
-            return (ei.stat.isFile() || ei.stat.isSymbolicLink()) && opts.fileFilter(ei);
+            var isCorrectType = opts.entryType === 'all' ?
+              !ei.stat.isDirectory() : ei.stat.isFile() || ei.stat.isSymbolicLink();
+            return isCorrectType && opts.fileFilter(ei);
           })
-          .forEach(function (fi) { 
-            if(opts.entryType === 'files' || opts.entryType === 'both'){
+          .forEach(function (fi) {
+            if(opts.entryType === 'files' || opts.entryType === 'both' || opts.entryType === 'all') {
               fileProcessed(fi);
             }
             readdirResult.files.push(fi); 
