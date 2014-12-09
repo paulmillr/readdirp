@@ -83,9 +83,9 @@ Behaves as follows:
 
 - **depth**: depth at which to stop recursing even if more subdirectories are found
 
-- **entryType**: determines if data events on the stream should be emitted for `'files'`, `'directories'` or `'both'`. Defaults to `'files'`.
+- **entryType**: determines if data events on the stream should be emitted for `'files'`, `'directories'`, `'both'`, or `'all'`. Setting to `'all'` will also include entries for other types of file descriptors like character devices, unix sockets and named pipes. Defaults to `'files'`.
 
-- **lstat**: if `true`, readdirp uses `fs.lstat` instead of `fs.stat` in order to stat files
+- **lstat**: if `true`, readdirp uses `fs.lstat` instead of `fs.stat` in order to stat files and includes symlink entries in the stream along with files.
 
 ## entry info
 
