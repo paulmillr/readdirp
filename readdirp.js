@@ -214,7 +214,7 @@ function readdir(opts, callback1, callback2) {
           .filter(function (ei) { return ei.stat.isDirectory() && opts.directoryFilter(ei); });
 
         subdirs.forEach(function (di) {
-          if(opts.entryType in {directories: 1, both: 1, all: 1}) {
+          if(opts.entryType === 'directories' || opts.entryType === 'both' || opts.entryType === 'all') {
             fileProcessed(di);
           }
           readdirResult.directories.push(di); 
@@ -227,7 +227,7 @@ function readdir(opts, callback1, callback2) {
             return isCorrectType && opts.fileFilter(ei);
           })
           .forEach(function (fi) {
-            if(opts.entryType in {files: 1, both: 1, all: 1}){
+            if(opts.entryType === 'files' || opts.entryType === 'both' || opts.entryType === 'all') {
               fileProcessed(fi);
             }
             readdirResult.files.push(fi); 
