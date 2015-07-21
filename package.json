@@ -30,7 +30,7 @@
     "test": "if [ -e $TRAVIS ]; then npm run test-all; else npm run test-main; fi"
   },
   "dependencies": {
-    "graceful-fs": "~2.0.0",
+    "graceful-fs": "~4.1.2",
     "minimatch": "~0.2.12",
     "readable-stream": "~1.0.26-2"
   },
