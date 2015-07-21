@@ -26,7 +26,9 @@
     "test-main": "(cd test && set -e; for t in ./*.js; do node $t; done)",
     "test-0.8": "nave use 0.8 npm run test-main",
     "test-0.10": "nave use 0.10 npm run test-main",
-    "test-all": "npm run test-main && npm run test-0.8 && npm run test-0.10",
+    "test-0.12": "nave use 0.12 npm run test-main",
+    "test-2.4": "nave use 2.4 npm run test-main",
+    "test-all": "npm run test-main && npm run test-0.8 && npm run test-0.10 && npm run test-0.12 && npm run test-2.4",
     "test": "if [ -e $TRAVIS ]; then npm run test-all; else npm run test-main; fi"
   },
   "dependencies": {
@@ -35,6 +37,7 @@
     "readable-stream": "~1.0.26-2"
   },
   "devDependencies": {
+    "nave": "~0.5.1",
     "tap": "~0.4.8",
     "through2": "~0.4.1"
   },
