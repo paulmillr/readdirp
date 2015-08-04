@@ -4,3 +4,5 @@ node_js:
   - "0.10"
   - "0.12"
   - "iojs-v2.4"
+before_install:
+  -  if [ "$TRAVIS_NODE_VERSION" == "0.8" ]; then npm update -g npm; fi
