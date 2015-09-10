@@ -1,7 +1,6 @@
 'use strict';
 
-var si = typeof setImmediate !== 'undefined' ? setImmediate : function (fn) { setTimeout(fn, 0) };
-
+var si =  require('set-immediate-shim')
 var stream = require('readable-stream');
 var util = require('util');
 
