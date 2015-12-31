@@ -252,16 +252,19 @@ test('\napi separately', function (t) {
         t.equals(data, processedData, 'emits the buffered data');
         t.ok(resumed, 'emits data only after it was resumed');
       })
-      .pause()
     
-    api.processEntry(processedData);
-    api.handleError(nonfatalError);
-    api.handleFatalError(fatalError);
+    process.nextTick(function() {
+      api.stream.pause();
+
+      api.processEntry(processedData);
+      api.handleError(nonfatalError);
+      api.handleFatalError(fatalError);
   
-    setTimeout(function () {
-      resumed = true;
-      api.stream.resume();
-    }, 1)
+      setTimeout(function () {
+        resumed = true;
+        api.stream.resume();
+      }, 1)
+    })
   })
 
 
