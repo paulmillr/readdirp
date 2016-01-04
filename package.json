@@ -22,6 +22,10 @@
     "filter"
   ],
   "main": "readdirp.js",
+  "files": [
+    "readdirp.js",
+    "stream-api.js"
+  ],
   "scripts": {
     "test-main": "(cd test && set -e; for t in ./*.js; do node $t; done)",
     "test-0.8": "nave use 0.8 npm run test-main",
