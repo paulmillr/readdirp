@@ -1,4 +1,4 @@
-# readdirp [![Build Status](https://secure.travis-ci.org/thlorenz/readdirp.png)](http://travis-ci.org/thlorenz/readdirp)
+# readdirp [![Build Status](https://secure.travis-ci.org/thlorenz/readdirp.svg)](http://travis-ci.org/thlorenz/readdirp)
 
 [![NPM](https://nodei.co/npm/readdirp.png?downloads=true&stars=true)](https://nodei.co/npm/readdirp/)
 
