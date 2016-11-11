@@ -17,10 +17,6 @@ function isString (obj) {
   return toString.call(obj) === '[object String]';
 }
 
-function isRegExp (obj) {
-  return toString.call(obj) === '[object RegExp]';
-}
-
 function isUndefined (obj) {
   return obj === void 0;
 }
@@ -37,7 +33,6 @@ function readdir(opts, callback1, callback2) {
   var stream
     , handleError
     , handleFatalError
-    , pending = 0
     , errors = []
     , readdirResult = {
         directories: []
