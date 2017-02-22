@@ -132,11 +132,7 @@ Directories that do not pass a filter will not be recursed into.
 
 Although the stream api is recommended, readdirp also exposes a callback based api.
 
-***readdirp (options, callback1 [, callback2])***
-
-If callback2 is given, callback1 functions as the **fileProcessed** callback, and callback2 as the **allProcessed** callback.
-
-If only callback1 is given, it functions as the **allProcessed** callback.
+***readdirp (options [, fileProcessed], allProcessed)***
 
 ### allProcessed 
 
