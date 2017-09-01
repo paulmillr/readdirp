@@ -115,7 +115,7 @@ There are three different ways to specify filters for files and directories resp
 - **glob string**: a string (e.g., `*.js`) which is matched using [minimatch](https://github.com/isaacs/minimatch), so go there for more
     information. 
 
-    Globstars (`**`) are not supported since specifiying a recursive pattern for an already recursive function doesn't make sense.
+    Globstars (`**`) are not supported since specifying a recursive pattern for an already recursive function doesn't make sense.
 
     Negated globs (as explained in the minimatch documentation) are allowed, e.g., `!*.txt` matches everything but text files.
 
