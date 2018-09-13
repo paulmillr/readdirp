@@ -37,7 +37,7 @@
   },
   "dependencies": {
     "graceful-fs": "^4.1.2",
-    "minimatch": "^3.0.2",
+    "micromatch": "^3.1.10",
     "readable-stream": "^2.0.2",
     "set-immediate-shim": "^1.0.1"
   },

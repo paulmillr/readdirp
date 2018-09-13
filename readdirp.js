@@ -2,7 +2,7 @@
 
 var fs        =  require('graceful-fs')
   , path      =  require('path')
-  , minimatch =  require('minimatch')
+  , micromatch =  require('micromatch').isMatch
   , toString  =  Object.prototype.toString
   , si        =  require('set-immediate-shim')
   ;
@@ -124,7 +124,7 @@ function readdir(opts, callback1, callback2) {
     } else if (isString(filter)) {
 
       return function (entryInfo) {
-        return minimatch(entryInfo.name, filter.trim());
+        return micromatch(entryInfo.name, filter.trim());
       };
 
     } else if (filter && Array.isArray(filter)) {
@@ -137,14 +137,14 @@ function readdir(opts, callback1, callback2) {
         // use AND to concat multiple negated filters
         function (entryInfo) {
           return filter.every(function (f) {
-            return minimatch(entryInfo.name, f);
+            return micromatch(entryInfo.name, f);
           });
         }
         :
         // use OR to concat multiple inclusive filters
         function (entryInfo) {
           return filter.some(function (f) {
-            return minimatch(entryInfo.name, f);
+            return micromatch(entryInfo.name, f);
           });
         };
     }
