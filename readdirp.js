@@ -4,7 +4,6 @@ var fs        =  require('graceful-fs')
   , path      =  require('path')
   , micromatch =  require('micromatch').isMatch
   , toString  =  Object.prototype.toString
-  , si        =  require('set-immediate-shim')
   ;
 
 
@@ -202,7 +201,7 @@ function readdir(opts, callback1, callback2) {
     var args = arguments;
     if (aborted) return;
     if (paused) {
-      si(function () {
+      setImmediate(function () {
         readdirRec.apply(null, args);
       })
       return;
