@@ -2,14 +2,14 @@
   "author": "Thorsten Lorenz <thlorenz@gmx.de> (thlorenz.com)",
   "name": "readdirp",
   "description": "Recursive version of fs.readdir with streaming api.",
-  "version": "2.2.0",
+  "version": "2.2.1",
   "homepage": "https://github.com/paulmillr/readdirp",
   "repository": {
     "type": "git",
     "url": "git://github.com/paulmillr/readdirp.git"
   },
   "engines": {
-    "node": ">=0.6"
+    "node": ">=0.10"
   },
   "files": [
     "readdirp.js",
@@ -36,7 +36,7 @@
     "test": "npm run test-main"
   },
   "dependencies": {
-    "graceful-fs": "^4.1.2",
+    "graceful-fs": "^4.1.11",
     "micromatch": "^3.1.10",
     "readable-stream": "^2.0.2"
   },
