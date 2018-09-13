@@ -18,7 +18,7 @@ var test_           = !debug ? function () {} : require('tap').test
   , ext2Files       = 3
   , ext3Files       = 2
   ;
-  
+
 // see test/readdirp.js for test bed layout
 
 function opts (extend) {
@@ -43,7 +43,7 @@ function capture () {
 
   dst._flush = function (cb) {
     result.ended = true;
-    this.push(result); 
+    this.push(result);
     cb();
   }
 
@@ -60,7 +60,7 @@ test('\nintegrated', function (t) {
       })
       .pipe(capture())
       .pipe(through.obj(
-        function (result, _ , cb) { 
+        function (result, _ , cb) {
           t.equals(result.entries.length, totalFiles, 'emits all files');
           t.ok(result.ended, 'ends stream');
           t.end();
@@ -78,7 +78,7 @@ test('\nintegrated', function (t) {
       })
       .pipe(capture())
       .pipe(through.obj(
-        function (result, _ , cb) { 
+        function (result, _ , cb) {
           t.equals(result.entries.length, ext1Files + ext3Files, 'all ext1 and ext3 files');
           t.ok(result.ended, 'ends stream');
           t.end();
@@ -96,7 +96,7 @@ test('\nintegrated', function (t) {
       })
       .pipe(capture())
       .pipe(through.obj(
-        function (result, _ , cb) { 
+        function (result, _ , cb) {
           t.equals(result.entries.length, totalFiles, 'returned files');
           t.ok(result.ended, 'ends stream');
           t.end();
@@ -114,7 +114,7 @@ test('\nintegrated', function (t) {
       })
       .pipe(capture())
       .pipe(through.obj(
-        function (result, _ , cb) { 
+        function (result, _ , cb) {
           t.equals(result.entries.length, totalDirs, 'returned directories');
           t.ok(result.ended, 'ends stream');
           t.end();
@@ -132,7 +132,7 @@ test('\nintegrated', function (t) {
       })
       .pipe(capture())
       .pipe(through.obj(
-        function (result, _ , cb) { 
+        function (result, _ , cb) {
           t.equals(result.entries.length, totalDirs + totalFiles, 'returned everything');
           t.ok(result.ended, 'ends stream');
           t.end();
@@ -186,7 +186,7 @@ test('\nintegrated', function (t) {
       })
       .pipe(capture())
       .pipe(through.obj(
-        function (result, _ , cb) { 
+        function (result, _ , cb) {
           t.equals(result.entries.length, totalFiles - ext1Files - ext3Files, 'all but ext1 and ext3 files');
           t.ok(result.ended, 'ends stream');
           t.end();
@@ -253,11 +253,11 @@ test('\napi separately', function (t) {
         t.ok(resumed, 'emits data only after it was resumed');
       })
       .pause()
-    
+
     api.processEntry(processedData);
     api.handleError(nonfatalError);
     api.handleFatalError(fatalError);
-  
+
     setTimeout(function () {
       resumed = true;
       api.stream.resume();
@@ -314,7 +314,7 @@ test('\napi separately', function (t) {
       .on('close', function () {
         t.ok(stream._destroyed, 'emits close when stream is destroyed');
       })
-    
+
 
     api.processEntry(processedData);
     api.handleError(nonfatalError);
@@ -330,7 +330,7 @@ test('\napi separately', function (t) {
       api.handleFatalError(fatalError);
 
       process.nextTick(function () {
-        t.pass('emits no more data, warn or error events after it was destroyed')  
+        t.pass('emits no more data, warn or error events after it was destroyed')
         t.end();
       })
     }, 10)
