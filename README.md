@@ -187,44 +187,15 @@ readdirp({ root: './test/bed', depth: 1 })
   });
 
 // callback api
-readdirp(
-    { root: '.' }
-  , function(fileInfo) {
-      // do something with file entry here
-    }
-  , function (err, res) {
-      // all done, move on or do final step for all file entries here
-    }
-);
+readdirp({ root: '.' }, function(fileInfo) {
+   // do something with file entry here
+  }, function (err, res) {
+    // all done, move on or do final step for all file entries here
+});
 ```
 
 Try more examples by following [instructions](https://github.com/paulmillr/readdirp/blob/master/examples/Readme.md)
 on how to get going.
-
-## stream api
-
-[stream-api.js](https://github.com/paulmillr/readdirp/blob/master/examples/stream-api.js)
-
-Demonstrates error and data handling by listening to events emitted from the readdirp stream.
-
-## stream api pipe
-
-[stream-api-pipe.js](https://github.com/paulmillr/readdirp/blob/master/examples/stream-api-pipe.js)
-
-Demonstrates error handling by listening to events emitted from the readdirp stream and how to pipe the data stream into
-another destination stream.
-
-## grep
-
-[grep.js](https://github.com/paulmillr/readdirp/blob/master/examples/grep.js)
-
-Very naive implementation of grep, for demonstration purposes only.
-
-## using callback api
-
-[callback-api.js](https://github.com/paulmillr/readdirp/blob/master/examples/callback-api.js)
-
-Shows how to pass callbacks in order to handle errors and/or data.
 
 ## tests
 
