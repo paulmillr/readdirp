@@ -3,10 +3,10 @@
   "name": "readdirp",
   "description": "Recursive version of fs.readdir with streaming api.",
   "version": "2.1.0",
-  "homepage": "https://github.com/thlorenz/readdirp",
+  "homepage": "https://github.com/paulmillr/readdirp",
   "repository": {
     "type": "git",
-    "url": "git://github.com/thlorenz/readdirp.git"
+    "url": "git://github.com/paulmillr/readdirp.git"
   },
   "engines": {
     "node": ">=0.6"

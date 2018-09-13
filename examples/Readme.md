@@ -12,26 +12,26 @@ At that point you can run the examples with node, i.e., `node grep`.
 
 ## stream api
 
-[stream-api.js](https://github.com/thlorenz/readdirp/blob/master/examples/stream-api.js)
+[stream-api.js](https://github.com/paulmillr/readdirp/blob/master/examples/stream-api.js)
 
 Demonstrates error and data handling by listening to events emitted from the readdirp stream.
 
 ## stream api pipe
 
-[stream-api-pipe.js](https://github.com/thlorenz/readdirp/blob/master/examples/stream-api-pipe.js)
+[stream-api-pipe.js](https://github.com/paulmillr/readdirp/blob/master/examples/stream-api-pipe.js)
 
 Demonstrates error handling by listening to events emitted from the readdirp stream and how to pipe the data stream into
 another destination stream.
 
 ## grep
 
-[grep.js](https://github.com/thlorenz/readdirp/blob/master/examples/grep.js)
+[grep.js](https://github.com/paulmillr/readdirp/blob/master/examples/grep.js)
 
 Very naive implementation of grep, for demonstration purposes only.
 
 ## using callback api
 
-[callback-api.js](https://github.com/thlorenz/readdirp/blob/master/examples/callback-api.js)
+[callback-api.js](https://github.com/paulmillr/readdirp/blob/master/examples/callback-api.js)
 
 Shows how to pass callbacks in order to handle errors and/or data.
 
