@@ -3,6 +3,7 @@
 var fs        =  require('graceful-fs')
   , path      =  require('path')
   , micromatch =  require('micromatch').isMatch
+  , sapi       = require('./stream-api')
   , toString  =  Object.prototype.toString
   ;
 
@@ -46,7 +47,7 @@ function readdir(opts, callback1, callback2) {
 
   // If no callbacks were given we will use a streaming interface
   if (isUndefined(callback1)) {
-    var api          =  require('./stream-api')();
+    var api          =  sapi();
     stream           =  api.stream;
     callback1        =  api.processEntry;
     callback2        =  api.done;
