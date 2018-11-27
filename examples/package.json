@@ -4,6 +4,6 @@
   "description": "Examples for readdirp.",
   "dependencies": {
     "tap-stream": "~0.1.0",
-    "event-stream": "~3.0.7"
+    "event-stream": "3.0.7"
   }
 }
