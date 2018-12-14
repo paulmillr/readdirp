@@ -39,7 +39,7 @@ entryInfoStream
     objectMode: true,
     transform(entryInfo, encoding, callback) {
       // Turn each entry info into a string with a line break
-      this.push(JSON.stringify(entryInfo).concat(EOL));
+      this.push(`${JSON.stringify(entryInfo)}${EOL}`);
       callback();
     },
   }))
