@@ -5,23 +5,44 @@
 Recursive version of [fs.readdir](http://nodejs.org/docs/latest/api/fs.html#fs_fs_readdir_path_callback). Exposes a **stream api**.
 
 ```javascript
-var readdirp = require('readdirp')
-  , path = require('path')
-  , es = require('event-stream');
+const path = require('path');
+const { EOL } = require('os');
+const { Transform } = require('stream');
+const readdirp = require('readdirp');
 
-// print out all JavaScript files along with their size
+/*
+ * Print out all JavaScript files within the current folder and
+ * subfolders along with their size.
+ */
 
-var stream = readdirp({ root: path.join(__dirname), fileFilter: '*.js' });
-stream
-  .on('warn', function (err) {
+const entryInfoStream = readdirp({
+  root: path.join(__dirname),
+  fileFilter: '*.js',
+});
+
+entryInfoStream
+  .on('warn', (err) => {
     console.error('non-fatal error', err);
-    // optionally call stream.destroy() here in order to abort and cause 'close' to be emitted
+    // Optionally call stream.destroy() here in order to abort and cause 'close' to be emitted
   })
-  .on('error', function (err) { console.error('fatal error', err); })
-  .pipe(es.mapSync(function (entry) {
-    return { path: entry.path, size: entry.stat.size };
+  .on('error', err => console.error('fatal error', err))
+  .on('end', () => console.log('done'))
+  .pipe(new Transform({
+    objectMode: true,
+    transform(entryInfo, encoding, callback) {
+      // Turn each entry info into a more simplified representation
+      this.push({ path: entryInfo.path, size: entryInfo.stat.size });
+      callback();
+    },
   }))
-  .pipe(es.stringify())
+  .pipe(new Transform({
+    objectMode: true,
+    transform(entryInfo, encoding, callback) {
+      // Turn each entry info into a string with a line break
+      this.push(`${JSON.stringify(entryInfo)}${EOL}`);
+      callback();
+    },
+  }))
   .pipe(process.stdout);
 ```
 
