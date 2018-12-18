@@ -20,15 +20,6 @@ const entryInfoStream = readdirp({
   fileFilter: '*.js',
 });
 
-// Quick synchronous helper for Transform.
-const streamMap = (handler) => new Transform({
-  objectMode: true,
-  transform(entryInfo, encoding, callback) {
-    handler(entryInfo);
-    callback();
-  }
-});
-
 entryInfoStream
   .on('warn', (err) => {
     console.error('non-fatal error', err);
@@ -36,13 +27,21 @@ entryInfoStream
   })
   .on('error', err => console.error('fatal error', err))
   .on('end', () => console.log('done'))
-  .pipe(streamMap(entry => {
-    // Turn each entry info into a more simplified representation
-    this.push({ path: entryInfo.path, size: entryInfo.stat.size });
+  .pipe(new Transform({
+    objectMode: true,
+    transform(entryInfo, encoding, callback) {
+      // Turn each entry info into a more simplified representation
+      this.push({ path: entryInfo.path, size: entryInfo.stat.size });
+      callback();
+    },
   }))
-  .pipe(streamMap(entry => {
-    // Stringify output, pretty-print.
-    this.push(`${JSON.stringify(entryInfo)}${EOL}`);
+  .pipe(new Transform({
+    objectMode: true,
+    transform(entryInfo, encoding, callback) {
+      // Turn each entry info into a string with a line break
+      this.push(`${JSON.stringify(entryInfo)}${EOL}`);
+      callback();
+    },
   }))
   .pipe(process.stdout);
 ```
