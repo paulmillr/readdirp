@@ -11,7 +11,7 @@ const readdirp = require('readdirp');
 readdirp({root: '.'}, function(file) {
     console.log(file);
   }, function (error, files) {
-    console.log(files;)
+    console.log(files);
 });
 
 // Streams example.
