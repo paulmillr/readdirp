@@ -8,10 +8,8 @@ Recursive version of [fs.readdir](http://nodejs.org/docs/latest/api/fs.html#fs_f
 const readdirp = require('readdirp');
 
 // Basic example.
-readdirp({root: '.'}, function(file) {
-    console.log(file);
-  }, function (error, files) {
-    console.log(files);
+readdirp({root: '.'}, (file => console.log(file)), (error, files) => {
+  console.log(files);
 });
 
 // Streams example.
@@ -183,38 +181,38 @@ var readdirp = require('readdirp');
 
 // Glob file filter
 readdirp({ root: './test/bed', fileFilter: '*.js' })
-  .on('data', function (entry) {
+  .on('data', (entry) => {
     // do something with each JavaScript file entry
   });
 
 // Combined glob file filters
 readdirp({ root: './test/bed', fileFilter: [ '*.js', '*.json' ] })
-  .on('data', function (entry) {
+  .on('data', (entry) => {
     // do something with each JavaScript and Json file entry
   });
 
 // Combined negated directory filters
 readdirp({ root: './test/bed', directoryFilter: [ '!.git', '!*modules' ] })
-  .on('data', function (entry) {
+  .on('data', (entry) => {
     // do something with each file entry found outside '.git' or any modules directory
   });
 
 // Function directory filter
-readdirp({ root: './test/bed', directoryFilter: function (di) { return di.name.length === 9; } })
-  .on('data', function (entry) {
+readdirp({ root: './test/bed', directoryFilter: (di) => { return di.name.length === 9; } })
+  .on('data', (entry) => {
     // do something with each file entry found inside directories whose name has length 9
   });
 
 // Limiting depth
 readdirp({ root: './test/bed', depth: 1 })
-  .on('data', function (entry) {
+  .on('data', (entry) => {
     // do something with each file entry found up to 1 subdirectory deep
   });
 
 // callback api
-readdirp({ root: '.' }, function(fileInfo) {
+readdirp({ root: '.' }, (fileInfo) => {
    // do something with file entry here
-  }, function (err, res) {
+  }, (err, res) => {
     // all done, move on or do final step for all file entries here
 });
 ```
