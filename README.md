@@ -5,27 +5,32 @@
 Recursive version of [fs.readdir](http://nodejs.org/docs/latest/api/fs.html#fs_fs_readdir_path_callback). Exposes a **stream api**.
 
 ```javascript
-const path = require('path');
-const { EOL } = require('os');
-const { Transform } = require('stream');
 const readdirp = require('readdirp');
 
-/*
- * Print out all JavaScript files within the current folder and
- * subfolders along with their size.
- */
+// Basic example.
+readdirp({root: '.'}, function(file) {
+    console.log(file);
+  }, function (error, files) {
+    console.log(files;)
+});
 
+// Streams example.
+// Print out all JavaScript files within
+// the current folder and subfolders along with their size.
+
+const { EOL } = require('os');
+const { Transform } = require('stream');
 const entryInfoStream = readdirp({
-  root: path.join(__dirname),
+  root: __dirname,
   fileFilter: '*.js',
 });
 
 entryInfoStream
-  .on('warn', (err) => {
-    console.error('non-fatal error', err);
+  .on('warn', (error) => {
+    console.error('non-fatal error', error);
     // Optionally call stream.destroy() here in order to abort and cause 'close' to be emitted
   })
-  .on('error', err => console.error('fatal error', err))
+  .on('error', error => console.error('fatal error', error))
   .on('end', () => console.log('done'))
   .pipe(new Transform({
     objectMode: true,
@@ -52,19 +57,19 @@ Meant to be one of the recursive versions of [fs](http://nodejs.org/docs/latest/
 
 - [Installation](#installation)
 - [API](#api)
-	- [entry stream](#entry-stream)
-	- [options](#options)
-	- [entry info](#entry-info)
-	- [Filters](#filters)
-	- [Callback API](#callback-api)
-		- [allProcessed ](#allprocessed)
-		- [fileProcessed](#fileprocessed)
+  - [entry stream](#entry-stream)
+  - [options](#options)
+  - [entry info](#entry-info)
+  - [Filters](#filters)
+  - [Callback API](#callback-api)
+    - [allProcessed ](#allprocessed)
+    - [fileProcessed](#fileprocessed)
 - [More Examples](#more-examples)
-	- [stream api](#stream-api)
-	- [stream api pipe](#stream-api-pipe)
-	- [grep](#grep)
-	- [using callback api](#using-callback-api)
-	- [tests](#tests)
+  - [stream api](#stream-api)
+  - [stream api pipe](#stream-api-pipe)
+  - [grep](#grep)
+  - [using callback api](#using-callback-api)
+  - [tests](#tests)
 
 
 # Installation
