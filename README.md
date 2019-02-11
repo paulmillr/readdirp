@@ -17,7 +17,6 @@ readdirp({root: '.'}, function(file) {
 // Streams example.
 // Print out all JavaScript files within
 // the current folder and subfolders along with their size.
-
 const { EOL } = require('os');
 const { Transform } = require('stream');
 const entryInfoStream = readdirp({
