@@ -4,22 +4,7 @@ var fs        =  require('graceful-fs')
   , path      =  require('path')
   , micromatch =  require('micromatch').isMatch
   , sapi       = require('./stream-api')
-  , toString  =  Object.prototype.toString
   ;
-
-
-// Standard helpers
-function isFunction (obj) {
-  return toString.call(obj) === '[object Function]';
-}
-
-function isString (obj) {
-  return toString.call(obj) === '[object String]';
-}
-
-function isUndefined (obj) {
-  return obj === void 0;
-}
 
 /**
  * Main function which ends up calling readdirRec and reads all files and directories in given root recursively.
@@ -46,7 +31,7 @@ function readdir(opts, callback1, callback2) {
     ;
 
   // If no callbacks were given we will use a streaming interface
-  if (isUndefined(callback1)) {
+  if (callback1 === undefined) {
     var api          =  sapi();
     stream           =  api.stream;
     callback1        =  api.processEntry;
@@ -65,7 +50,7 @@ function readdir(opts, callback1, callback2) {
     };
   }
 
-  if (isUndefined(opts)){
+  if (opts === undefined) {
     handleFatalError(new Error (
       'Need to pass at least one argument: opts! \n' +
       'https://github.com/paulmillr/readdirp#options'
@@ -77,12 +62,12 @@ function readdir(opts, callback1, callback2) {
   opts.root            =  opts.root            || '.';
   opts.fileFilter      =  opts.fileFilter      || function() { return true; };
   opts.directoryFilter =  opts.directoryFilter || function() { return true; };
-  opts.depth           =  typeof opts.depth === 'undefined' ? 999999999 : opts.depth;
+  opts.depth = opts.depth === undefined ? 999999999 : opts.depth;
   opts.entryType       =  opts.entryType       || 'files';
 
   var statfn = opts.lstat === true ? fs.lstat.bind(fs) : fs.stat.bind(fs);
 
-  if (isUndefined(callback2)) {
+  if (callback2 === undefined) {
     fileProcessed = function() { };
     allProcessed = callback1;
   } else {
@@ -91,8 +76,7 @@ function readdir(opts, callback1, callback2) {
   }
 
   function normalizeFilter (filter) {
-
-    if (isUndefined(filter)) return undefined;
+    if (filter === undefined) return;
 
     function isNegated (filters) {
 
@@ -100,36 +84,29 @@ function readdir(opts, callback1, callback2) {
         return f.indexOf('!') === 0;
       }
 
-      var some = filters.some(negated);
-      if (!some) {
-        return false;
-      } else {
-        if (filters.every(negated)) {
-          return true;
-        } else {
-          // if we detect illegal filters, bail out immediately
-          throw new Error(
-            'Cannot mix negated with non negated glob filters: ' + filters + '\n' +
-            'https://github.com/paulmillr/readdirp#filters'
-          );
-        }
-      }
+      if (!filters.some(negated)) return false;
+      if (filters.every(negated)) return true;
+
+      // if we detect illegal filters, bail out immediately
+      throw new Error(
+        'Cannot mix negated with non negated glob filters: ' + filters + '\n' +
+        'https://github.com/paulmillr/readdirp#filters'
+      );
     }
 
     // Turn all filters into a function
-    if (isFunction(filter)) {
-
+    if (typeof filter === 'function') {
       return filter;
+    }
 
-    } else if (isString(filter)) {
-
+    if (typeof filter === 'string') {
       return function (entryInfo) {
         return micromatch(entryInfo.name, filter.trim());
       };
+    }
 
-    } else if (filter && Array.isArray(filter)) {
-
-      if (filter) filter = filter.map(function (f) {
+    if (Array.isArray(filter)) {
+      filter = filter.map(function (f) {
         return f.trim();
       });
 
