@@ -9,12 +9,8 @@
     "url": "git://github.com/paulmillr/readdirp.git"
   },
   "engines": {
-    "node": ">=0.10"
+    "node": "^8"
   },
-  "files": [
-    "readdirp.js",
-    "stream-api.js"
-  ],
   "keywords": [
     "recursive",
     "fs",
@@ -25,20 +21,12 @@
     "find",
     "filter"
   ],
-  "main": "readdirp.js",
+  "main": "lib",
   "scripts": {
-    "test-main": "(cd test && set -e; for t in ./*.js; do node $t; done)",
-    "test-0.10": "nave use 0.10 npm run test-main",
-    "test-0.12": "nave use 0.12 npm run test-main",
-    "test-4": "nave use 4.4 npm run test-main",
-    "test-6": "nave use 6.2 npm run test-main",
-    "test-all": "npm run test-main && npm run test-0.10 && npm run test-0.12 && npm run test-4 && npm run test-6",
-    "test": "npm run test-main"
+    "test": "(cd test && set -e; for t in ./*.js; do node $t; done)",
   },
   "dependencies": {
-    "graceful-fs": "^4.1.11",
-    "micromatch": "^3.1.10",
-    "readable-stream": "^2.0.2"
+    "micromatch": "^3.1.10"
   },
   "devDependencies": {
     "nave": "^0.5.1",
