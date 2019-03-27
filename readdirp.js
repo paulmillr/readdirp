@@ -1,10 +1,205 @@
-'use strict';
+"use strict";
 
-var fs        =  require('graceful-fs')
-  , path      =  require('path')
-  , micromatch =  require('micromatch').isMatch
-  , sapi       = require('./stream-api')
-  ;
+const fs = require("graceful-fs");
+const path = require("path");
+const { isMatch } = require("micromatch");
+const sapi = require("./stream-api");
+
+function negated(f) {
+  return f.indexOf("!") === 0;
+}
+
+function isNegated(filters) {
+  if (!filters.some(negated)) {
+    return false;
+  }
+  if (filters.every(negated)) {
+    return true;
+  }
+
+  // if we detect illegal filters, bail out immediately
+  throw new Error(
+    "Cannot mix negated with non negated glob filters: " +
+      filters +
+      "\n" +
+      "https://github.com/paulmillr/readdirp#filters"
+  );
+}
+
+function normalizeFilter(filter) {
+  if (filter === undefined) {
+    return;
+  }
+
+  // Turn all filters into a function
+  if (typeof filter === "function") {
+    return filter;
+  }
+
+  if (typeof filter === "string") {
+    return entryInfo => isMatch(entryInfo.name, filter.trim());
+  }
+
+  if (Array.isArray(filter)) {
+    filter = filter.map(f => f.trim());
+
+    return isNegated(filter)
+      ? // use AND to concat multiple negated filters
+        entryInfo => filter.every(f => isMatch(entryInfo.name, f))
+      : // use OR to concat multiple inclusive filters
+        entryInfo => filter.some(f => isMatch(entryInfo.name, f));
+  }
+}
+
+function processDir(
+  { currentDir, statfn, entries, realRoot, aborted, handleError },
+  callProcessed
+) {
+  if (aborted) {
+    return;
+  }
+  const total = entries.length;
+  const entryInfos = [];
+  let processed = 0;
+
+  fs.realpath(currentDir, (err, realCurrentDir) => {
+    if (aborted) {
+      return;
+    }
+    if (err) {
+      handleError(err);
+      callProcessed(entryInfos);
+      return;
+    }
+
+    const relDir = path.relative(realRoot, realCurrentDir);
+
+    if (entries.length === 0) {
+      callProcessed([]);
+    } else {
+      entries.forEach(entry => {
+        const fullPath = path.join(realCurrentDir, entry);
+        const relPath = path.join(relDir, entry);
+
+        statfn(fullPath, (err, stat) => {
+          if (err) {
+            handleError(err);
+          } else {
+            entryInfos.push({
+              name: entry,
+              path: relPath, // relative to root
+              fullPath: fullPath,
+
+              parentDir: relDir, // relative to root
+              fullParentDir: realCurrentDir,
+
+              stat: stat
+            });
+          }
+          processed++;
+          if (processed === total) {
+            callProcessed(entryInfos);
+          }
+        });
+      });
+    }
+  });
+}
+
+function readdirRec(options, callCurrentDirProcessed) {
+  const {
+    paused,
+    statfn,
+    currentDir,
+    depth,
+    aborted,
+    handleError,
+    realRoot,
+    readdirOptions,
+    readdirResult,
+    fileProcessed
+  } = options;
+  if (aborted) {
+    return;
+  }
+  if (paused) {
+    setImmediate(() => readdirRec(options, callCurrentDirProcessed));
+    return;
+  }
+
+  fs.readdir(currentDir, (err, entries) => {
+    if (err) {
+      handleError(err);
+      callCurrentDirProcessed();
+      return;
+    }
+
+    processDir(
+      { currentDir, statfn, entries, aborted, realRoot, handleError },
+      entryInfos => {
+        const subdirs = entryInfos.filter(
+          ei => ei.stat.isDirectory() && readdirOptions.directoryFilter(ei)
+        );
+
+        subdirs.forEach(di => {
+          if (
+            readdirOptions.entryType === "directories" ||
+            readdirOptions.entryType === "both" ||
+            readdirOptions.entryType === "all"
+          ) {
+            fileProcessed(di);
+          }
+          readdirResult.directories.push(di);
+        });
+
+        entryInfos
+          .filter(ei => {
+            const isCorrectType =
+              readdirOptions.entryType === "all"
+                ? !ei.stat.isDirectory()
+                : ei.stat.isFile() || ei.stat.isSymbolicLink();
+            return isCorrectType && readdirOptions.fileFilter(ei);
+          })
+          .forEach(fi => {
+            if (
+              readdirOptions.entryType === "files" ||
+              readdirOptions.entryType === "both" ||
+              readdirOptions.entryType === "all"
+            ) {
+              fileProcessed(fi);
+            }
+            readdirResult.files.push(fi);
+          });
+
+        let pendingSubdirs = subdirs.length;
+
+        // Be done if no more subfolders exist or we reached the maximum desired depth
+        if (pendingSubdirs === 0 || depth === readdirOptions.depth) {
+          callCurrentDirProcessed();
+        } else {
+          // recurse into subdirs, keeping track of which ones are done
+          // and call back once all are processed
+          subdirs.forEach(subdir => {
+            readdirRec(
+              {
+                ...options,
+                depth: depth + 1,
+                currentDir: subdir.fullPath
+              },
+              () => {
+                pendingSubdirs = pendingSubdirs - 1;
+                if (pendingSubdirs !== 0) {
+                  return;
+                }
+                callCurrentDirProcessed();
+              }
+            );
+          });
+        }
+      }
+    );
+  });
+}
 
 /**
  * Main function which ends up calling readdirRec and reads all files and directories in given root recursively.
@@ -15,227 +210,72 @@ var fs        =  require('graceful-fs')
  *                                  function (err, fileInfos) { ... }
  */
 function readdir(opts, callback1, callback2) {
-  var stream
-    , handleError
-    , handleFatalError
-    , errors = []
-    , readdirResult = {
-        directories: []
-      , files: []
-    }
-    , fileProcessed
-    , allProcessed
-    , realRoot
-    , aborted = false
-    , paused = false
-    ;
+  let stream;
+  let handleError;
+  let handleFatalError;
+  let errors = [];
+  let readdirResult = {
+    directories: [],
+    files: []
+  };
+  let fileProcessed;
+  let allProcessed;
+  let realRoot;
+  let aborted = false;
+  let paused = false;
 
   // If no callbacks were given we will use a streaming interface
   if (callback1 === undefined) {
-    var api          =  sapi();
-    stream           =  api.stream;
-    callback1        =  api.processEntry;
-    callback2        =  api.done;
-    handleError      =  api.handleError;
-    handleFatalError =  api.handleFatalError;
+    const api = sapi();
+    stream = api.stream;
+    callback1 = api.processEntry;
+    callback2 = api.done;
+    handleError = api.handleError;
+    handleFatalError = api.handleFatalError;
 
-    stream.on('close', function () { aborted = true; });
-    stream.on('pause', function () { paused = true; });
-    stream.on('resume', function () { paused = false; });
+    stream.on("close", () => {
+      aborted = true;
+    });
+    stream.on("pause", () => {
+      paused = true;
+    });
+    stream.on("resume", () => {
+      paused = false;
+    });
   } else {
-    handleError      =  function (err) { errors.push(err); };
-    handleFatalError =  function (err) {
+    handleError = err => {
+      errors.push(err);
+    };
+    handleFatalError = err => {
       handleError(err);
       allProcessed(errors, null);
     };
   }
 
   if (opts === undefined) {
-    handleFatalError(new Error (
-      'Need to pass at least one argument: opts! \n' +
-      'https://github.com/paulmillr/readdirp#options'
+    handleFatalError(
+      new Error(
+        "Need to pass at least one argument: opts! \n" +
+          "https://github.com/paulmillr/readdirp#options"
       )
     );
     return stream;
   }
 
-  opts.root            =  opts.root            || '.';
-  opts.fileFilter      =  opts.fileFilter      || function() { return true; };
-  opts.directoryFilter =  opts.directoryFilter || function() { return true; };
+  opts.root = opts.root || ".";
+  opts.fileFilter = opts.fileFilter || (() => true);
+  opts.directoryFilter = opts.directoryFilter || (() => true);
   opts.depth = opts.depth === undefined ? 999999999 : opts.depth;
-  opts.entryType       =  opts.entryType       || 'files';
+  opts.entryType = opts.entryType || "files";
 
-  var statfn = opts.lstat === true ? fs.lstat.bind(fs) : fs.stat.bind(fs);
+  const statfn = opts.lstat === true ? fs.lstat.bind(fs) : fs.stat.bind(fs);
 
   if (callback2 === undefined) {
-    fileProcessed = function() { };
+    fileProcessed = () => {};
     allProcessed = callback1;
   } else {
     fileProcessed = callback1;
     allProcessed = callback2;
-  }
-
-  function normalizeFilter (filter) {
-    if (filter === undefined) return;
-
-    function isNegated (filters) {
-
-      function negated(f) {
-        return f.indexOf('!') === 0;
-      }
-
-      if (!filters.some(negated)) return false;
-      if (filters.every(negated)) return true;
-
-      // if we detect illegal filters, bail out immediately
-      throw new Error(
-        'Cannot mix negated with non negated glob filters: ' + filters + '\n' +
-        'https://github.com/paulmillr/readdirp#filters'
-      );
-    }
-
-    // Turn all filters into a function
-    if (typeof filter === 'function') {
-      return filter;
-    }
-
-    if (typeof filter === 'string') {
-      return function (entryInfo) {
-        return micromatch(entryInfo.name, filter.trim());
-      };
-    }
-
-    if (Array.isArray(filter)) {
-      filter = filter.map(function (f) {
-        return f.trim();
-      });
-
-      return isNegated(filter) ?
-        // use AND to concat multiple negated filters
-        function (entryInfo) {
-          return filter.every(function (f) {
-            return micromatch(entryInfo.name, f);
-          });
-        }
-        :
-        // use OR to concat multiple inclusive filters
-        function (entryInfo) {
-          return filter.some(function (f) {
-            return micromatch(entryInfo.name, f);
-          });
-        };
-    }
-  }
-
-  function processDir(currentDir, entries, callProcessed) {
-    if (aborted) return;
-    var total = entries.length
-      , processed = 0
-      , entryInfos = []
-      ;
-
-    fs.realpath(currentDir, function(err, realCurrentDir) {
-      if (aborted) return;
-      if (err) {
-        handleError(err);
-        callProcessed(entryInfos);
-        return;
-      }
-
-      var relDir = path.relative(realRoot, realCurrentDir);
-
-      if (entries.length === 0) {
-        callProcessed([]);
-      } else {
-        entries.forEach(function (entry) {
-
-          var fullPath = path.join(realCurrentDir, entry)
-            , relPath  = path.join(relDir, entry);
-
-          statfn(fullPath, function (err, stat) {
-            if (err) {
-              handleError(err);
-            } else {
-              entryInfos.push({
-                  name          :  entry
-                , path          :  relPath   // relative to root
-                , fullPath      :  fullPath
-
-                , parentDir     :  relDir    // relative to root
-                , fullParentDir :  realCurrentDir
-
-                , stat          :  stat
-              });
-            }
-            processed++;
-            if (processed === total) callProcessed(entryInfos);
-          });
-        });
-      }
-    });
-  }
-
-  function readdirRec(currentDir, depth, callCurrentDirProcessed) {
-    var args = arguments;
-    if (aborted) return;
-    if (paused) {
-      setImmediate(function () {
-        readdirRec.apply(null, args);
-      })
-      return;
-    }
-
-    fs.readdir(currentDir, function (err, entries) {
-      if (err) {
-        handleError(err);
-        callCurrentDirProcessed();
-        return;
-      }
-
-      processDir(currentDir, entries, function(entryInfos) {
-
-        var subdirs = entryInfos
-          .filter(function (ei) { return ei.stat.isDirectory() && opts.directoryFilter(ei); });
-
-        subdirs.forEach(function (di) {
-          if(opts.entryType === 'directories' || opts.entryType === 'both' || opts.entryType === 'all') {
-            fileProcessed(di);
-          }
-          readdirResult.directories.push(di);
-        });
-
-        entryInfos
-          .filter(function(ei) {
-            var isCorrectType = opts.entryType === 'all' ?
-              !ei.stat.isDirectory() : ei.stat.isFile() || ei.stat.isSymbolicLink();
-            return isCorrectType && opts.fileFilter(ei);
-          })
-          .forEach(function (fi) {
-            if(opts.entryType === 'files' || opts.entryType === 'both' || opts.entryType === 'all') {
-              fileProcessed(fi);
-            }
-            readdirResult.files.push(fi);
-          });
-
-        var pendingSubdirs = subdirs.length;
-
-        // Be done if no more subfolders exist or we reached the maximum desired depth
-        if(pendingSubdirs === 0 || depth === opts.depth) {
-          callCurrentDirProcessed();
-        } else {
-          // recurse into subdirs, keeping track of which ones are done
-          // and call back once all are processed
-          subdirs.forEach(function (subdir) {
-            readdirRec(subdir.fullPath, depth + 1, function () {
-              pendingSubdirs = pendingSubdirs - 1;
-              if(pendingSubdirs === 0) {
-                callCurrentDirProcessed();
-              }
-            });
-          });
-        }
-      });
-    });
   }
 
   // Validate and normalize filters
@@ -256,14 +296,25 @@ function readdir(opts, callback1, callback2) {
     }
 
     realRoot = res;
-    readdirRec(opts.root, 0, function () {
-      // All errors are collected into the errors array
-      if (errors.length > 0) {
-        allProcessed(errors, readdirResult);
-      } else {
-        allProcessed(null, readdirResult);
+    readdirRec(
+      {
+        paused,
+        aborted,
+        handleError,
+        realRoot,
+        currentDir: opts.root,
+        statfn,
+        depth: 0,
+        readdirOptions: opts,
+        readdirResult,
+        fileProcessed
+      },
+      () => {
+        // All errors are collected into the errors array
+        const realErrors = errors.length > 0 ? errors : null;
+        allProcessed(realErrors, readdirResult);
       }
-    });
+    );
   });
 
   return stream;

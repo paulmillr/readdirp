@@ -1,6 +1,4 @@
 "use strict";
-
-const util = require("util");
 const { Readable } = require("stream");
 
 class ReaddirpReadable extends Readable {
