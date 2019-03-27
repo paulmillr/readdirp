@@ -1,97 +1,95 @@
-'use strict';
+"use strict";
 
-var stream = require('readable-stream');
-var util = require('util');
+const util = require("util");
+const { Readable } = require("stream");
 
-var Readable = stream.Readable;
+class ReaddirpReadable extends Readable {
 
-module.exports = ReaddirpReadable;
+  constructor(options = {}) {
+    super({ ...options, objectMode: true });
 
-util.inherits(ReaddirpReadable, Readable);
+    this._destroyed = false;
+    this._paused = false;
+    this._warnings = [];
+    this._errors = [];
+    this.highWaterMark = Infinity;
 
-function ReaddirpReadable (opts) {
-  if (!(this instanceof ReaddirpReadable)) return new ReaddirpReadable(opts);
+    this._pauseResumeErrors();
+  }
 
-  opts = opts || {};
+  _done() {
+    this.push(null);
+  }
 
-  opts.objectMode = true;
-  Readable.call(this, opts);
+  // we emit errors and warnings async since we may handle errors like invalid args
+  // within the initial event loop before any event listeners subscribed
+  _handleError(err) {
+    setImmediate(() => {
+      if (this._paused) {
+        return this._warnings.push(err);
+      }
+      if (!this._destroyed) {
+        this.emit("warn", err);
+      }
+    });
+  }
 
-  // backpressure not implemented at this point
-  this.highWaterMark = Infinity;
+  _handleFatalError(err) {
+    setImmediate(() => {
+      if (this._paused) {
+        return this._errors.push(err);
+      }
+      if (!this._destroyed) {
+        this.emit("error", err);
+      }
+    });
+  }
 
-  this._destroyed = false;
-  this._paused = false;
-  this._warnings = [];
-  this._errors = [];
+  _pauseResumeErrors() {
+    this.on("pause", () => {
+      this._paused = true;
+    });
+    this.on("resume", () => {
+      if (this._destroyed) {
+        return;
+      }
+      this._paused = false;
 
-  this._pauseResumeErrors();
+      this._warnings.forEach(err => this.emit("warn", err));
+      this._warnings.length = 0;
+
+      this._errors.forEach(err => this.emit("error", err));
+      this._errors.length = 0;
+    });
+  }
+
+  _processEntry(entry) {
+    if (this._destroyed) {
+      return;
+    }
+    this.push(entry);
+  }
+
+  _read() {}
+
+  destroy() {
+    // when stream is destroyed it will emit nothing further, not even errors or warnings
+    this.push(null);
+    this.readable = false;
+    this._destroyed = true;
+    this.emit("close");
+  }
 }
 
-var proto = ReaddirpReadable.prototype;
-
-proto._pauseResumeErrors = function () {
-  var self = this;
-  self.on('pause', function () { self._paused = true });
-  self.on('resume', function () {
-    if (self._destroyed) return;
-    self._paused = false;
-
-    self._warnings.forEach(function (err) { self.emit('warn', err) });
-    self._warnings.length = 0;
-
-    self._errors.forEach(function (err) { self.emit('error', err) });
-    self._errors.length = 0;
-  })
-}
-
-// called for each entry
-proto._processEntry = function (entry) {
-  if (this._destroyed) return;
-  this.push(entry);
-}
-
-proto._read = function () { }
-
-proto.destroy = function () {
-  // when stream is destroyed it will emit nothing further, not even errors or warnings
-  this.push(null);
-  this.readable = false;
-  this._destroyed = true;
-  this.emit('close');
-}
-
-proto._done = function () {
-  this.push(null);
-}
-
-// we emit errors and warnings async since we may handle errors like invalid args
-// within the initial event loop before any event listeners subscribed
-proto._handleError = function (err) {
-  var self = this;
-  setImmediate(function () {
-    if (self._paused) return self._warnings.push(err);
-    if (!self._destroyed) self.emit('warn', err);
-  });
-}
-
-proto._handleFatalError = function (err) {
-  var self = this;
-  setImmediate(function () {
-    if (self._paused) return self._errors.push(err);
-    if (!self._destroyed) self.emit('error', err);
-  });
-}
-
-function createStreamAPI () {
-  var stream = new ReaddirpReadable();
+function createStreamAPI() {
+  const stream = new ReaddirpReadable();
 
   return {
-      stream           :  stream
-    , processEntry     :  stream._processEntry.bind(stream)
-    , done             :  stream._done.bind(stream)
-    , handleError      :  stream._handleError.bind(stream)
-    , handleFatalError :  stream._handleFatalError.bind(stream)
+    stream: stream,
+    processEntry: stream._processEntry.bind(stream),
+    done: stream._done.bind(stream),
+    handleError: stream._handleError.bind(stream),
+    handleFatalError: stream._handleFatalError.bind(stream)
   };
 }
 
