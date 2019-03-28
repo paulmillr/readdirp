@@ -1,8 +1,6 @@
 "use strict";
 
-const readdirp = require("./stream-api");
-
-const EMPTY_FUNCTION = () => {};
+const readdirp = require("./lib/stream-api");
 
 /**
  * Main function which ends up calling readdirRec and reads all files and directories in given root recursively.

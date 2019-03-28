@@ -1,34 +1,26 @@
 /*jshint asi:true */
 
-var debug           //= true;
-var test            = debug  ? function () {} : require('tap').test
-var test_           = !debug ? function () {} : require('tap').test
-  , path            = require('path')
-  , fs              = require('fs')
-  , util            = require('util')
-  , TransformStream = require('readable-stream').Transform
-  , through         = require('through2')
-  , proxyquire      = require('proxyquire')
-  , streamapi       = require('../stream-api')
-  , readdirp        = require('..')
-  , root            = path.join(__dirname, 'bed')
-  , totalDirs       = 6
-  , totalFiles      = 12
-  , ext1Files       = 4
-  , ext2Files       = 3
-  , ext3Files       = 2
-  ;
+const path            = require('path');
+const TransformStream = require('readable-stream').Transform;
+const through         = require('through2');
+const proxyquire      = require('proxyquire');
+const streamapi       = require('../lib/stream-api');
+const readdirp        = require('..');
+const root            = path.join(__dirname, 'bed');
+const totalDirs       = 6;
+const totalFiles      = 12;
+const ext1Files       = 4;
+const ext2Files       = 3;
+const ext3Files       = 2;
+
+const mocha = require('mocha');
+const assert = require('assert');
 
 // see test/readdirp.js for test bed layout
 
 function opts (extend) {
-  var o = { root: root };
-
-  if (extend) {
-    for (var prop in extend) {
-      o[prop] = extend[prop];
-    }
-  }
+  var o = {root: root};
+  Object.assign(o, extend)
   return o;
 }
 
@@ -50,188 +42,188 @@ function capture () {
   return dst;
 }
 
-test('\nintegrated', function (t) {
-  t.test('\n# reading root without filter', function (t) {
-    t.plan(2);
+describe('integrated', function () {
+  it('reading root without filter', function (done) {
+
 
     readdirp(opts())
       .on('error', function (err) {
-        t.fail('should not throw error', err);
+        assert.fail('should not throw error', err);
       })
       .pipe(capture())
       .pipe(through.obj(
         function (result, _ , cb) {
-          t.equals(result.entries.length, totalFiles, 'emits all files');
-          t.ok(result.ended, 'ends stream');
-          t.end();
+          assert.equal(result.entries.length, totalFiles, 'emits all files');
+          assert.ok(result.ended, 'ends stream');
+          done();
           cb();
         }
       ));
   })
 
-  t.test('\n# normal: ["*.ext1", "*.ext3"]', function (t) {
-    t.plan(2);
+  it('normal: ["*.ext1", "*.ext3"]', function (done) {
+
 
     readdirp(opts( { fileFilter: [ '*.ext1', '*.ext3' ] } ))
       .on('error', function (err) {
-        t.fail('should not throw error', err);
+        assert.fail('should not throw error', err);
       })
       .pipe(capture())
       .pipe(through.obj(
         function (result, _ , cb) {
-          t.equals(result.entries.length, ext1Files + ext3Files, 'all ext1 and ext3 files');
-          t.ok(result.ended, 'ends stream');
-          t.end();
+          assert.equal(result.entries.length, ext1Files + ext3Files, 'all ext1 and ext3 files');
+          assert.ok(result.ended, 'ends stream');
+          done();
           cb();
         }
       ))
   })
 
-  t.test('\n# files only', function (t) {
-    t.plan(2);
+  it('files only', function (done) {
+
 
     readdirp(opts( { entryType: 'files' } ))
       .on('error', function (err) {
-        t.fail('should not throw error', err);
+        assert.fail('should not throw error', err);
       })
       .pipe(capture())
       .pipe(through.obj(
         function (result, _ , cb) {
-          t.equals(result.entries.length, totalFiles, 'returned files');
-          t.ok(result.ended, 'ends stream');
-          t.end();
+          assert.equal(result.entries.length, totalFiles, 'returned files');
+          assert.ok(result.ended, 'ends stream');
+          done();
           cb();
         }
       ))
   })
 
-  t.test('\n# directories only', function (t) {
-    t.plan(2);
+  it('directories only', function (done) {
+
 
     readdirp(opts( { entryType: 'directories' } ))
       .on('error', function (err) {
-        t.fail('should not throw error', err);
+        assert.fail('should not throw error', err);
       })
       .pipe(capture())
       .pipe(through.obj(
         function (result, _ , cb) {
-          t.equals(result.entries.length, totalDirs, 'returned directories');
-          t.ok(result.ended, 'ends stream');
-          t.end();
+          assert.equal(result.entries.length, totalDirs, 'returned directories');
+          assert.ok(result.ended, 'ends stream');
+          done();
           cb();
         }
       ))
   })
 
-  t.test('\n# both directories + files', function (t) {
-    t.plan(2);
+  it('both directories + files', function (done) {
+
 
     readdirp(opts( { entryType: 'both' } ))
       .on('error', function (err) {
-        t.fail('should not throw error', err);
+        assert.fail('should not throw error', err);
       })
       .pipe(capture())
       .pipe(through.obj(
         function (result, _ , cb) {
-          t.equals(result.entries.length, totalDirs + totalFiles, 'returned everything');
-          t.ok(result.ended, 'ends stream');
-          t.end();
+          assert.equal(result.entries.length, totalDirs + totalFiles, 'returned everything');
+          assert.ok(result.ended, 'ends stream');
+          done();
           cb();
         }
       ))
   })
 
-  t.test('\n# directory filter with directories only', function (t) {
-    t.plan(2);
+  it('directory filter with directories only', function (done) {
+
 
     readdirp(opts( { entryType: 'directories', directoryFilter: [ 'root_dir1', '*dir1_subdir1' ] } ))
       .on('error', function (err) {
-        t.fail('should not throw error', err);
+        assert.fail('should not throw error', err);
       })
       .pipe(capture())
       .pipe(through.obj(
         function (result, _ , cb) {
-          t.equals(result.entries.length, 2, 'two directories');
-          t.ok(result.ended, 'ends stream');
-          t.end();
+          assert.equal(result.entries.length, 2, 'two directories');
+          assert.ok(result.ended, 'ends stream');
+          done();
           cb();
         }
       ))
   })
 
-  t.test('\n# directory and file filters with both entries', function (t) {
-    t.plan(2);
+  it('directory and file filters with both entries', function (done) {
+
 
     readdirp(opts( { entryType: 'both', directoryFilter: [ 'root_dir1', '*dir1_subdir1' ], fileFilter: [ '!*.ext1' ] } ))
       .on('error', function (err) {
-        t.fail('should not throw error', err);
+        assert.fail('should not throw error', err);
       })
       .pipe(capture())
       .pipe(through.obj(
         function (result, _ , cb) {
-          t.equals(result.entries.length, 6, '2 directories and 4 files');
-          t.ok(result.ended, 'ends stream');
-          t.end();
+          assert.equal(result.entries.length, 6, '2 directories and 4 files');
+          assert.ok(result.ended, 'ends stream');
+          done();
           cb();
         }
       ))
   })
 
-  t.test('\n# negated: ["!*.ext1", "!*.ext3"]', function (t) {
-    t.plan(2);
+  it('negated: ["!*.ext1", "!*.ext3"]', function (done) {
+
 
     readdirp(opts( { fileFilter: [ '!*.ext1', '!*.ext3' ] } ))
       .on('error', function (err) {
-        t.fail('should not throw error', err);
+        assert.fail('should not throw error', err);
       })
       .pipe(capture())
       .pipe(through.obj(
         function (result, _ , cb) {
-          t.equals(result.entries.length, totalFiles - ext1Files - ext3Files, 'all but ext1 and ext3 files');
-          t.ok(result.ended, 'ends stream');
-          t.end();
+          assert.equal(result.entries.length, totalFiles - ext1Files - ext3Files, 'all but ext1 and ext3 files');
+          assert.ok(result.ended, 'ends stream');
+          done();
         }
       ))
   })
 
-  t.test('\n# no options given', function (t) {
-    t.plan(1);
+  it('no options given', function (done) {
+
     readdirp()
       .on('error', function (err) {
-        t.similar(err.toString() , /Need to pass at least one argument/ , 'emits meaningful error');
-        t.end();
+        var re = /Need to pass at least one argument/;
+        assert.ok(re.test(err.toString()), 'emits meaningful error');
+        done();
       })
   })
 
-  t.test('\n# mixed: ["*.ext1", "!*.ext3"]', function (t) {
-    t.plan(1);
-
+  it('mixed: ["*.ext1", "!*.ext3"]', function (done) {
     readdirp(opts( { fileFilter: [ '*.ext1', '!*.ext3' ] } ))
       .on('error', function (err) {
-        t.similar(err.toString() , /Cannot mix negated with non negated glob filters/ , 'emits meaningful error');
-        t.end();
+        var re = /Cannot mix negated with non negated glob filters/;
+        assert.ok(re.test(err.toString()), 'emits meaningful error');
+        done();
       })
   })
 })
 
 
-test('\napi separately', function (t) {
+describe('api separately', function () {
 
-  t.test('\n# handleError', function (t) {
-    t.plan(1);
+  it('handleError', function (done) {
+
 
     var api = streamapi.createStreamAPI()
       , warning = new Error('some file caused problems');
 
     api.stream
       .on('warn', function (err) {
-        t.equals(err, warning, 'warns with the handled error');
+        assert.equal(err, warning, 'warns with the handled error');
+        done();
       })
     api.handleError(warning);
   })
 
-  t.test('\n# when stream is paused and then resumed', function (t) {
-    t.plan(6);
+  it('when stream is paused and then resumed', function (done) {
     var api = streamapi.createStreamAPI()
       , resumed = false
       , fatalError = new Error('fatal!')
@@ -241,16 +233,17 @@ test('\napi separately', function (t) {
 
     api.stream
       .on('warn', function (err) {
-        t.equals(err, nonfatalError, 'emits the buffered warning');
-        t.ok(resumed, 'emits warning only after it was resumed');
+        assert.equal(err, nonfatalError, 'emits the buffered warning');
+        assert.ok(resumed, 'emits warning only after it was resumed');
       })
       .on('error', function (err) {
-        t.equals(err, fatalError, 'emits the buffered fatal error');
-        t.ok(resumed, 'emits errors only after it was resumed');
+        assert.equal(err, fatalError, 'emits the buffered fatal error');
+        assert.ok(resumed, 'emits errors only after it was resumed');
       })
       .on('data', function (data) {
-        t.equals(data, processedData, 'emits the buffered data');
-        t.ok(resumed, 'emits data only after it was resumed');
+        assert.equal(data, processedData, 'emits the buffered data');
+        assert.ok(resumed, 'emits data only after it was resumed');
+        done();
       })
       .pause()
 
@@ -264,26 +257,26 @@ test('\napi separately', function (t) {
     }, 1)
   })
 
-  t.test('\n# when a stream is paused it stops walking the fs', function (t) {
+  it('when a stream is paused it stops walking the fs', function (done) {
     var resumed = false,
       mockedAPI = streamapi.createStreamAPI();
 
     mockedAPI.processEntry = function (entry) {
       if (!resumed) t.notOk(true, 'should not emit while paused')
-      t.ok(entry, 'emitted while resumed')
+      assert.ok(entry, 'emitted while resumed')
     }.bind(mockedAPI.stream)
 
     function wrapper () {
       return mockedAPI
     }
 
-    var readdirp = proxyquire('../readdirp', {'./stream-api': wrapper})
+    var readdirp = proxyquire('..', {'./lib/stream-api': wrapper})
       , stream = readdirp(opts())
       .on('error', function (err) {
-        t.fail('should not throw error', err);
+        assert.fail('should not throw error', err);
       })
       .on('end', function () {
-        t.end()
+        done()
       })
       .pause();
 
@@ -293,26 +286,25 @@ test('\napi separately', function (t) {
     }, 5)
   })
 
-  t.test('\n# when a stream is destroyed, it emits "closed", but no longer emits "data", "warn" and "error"', function (t) {
+  it('when a stream is destroyed, it emits "closed", but no longer emits "data", "warn" and "error"', function (done) {
     var api = streamapi.createStreamAPI()
       , fatalError = new Error('fatal!')
       , nonfatalError = new Error('nonfatal!')
       , processedData = 'some data'
       , plan = 0;
 
-    t.plan(6)
     var stream = api.stream
       .on('warn', function (err) {
-        t.ok(!stream._destroyed, 'emits warning until destroyed');
+        assert.ok(!stream._destroyed, 'emits warning until destroyed');
       })
       .on('error', function (err) {
-        t.ok(!stream._destroyed, 'emits errors until destroyed');
+        assert.ok(!stream._destroyed, 'emits errors until destroyed');
       })
       .on('data', function (data) {
-        t.ok(!stream._destroyed, 'emits data until destroyed');
+        assert.ok(!stream._destroyed, 'emits data until destroyed');
       })
       .on('close', function () {
-        t.ok(stream._destroyed, 'emits close when stream is destroyed');
+        assert.ok(stream._destroyed, 'emits close when stream is destroyed');
       })
 
 
@@ -331,7 +323,7 @@ test('\napi separately', function (t) {
 
       process.nextTick(function () {
         t.pass('emits no more data, warn or error events after it was destroyed')
-        t.end();
+        done();
       })
     }, 10)
   })
