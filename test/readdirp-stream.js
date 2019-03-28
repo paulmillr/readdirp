@@ -220,7 +220,7 @@ test('\napi separately', function (t) {
   t.test('\n# handleError', function (t) {
     t.plan(1);
 
-    var api = streamapi()
+    var api = streamapi.createStreamAPI()
       , warning = new Error('some file caused problems');
 
     api.stream
@@ -232,7 +232,7 @@ test('\napi separately', function (t) {
 
   t.test('\n# when stream is paused and then resumed', function (t) {
     t.plan(6);
-    var api = streamapi()
+    var api = streamapi.createStreamAPI()
       , resumed = false
       , fatalError = new Error('fatal!')
       , nonfatalError = new Error('nonfatal!')
@@ -266,7 +266,7 @@ test('\napi separately', function (t) {
 
   t.test('\n# when a stream is paused it stops walking the fs', function (t) {
     var resumed = false,
-      mockedAPI = streamapi();
+      mockedAPI = streamapi.createStreamAPI();
 
     mockedAPI.processEntry = function (entry) {
       if (!resumed) t.notOk(true, 'should not emit while paused')
@@ -294,7 +294,7 @@ test('\napi separately', function (t) {
   })
 
   t.test('\n# when a stream is destroyed, it emits "closed", but no longer emits "data", "warn" and "error"', function (t) {
-    var api = streamapi()
+    var api = streamapi.createStreamAPI()
       , fatalError = new Error('fatal!')
       , nonfatalError = new Error('nonfatal!')
       , processedData = 'some data'
