@@ -1,7 +1,5 @@
 "use strict";
 
-const fs = require("graceful-fs");
-const path = require("path");
 const readdirp = require("./stream-api");
 
 const EMPTY_FUNCTION = () => {};
@@ -22,6 +20,20 @@ function readdir(options, fileProcessed, allProcessed) {
   };
   const api = readdirp.createStreamAPI(options);
   const stream = api.stream;
+
+  if (options === undefined) {
+    stream._handleFatalError(
+      new Error(
+        "Need to pass at least one argument: opts! \n" +
+          "https://github.com/paulmillr/readdirp#options"
+      )
+    );
+  }
+
+  if (!fileProcessed && !allProcessed) {
+    return stream;
+  }
+
   const notifyAllProcessed = allProcessed || fileProcessed;
   const notifyFileProcessed =
     fileProcessed !== notifyAllProcessed && fileProcessed;
@@ -56,15 +68,6 @@ function readdir(options, fileProcessed, allProcessed) {
       notifyAllProcessed(realErrors, readdirResult);
     }
   });
-
-  if (options === undefined) {
-    stream._handleFatalError(
-      new Error(
-        "Need to pass at least one argument: opts! \n" +
-          "https://github.com/paulmillr/readdirp#options"
-      )
-    );
-  }
 
   return stream;
 }
