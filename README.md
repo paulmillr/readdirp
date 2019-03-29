@@ -62,22 +62,24 @@ readdirp({root: './test/bed', depth: 1})
 # API
 
 `const stream = readdirp(options)` — **Stream API**
-    - Reads given root recursively and returns a `stream` of [entry info](#entry-info)s.
-    - `on('data', (entry) => {})` [entry info](#entry-info) for every file / dir.
-    - `on('warn', (error) => {})` non-fatal `Error` that prevents a file / dir from being processed. Example: inaccessible to the user.
-    - `on('error', (error) => {})` fatal `Error` which also ends the stream. Example: illegal options where passed.
-    - `on('end')` — we are done. Called when all entries were found and no more will be emitted.
-    - `on('close')` — stream is destroyed via `stream.destroy()`.
-      Could be useful if you want to manually abort even on a non fatal error.
-      At that point the stream is no longer `readable` and no more entries, warning or errors are emitted
-    - To learn more about streams, consult the very detailed [nodejs streams documentation](https://nodejs.org/api/stream.html)
-      or the [stream-handbook](https://github.com/substack/stream-handbook)
+
+- Reads given root recursively and returns a `stream` of [entry info](#entry-info)s.
+- `on('data', (entry) => {})` [entry info](#entry-info) for every file / dir.
+- `on('warn', (error) => {})` non-fatal `Error` that prevents a file / dir from being processed. Example: inaccessible to the user.
+- `on('error', (error) => {})` fatal `Error` which also ends the stream. Example: illegal options where passed.
+- `on('end')` — we are done. Called when all entries were found and no more will be emitted.
+- `on('close')` — stream is destroyed via `stream.destroy()`.
+  Could be useful if you want to manually abort even on a non fatal error.
+  At that point the stream is no longer `readable` and no more entries, warning or errors are emitted
+- To learn more about streams, consult the very detailed [nodejs streams documentation](https://nodejs.org/api/stream.html)
+  or the [stream-handbook](https://github.com/substack/stream-handbook)
 
 `readdirp(options, fileProcessed[, allProcessed])` — **Callback API**
-    - `fileProcessed: (entry) => {...}`: function with [entry info](#entry-info) parameter
-    - `allProcessed: (error, entries) => {}`:
-        - **error**: array of errors that occurred during the operation, **entries may still be present, even if errors occurred**
-        - **entries**: collection of file / dir [entry infos](#entry-info)
+
+- `fileProcessed: (entry) => {...}`: function with [entry info](#entry-info) parameter
+- `allProcessed: (error, entries) => {}`:
+    - **error**: array of errors that occurred during the operation, **entries may still be present, even if errors occurred**
+    - **entries**: collection of file / dir [entry infos](#entry-info)
 
 ### options
 
