@@ -50,35 +50,44 @@ stream
     },
   }))
   .pipe(process.stdout);
-```
 
-Meant to be one of the recursive versions of [fs](https://nodejs.org/api/fs.html) functions, e.g., like [mkdirp](https://github.com/substack/node-mkdirp).
+// More examples.
+readdirp({root: './test/bed', fileFilter: '*.js'})
+readdirp({root: './test/bed', fileFilter: ['*.js', '*.json']})
+readdirp({root: './test/bed', directoryFilter: ['!.git', '!*modules']})
+readdirp({root: './test/bed', directoryFilter: (di) => di.name.length === 9})
+readdirp({root: './test/bed', depth: 1})
+```
 
 # API
 
-- `const stream = readdirp(options)` — **Stream API**
+`const stream = readdirp(options)` — **Stream API**
     - Reads given root recursively and returns a `stream` of [entry info](#entry-info)s.
-    - `on('data')` passes an [entry info](#entry-info) whenever one is found
-    - `on('warn')` passes a non-fatal `Error` that prevents a file/directory from being processed (i.e., if it is inaccessible to the user)
-    - `on('error')` passes a fatal `Error` which also ends the stream (i.e., when illegal options where passed)
-    - `on('end')` called when all entries were found and no more will be emitted (i.e., we are done)
-    - `on('close')` called when the stream is destroyed via `stream.destroy()` (which could be useful if you want to manually abort even on a non fatal error) - at that point the stream is no longer `readable` and no more entries, warning or errors are emitted
-    - to learn more about streams, consult the very detailed [nodejs streams documentation](http://nodejs.org/api/stream.html) or the [stream-handbook](https://github.com/substack/stream-handbook)
-- `readdirp (options, fileProcessed[, allProcessed])` — **Callback API**
-    - `fileProcessed`: function with [entry info](#entry-info) parameter e.g., `(entry) => {...}`
-    - `allProcessed`: `(error, entries) => {}`
+    - `on('data', (entry) => {})` [entry info](#entry-info) for every file / dir.
+    - `on('warn', (error) => {})` non-fatal `Error` that prevents a file / dir from being processed. Example: inaccessible to the user.
+    - `on('error', (error) => {})` fatal `Error` which also ends the stream. Example: illegal options where passed.
+    - `on('end')` — we are done. Called when all entries were found and no more will be emitted.
+    - `on('close')` — stream is destroyed via `stream.destroy()`.
+      Could be useful if you want to manually abort even on a non fatal error.
+      At that point the stream is no longer `readable` and no more entries, warning or errors are emitted
+    - To learn more about streams, consult the very detailed [nodejs streams documentation](https://nodejs.org/api/stream.html)
+      or the [stream-handbook](https://github.com/substack/stream-handbook)
+
+`readdirp(options, fileProcessed[, allProcessed])` — **Callback API**
+    - `fileProcessed: (entry) => {...}`: function with [entry info](#entry-info) parameter
+    - `allProcessed: (error, entries) => {}`:
         - **error**: array of errors that occurred during the operation, **entries may still be present, even if errors occurred**
-        - **entries**: collection of file / directory [entry infos](#entry-info)
+        - **entries**: collection of file / dir [entry infos](#entry-info)
 
 ### options
 
 - `root: './test'`: path in which to start reading and recursing into subdirectories
-- `fileFilter: ["*.js"]`: filter to include/exclude files found
+- `fileFilter: ["*.js"]`: filter to include or exclude files. A Function, Glob string or Array of glob strings.
     - There are three different ways to specify filters for files and directories respectively.
-    - **function**: a function that takes an entry info as a parameter and returns true to include or false to exclude the entry
-    - **glob string**: a string (e.g., `*.js`) which is matched using [minimatch](https://github.com/isaacs/minimatch), so go there for more
+    - **Function**: a function that takes an entry info as a parameter and returns true to include or false to exclude the entry
+    - **Glob string**: a string (e.g., `*.js`) which is matched using [minimatch](https://github.com/isaacs/minimatch), so go there for more
         information. Globstars (`**`) are not supported since specifying a recursive pattern for an already recursive function doesn't make sense. Negated globs (as explained in the minimatch documentation) are allowed, e.g., `!*.txt` matches everything but text files.
-    - **array of glob strings**: either need to be all inclusive or all exclusive (negated) patterns otherwise an error is thrown.
+    - **Array of glob strings**: either need to be all inclusive or all exclusive (negated) patterns otherwise an error is thrown.
         `[ '*.json', '*.js' ]` includes all JavaScript and Json files.
         `[ '!.git', '!node_modules' ]` includes all directories except the '.git' and 'node_modules'.
     - Directories that do not pass a filter will not be recursed into.
@@ -98,21 +107,6 @@ Has the following properties:
 - `fullPath: '/User/dev/readdirp/test/bed/root_dir1/root_dir1_subdir1'`: full path to the file/directory found
 - `stat: [...]`: built in [stat object](https://nodejs.org/api/fs.html#fs_class_fs_stats)
 
-## Examples
+# License
 
-`on('error', ..)`, `on('warn', ..)` and `on('end', ..)` handling omitted for brevity
-
-```javascript
-// Every line would emit stream. Listen to its events with
-// .on('data', (entry) => {})
-readdirp({root: './test/bed', fileFilter: '*.js'})
-readdirp({root: './test/bed', fileFilter: ['*.js', '*.json']})
-readdirp({root: './test/bed', directoryFilter: ['!.git', '!*modules']})
-readdirp({root: './test/bed', directoryFilter: (di) => di.name.length === 9})
-readdirp({root: './test/bed', depth: 1})
-
-// callback api
-readdirp({ root: '.' }, (entry) => {}, (error, entries) => {
-    // all done, move on or do final step for all file entries here
-});
-```
+MIT License, see LICENSE file.
