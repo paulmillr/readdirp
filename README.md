@@ -84,8 +84,7 @@ readdirp({root: './test/bed', depth: 1})
 ### options
 
 - `root: './test'`: path in which to start reading and recursing into subdirectories
-- `fileFilter: ["*.js"]`: filter to include or exclude files. A Function, Glob string or Array of glob strings.
-    - There are three different ways to specify filters for files and directories respectively.
+- `fileFilter: ["*.js"]`: filter to include or exclude files. A `Function`, Glob string or Array of glob strings.
     - **Function**: a function that takes an entry info as a parameter and returns true to include or false to exclude the entry
     - **Glob string**: a string (e.g., `*.js`) which is matched using [minimatch](https://github.com/isaacs/minimatch), so go there for more
         information. Globstars (`**`) are not supported since specifying a recursive pattern for an already recursive function doesn't make sense. Negated globs (as explained in the minimatch documentation) are allowed, e.g., `!*.txt` matches everything but text files.
@@ -96,18 +95,18 @@ readdirp({root: './test/bed', depth: 1})
 - `directoryFilter: ["!.git"]`: filter to include/exclude directories found and to recurse into. Directories that do not pass a filter will not be recursed into.
 - `depth: 5`: depth at which to stop recursing even if more subdirectories are found
 - `entryType: 'all'`: determines if data events on the stream should be emitted for `'files'`, `'directories'`, `'both'`, or `'all'`. Setting to `'all'` will also include entries for other types of file descriptors like character devices, unix sockets and named pipes. Defaults to `'files'`.
-- `lstat: false`: use `fs.lstat` instead of `fs.stat` in order to include symlink entries in the stream along with files.
+- `lstat: false`: include symlink entries in the stream along with files. When `true`, `fs.lstat` would be used instead of `fs.stat`
 
 ### entry info
 
 Has the following properties:
 
+- `path: 'test/bed/root_dir1/root_dir1_subdir1'`: path to the file/directory (relative to given root)
 - `parentDir: 'test/bed/root_dir1'`: directory in which entry was found (relative to given root)
 - `fullParentDir: '/User/dev/readdirp/test/bed/root_dir1'`: full path to parent directory
 - `name: 'root_dir1_subdir1'`: name of the file/directory
-- `path: 'test/bed/root_dir1/root_dir1_subdir1'`: path to the file/directory (relative to given root)
 - `fullPath: '/User/dev/readdirp/test/bed/root_dir1/root_dir1_subdir1'`: full path to the file/directory found
-- `stat: [...]`: built in [stat object](https://nodejs.org/api/fs.html#fs_class_fs_stats)
+- `stat: fs.Stats`: built in [stat object](https://nodejs.org/api/fs.html#fs_class_fs_stats)
 
 # License
 
