@@ -1,8 +1,8 @@
-# readdirp [![Build Status](https://secure.travis-ci.org/thlorenz/readdirp.svg)](http://travis-ci.org/thlorenz/readdirp)
+# readdirp
+
+> Recursive version of [fs.readdir](https://nodejs.org/api/fs.html#fs_fs_readdir_path_options_callback). Exposes a **stream api** and a **callback api**.
 
 [![NPM](https://nodei.co/npm/readdirp.png?downloads=true&stars=true)](https://nodei.co/npm/readdirp/)
-
-Recursive version of [fs.readdir](http://nodejs.org/docs/latest/api/fs.html#fs_fs_readdir_path_callback). Exposes a **stream api**; in addition to non-streaming one.
 
 ```sh
 npm install readdirp
@@ -19,14 +19,14 @@ readdirp({root: '.'}, (file => console.log(file)), (error, files) => {
 // Streams example. Recommended.
 // Print out all JavaScript files within
 // the current folder and subfolders along with their size.
-const { EOL } = require('os');
-const { Transform } = require('stream');
-const entryInfoStream = readdirp({
+const {EOL} = require('os');
+const {Transform} = require('stream');
+const stream = readdirp({
   root: __dirname,
   fileFilter: '*.js',
 });
 
-entryInfoStream
+stream
   .on('warn', (error) => {
     console.error('non-fatal error', error);
     // Optionally call stream.destroy() here in order to abort and cause 'close' to be emitted
@@ -37,7 +37,7 @@ entryInfoStream
     objectMode: true,
     transform(entryInfo, encoding, callback) {
       // Turn each entry info into a more simplified representation
-      this.push({ path: entryInfo.path, size: entryInfo.stat.size });
+      this.push({path: entryInfo.path, size: entryInfo.stat.size});
       callback();
     },
   }))
@@ -52,24 +52,19 @@ entryInfoStream
   .pipe(process.stdout);
 ```
 
-Meant to be one of the recursive versions of [fs](http://nodejs.org/docs/latest/api/fs.html) functions, e.g., like [mkdirp](https://github.com/substack/node-mkdirp).
-
-- [readdirp ![Build Status](http://travis-ci.org/thlorenz/readdirp)](#readdirp-build-status)
-- [API](#api)
-    - [options](#options)
-    - [entry info](#entry-info)
-  - [Examples](#examples)
+Meant to be one of the recursive versions of [fs](https://nodejs.org/api/fs.html) functions, e.g., like [mkdirp](https://github.com/substack/node-mkdirp).
 
 # API
 
-- ***const stream = readdirp(options)*** — Stream API. Reads given root recursively and returns a `stream` of [entry info](#entry-info)s.
+- `const stream = readdirp(options)` — **Stream API**
+    - Reads given root recursively and returns a `stream` of [entry info](#entry-info)s.
     - `on('data')` passes an [entry info](#entry-info) whenever one is found
     - `on('warn')` passes a non-fatal `Error` that prevents a file/directory from being processed (i.e., if it is inaccessible to the user)
     - `on('error')` passes a fatal `Error` which also ends the stream (i.e., when illegal options where passed)
     - `on('end')` called when all entries were found and no more will be emitted (i.e., we are done)
     - `on('close')` called when the stream is destroyed via `stream.destroy()` (which could be useful if you want to manually abort even on a non fatal error) - at that point the stream is no longer `readable` and no more entries, warning or errors are emitted
     - to learn more about streams, consult the very detailed [nodejs streams documentation](http://nodejs.org/api/stream.html) or the [stream-handbook](https://github.com/substack/stream-handbook)
-- ***readdirp (options, fileProcessed[, allProcessed])*** — Callback API.
+- `readdirp (options, fileProcessed[, allProcessed])` — **Callback API**
     - `fileProcessed`: function with [entry info](#entry-info) parameter e.g., `(entry) => {...}`
     - `allProcessed`: `(error, entries) => {}`
         - **error**: array of errors that occurred during the operation, **entries may still be present, even if errors occurred**
@@ -77,9 +72,8 @@ Meant to be one of the recursive versions of [fs](http://nodejs.org/docs/latest/
 
 ### options
 
-- **root**: path in which to start reading and recursing into subdirectories
-- **fileFilter**: filter to include/exclude files found (see [Filters](#filters) for more)
-- **directoryFilter**: filter to include/exclude directories found and to recurse into (see [Filters](#filters) for more)
+- `root: './test'`: path in which to start reading and recursing into subdirectories
+- `fileFilter: ["*.js"]`: filter to include/exclude files found
     - There are three different ways to specify filters for files and directories respectively.
     - **function**: a function that takes an entry info as a parameter and returns true to include or false to exclude the entry
     - **glob string**: a string (e.g., `*.js`) which is matched using [minimatch](https://github.com/isaacs/minimatch), so go there for more
@@ -88,9 +82,10 @@ Meant to be one of the recursive versions of [fs](http://nodejs.org/docs/latest/
         `[ '*.json', '*.js' ]` includes all JavaScript and Json files.
         `[ '!.git', '!node_modules' ]` includes all directories except the '.git' and 'node_modules'.
     - Directories that do not pass a filter will not be recursed into.
-- **depth**: depth at which to stop recursing even if more subdirectories are found
-- **entryType**: determines if data events on the stream should be emitted for `'files'`, `'directories'`, `'both'`, or `'all'`. Setting to `'all'` will also include entries for other types of file descriptors like character devices, unix sockets and named pipes. Defaults to `'files'`.
-- **lstat**: if `true`, readdirp uses `fs.lstat` instead of `fs.stat` in order to stat files and includes symlink entries in the stream along with files.
+- `directoryFilter: ["!.git"]`: filter to include/exclude directories found and to recurse into. Directories that do not pass a filter will not be recursed into.
+- `depth: 5`: depth at which to stop recursing even if more subdirectories are found
+- `entryType: 'all'`: determines if data events on the stream should be emitted for `'files'`, `'directories'`, `'both'`, or `'all'`. Setting to `'all'` will also include entries for other types of file descriptors like character devices, unix sockets and named pipes. Defaults to `'files'`.
+- `lstat: false`: use `fs.lstat` instead of `fs.stat` in order to include symlink entries in the stream along with files.
 
 ### entry info
 
