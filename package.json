@@ -33,7 +33,7 @@
   },
   "dependencies": {
     "micromatch": "^3.1.10",
-    "readable-stream": "^2.0.2"
+    "readable-stream": "^3.2.0"
   },
   "devDependencies": {
     "proxyquire": "^1.7.9",
