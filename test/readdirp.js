@@ -46,6 +46,9 @@ Structure of test bed:
 
 // console.log('\033[2J'); // clear console
 
+// Need for using "bed" as relative path
+process.chdir(__dirname);
+
 function opts (extend) {
   var o = {root: root};
   Object.assign(o, extend)
