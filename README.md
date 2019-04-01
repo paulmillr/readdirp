@@ -51,7 +51,7 @@ stream
   }))
   .pipe(process.stdout);
 
-// More examples.
+// Other options.
 readdirp({root: './test/bed', fileFilter: '*.js'})
 readdirp({root: './test/bed', fileFilter: ['*.js', '*.json']})
 readdirp({root: './test/bed', directoryFilter: ['!.git', '!*modules']})
