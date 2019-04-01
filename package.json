@@ -28,7 +28,6 @@
   ],
   "main": "index.js",
   "scripts": {
-    "test-main": "(cd test && set -e; for t in ./*.js; do node $t; done)",
     "test": "mocha"
   },
   "dependencies": {
