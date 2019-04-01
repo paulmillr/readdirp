@@ -17,35 +17,21 @@ readdirp({root: '.'}, (file => console.log(file)), (error, files) => {
 });
 
 // Streams example. Recommended.
-// Print out all JavaScript files within
-// the current folder and subfolders along with their size.
-const {EOL} = require('os');
+// Print out all JS files along with their size within the current folder & subfolders.
 const {Transform} = require('stream');
-const stream = readdirp({
-  root: __dirname,
-  fileFilter: '*.js',
-});
 
-stream
-  .on('warn', (error) => {
-    console.error('non-fatal error', error);
-    // Optionally call stream.destroy() here in order to abort and cause 'close' to be emitted
-  })
+readdirp({root: '.', fileFilter: '*.js'})
+  // Optionally call stream.destroy() in `warn()` in order to abort and cause 'close' to be emitted
+  .on('warn', error => console.error('non-fatal error', error))
   .on('error', error => console.error('fatal error', error))
   .on('end', () => console.log('done'))
   .pipe(new Transform({
     objectMode: true,
-    transform(entryInfo, encoding, callback) {
-      // Turn each entry info into a more simplified representation
-      this.push({path: entryInfo.path, size: entryInfo.stat.size});
-      callback();
-    },
-  }))
-  .pipe(new Transform({
-    objectMode: true,
-    transform(entryInfo, encoding, callback) {
+    transform(entry, encoding, callback) {
+      const {path} = entry;
+      const {size} = entry.stat;
       // Turn each entry info into a string with a line break
-      this.push(`${JSON.stringify(entryInfo)}${EOL}`);
+      this.push(`${JSON.stringify({path, size})}\n`);
       callback();
     },
   }))
@@ -109,26 +95,6 @@ Has the following properties:
 - `stat: fs.Stats`: built in [stat object](https://nodejs.org/api/fs.html#fs_class_fs_stats)
 
 ### More examples
-
-- Print out all JS files along with their size:
-
-```js
-let {join} = require('path');
-let through = require('through2');
-
-readdirp({root: join(__dirname), fileFilter: '*.js'})
-  .on('warn', err => console.error('non-fatal error', err))
-  .on('error', err => console.error('fatal error', err))
-  .pipe(through.obj(function (entry, _, cb) {
-    this.push({path: entry.path, size: entry.stat.size});
-    cb();
-  }))
-  .pipe(through.obj(function (res, _, cb) {
-    this.push(JSON.stringify(res) + '\n');
-    cb();
-  }))
-  .pipe(process.stdout);
-```
 
 - `grep` example:
 
