@@ -12,7 +12,7 @@ npm install readdirp
 const readdirp = require('readdirp');
 
 // Callback example. More RAM and CPU than streams.
-readdirp({root: '.'}, (file => console.log(file)), (error, files) => {
+readdirp('.', (file => console.log(file)), (error, files) => {
   console.log(files);
 });
 
@@ -20,7 +20,7 @@ readdirp({root: '.'}, (file => console.log(file)), (error, files) => {
 // Print out all JS files along with their size within the current folder & subfolders.
 const {Transform} = require('stream');
 
-readdirp({root: '.', fileFilter: '*.js'})
+readdirp('.', {fileFilter: '*.js'})
   // Optionally call stream.destroy() in `warn()` in order to abort and cause 'close' to be emitted
   .on('warn', error => console.error('non-fatal error', error))
   .on('error', error => console.error('fatal error', error))
@@ -38,16 +38,16 @@ readdirp({root: '.', fileFilter: '*.js'})
   .pipe(process.stdout);
 
 // Other options.
-readdirp({root: './test/bed', fileFilter: '*.js'})
-readdirp({root: './test/bed', fileFilter: ['*.js', '*.json']})
-readdirp({root: './test/bed', directoryFilter: ['!.git', '!*modules']})
-readdirp({root: './test/bed', directoryFilter: (di) => di.name.length === 9})
-readdirp({root: './test/bed', depth: 1})
+readdirp('./test/bed', {fileFilter: '*.js'})
+readdirp('./test/bed', {fileFilter: ['*.js', '*.json']})
+readdirp('./test/bed', {directoryFilter: ['!.git', '!*modules']})
+readdirp('./test/bed', {directoryFilter: (di) => di.name.length === 9})
+readdirp('./test/bed', {depth: 1})
 ```
 
 # API
 
-`const stream = readdirp(options)` — **Stream API**
+`const stream = readdirp(root[, options])` — **Stream API**
 
 - Reads given root recursively and returns a `stream` of [entry info](#entry-info)s.
 - `on('data', (entry) => {})` [entry info](#entry-info) for every file / dir.
@@ -60,7 +60,7 @@ readdirp({root: './test/bed', depth: 1})
 - To learn more about streams, consult the very detailed [nodejs streams documentation](https://nodejs.org/api/stream.html)
   or the [stream-handbook](https://github.com/substack/stream-handbook)
 
-`readdirp(options, fileProcessed[, allProcessed])` — **Callback API**
+`readdirp(root, options, fileProcessed[, allProcessed])` — **Callback API**
 
 - `fileProcessed: (entry) => {...}`: function with [entry info](#entry-info) parameter
 - `allProcessed: (error, entries) => {}`:

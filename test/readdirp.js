@@ -50,14 +50,14 @@ Structure of test bed:
 process.chdir(__dirname);
 
 function opts (extend) {
-  var o = {root: root};
+  var o = {};
   Object.assign(o, extend)
   return o;
 }
 
 describe('basic', () => {
   it('reading root without filter', function (done) {
-    readdirp(opts(), function (err, res) {
+    readdirp(root, opts(), function (err, res) {
       assert.equal(res.directories.length, totalDirs, 'all directories');
       assert.equal(res.files.length, totalFiles, 'all files');
       done();
@@ -66,7 +66,7 @@ describe('basic', () => {
 
   it('reading root without filter using lstat', function (done) {
 
-    readdirp(opts({ lstat: true }), function (err, res) {
+    readdirp(root, opts({ lstat: true }), function (err, res) {
       assert.equal(res.directories.length, totalDirs, 'all directories');
       assert.equal(res.files.length, totalFiles, 'all files');
       done()
@@ -77,7 +77,7 @@ describe('basic', () => {
 
     fs.symlinkSync(path.join(root, 'root_dir1'), path.join(root, 'dirlink'));
     fs.symlinkSync(path.join(root, 'root_file1.ext1'), path.join(root, 'link.ext1'));
-    readdirp(opts({ lstat: true }), function (err, res) {
+    readdirp(root, opts({ lstat: true }), function (err, res) {
       assert.equal(res.directories.length, totalDirs, 'all directories');
       assert.equal(res.files.length, totalFiles + 2, 'all files + symlinks');
       fs.unlinkSync(path.join(root, 'dirlink'));
@@ -89,9 +89,9 @@ describe('basic', () => {
   it('reading non-standard fds', function (done) {
 
     var server = net.createServer().listen(path.join(root, 'test.sock'), function(){
-      readdirp(opts({ entryType: 'all' }), function (err, res) {
+      readdirp(root, opts({ entryType: 'all' }), function (err, res) {
         assert.equal(res.files.length, totalFiles + 1, 'all files + socket');
-        readdirp(opts({ entryType: 'both' }), function (err, res) {
+        readdirp(root, opts({ entryType: 'both' }), function (err, res) {
           assert.equal(res.files.length, totalFiles, 'all regular files only');
           server.close();
           done()
@@ -105,28 +105,28 @@ describe('reading root using glob filter', function (done) {
   // normal
   it('# "*.ext1"', function (done) {
 
-    readdirp(opts( { fileFilter: '*.ext1' } ), function (err, res) {
+    readdirp(root, opts( { fileFilter: '*.ext1' } ), function (err, res) {
       assert.equal(res.files.length, ext1Files, 'all ext1 files');
       done()
     })
   })
   it('# ["*.ext1", "*.ext3"]', function (done) {
 
-    readdirp(opts( { fileFilter: [ '*.ext1', '*.ext3' ] } ), function (err, res) {
+    readdirp(root, opts( { fileFilter: [ '*.ext1', '*.ext3' ] } ), function (err, res) {
       assert.equal(res.files.length, ext1Files + ext3Files, 'all ext1 and ext3 files');
       done()
     })
   })
   it('# "root_dir1"', function (done) {
 
-    readdirp(opts( { directoryFilter: 'root_dir1' }), function (err, res) {
+    readdirp(root, opts( { directoryFilter: 'root_dir1' }), function (err, res) {
       assert.equal(res.directories.length, 1, 'one directory');
       done()
     })
   })
   it('# ["root_dir1", "*dir1_subdir1"]', function (done) {
 
-    readdirp(opts( { directoryFilter: [ 'root_dir1', '*dir1_subdir1' ]}), function (err, res) {
+    readdirp(root, opts( { directoryFilter: [ 'root_dir1', '*dir1_subdir1' ]}), function (err, res) {
       assert.equal(res.directories.length, 2, 'two directories');
       done()
     })
@@ -134,14 +134,14 @@ describe('reading root using glob filter', function (done) {
 
   it('# negated: "!*.ext1"', function (done) {
 
-    readdirp(opts( { fileFilter: '!*.ext1' } ), function (err, res) {
+    readdirp(root, opts( { fileFilter: '!*.ext1' } ), function (err, res) {
       assert.equal(res.files.length, totalFiles - ext1Files, 'all but ext1 files');
       done()
     })
   })
   it('# negated: ["!*.ext1", "!*.ext3"]', function (done) {
 
-    readdirp(opts( { fileFilter: [ '!*.ext1', '!*.ext3' ] } ), function (err, res) {
+    readdirp(root, opts( { fileFilter: [ '!*.ext1', '!*.ext3' ] } ), function (err, res) {
       assert.equal(res.files.length, totalFiles - ext1Files - ext3Files, 'all but ext1 and ext3 files');
       done()
     })
@@ -149,7 +149,7 @@ describe('reading root using glob filter', function (done) {
 
   it('# mixed: ["*.ext1", "!*.ext3"]', function (done) {
 
-    readdirp(opts( { fileFilter: [ '*.ext1', '!*.ext3' ] } ), function (err, res) {
+    readdirp(root, opts( { fileFilter: [ '*.ext1', '!*.ext3' ] } ), function (err, res) {
       var re = /Cannot mix negated with non negated glob filters/;
       assert.ok(re.test(err[0].toString()), 'returns meaningfull error');
       done()
@@ -158,14 +158,14 @@ describe('reading root using glob filter', function (done) {
 
   it('# leading and trailing spaces: [" *.ext1", "*.ext3 "]', function (done) {
 
-    readdirp(opts( { fileFilter: [ ' *.ext1', '*.ext3 ' ] } ), function (err, res) {
+    readdirp(root, opts( { fileFilter: [ ' *.ext1', '*.ext3 ' ] } ), function (err, res) {
       assert.equal(res.files.length, ext1Files + ext3Files, 'all ext1 and ext3 files');
       done()
     })
   })
   it('# leading and trailing spaces: [" !*.ext1", " !*.ext3 "]', function (done) {
 
-    readdirp(opts( { fileFilter: [ ' !*.ext1', ' !*.ext3' ] } ), function (err, res) {
+    readdirp(root, opts( { fileFilter: [ ' !*.ext1', ' !*.ext3' ] } ), function (err, res) {
       assert.equal(res.files.length, totalFiles - ext1Files - ext3Files, 'all but ext1 and ext3 files');
       done()
     })
@@ -173,7 +173,7 @@ describe('reading root using glob filter', function (done) {
 
   it('# ** glob pattern', function (done) {
 
-    readdirp(opts( { fileFilter: '**/*.ext1' } ), function (err, res) {
+    readdirp(root,opts( { fileFilter: '**/*.ext1' } ), function (err, res) {
       assert.equal(res.files.length, ext1Files, 'ignores ** in **/*.ext1 -> only *.ext1 files');
       done()
     })
@@ -183,7 +183,7 @@ describe('reading root using glob filter', function (done) {
 describe('reading root using function filter', function (done) {
   it('# file filter -> "contains root_dir2"', function (done) {
 
-    readdirp(
+    readdirp(root,
         opts( { fileFilter: function (fi) { return fi.name.indexOf('root_dir2') >= 0; } })
       , function (err, res) {
           assert.equal(res.files.length, rootDir2Files, 'all rootDir2Files');
@@ -194,7 +194,7 @@ describe('reading root using function filter', function (done) {
 
   it('# directory filter -> "name has length 9"', function (done) {
 
-    readdirp(
+    readdirp(root,
         opts( { directoryFilter: function (di) { return di.name.length === 9; } })
       , function (err, res) {
           assert.equal(res.directories.length, nameHasLength9Dirs, 'all all dirs with name length 9');
@@ -206,14 +206,14 @@ describe('reading root using function filter', function (done) {
 
 describe('root', function () {
   it('# depth 1', function(done) {
-      readdirp(opts({depth: 1}), (() => {}), function (err, res) {
+      readdirp(root, opts({depth: 1}), (() => {}), function (err, res) {
         assert.ifError(err);
         assert.equal(res.files.length, depth1Files, 'does not return files at depth 2');
         done();
       })
   });
   it('# depth 0', function (done) {
-    readdirp(opts({depth: 0}), (() => {}), function (err, res) {
+    readdirp(root, opts({depth: 0}), (() => {}), function (err, res) {
       assert.ifError(err);
       assert.equal(res.files.length, depth0Files, 'does not return files at depth 0');
       done();
@@ -226,7 +226,7 @@ describe('root', function () {
     var pluckName = function(fi) { return fi.name; };
     var processedFiles = [];
 
-    readdirp(opts(), function(fi) { processedFiles.push(fi);}, function (err, res) {
+    readdirp(root, opts(), function(fi) { processedFiles.push(fi);}, function (err, res) {
           assert.equal(processedFiles.length, res.files.length, 'calls back for each file processed');
           // t.deepEquals();
           assert.deepEqual(processedFiles.map(pluckName).sort(),res.files.map(pluckName).sort(), 'same file names');
@@ -257,13 +257,13 @@ describe('resolving of name, full and relative paths', function () {
 
     it('' + util.inspect(op), function (done) {
       this.timeout(5000);
-      readdirp (op, function(err, res) {
+      readdirp(op.root, op, function(err, res) {
         assert.ifError(err);
         assert.equal(res.files[0].name, expected.name, 'correct name');
         assert.equal(res.files[0].path, path.join(op.prefix, expected.path), 'correct path');
 
         fs.realpath(op.root, function(err, fullRoot) {
-          readdirp (op, function(err, res) {
+          readdirp(op.root, op, function(err, res) {
             assert.equal(
                 res.files[0].fullParentDir
               , path.join(fullRoot, op.prefix, expected.parentDirName)

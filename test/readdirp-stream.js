@@ -22,7 +22,7 @@ process.chdir(__dirname);
 // see test/readdirp.js for test bed layout
 
 function opts(extend) {
-  var o = { root: root };
+  var o = { };
   Object.assign(o, extend);
   return o;
 }
@@ -47,7 +47,7 @@ function capture() {
 
 describe("integrated", function() {
   it("reading root without filter", function(done) {
-    readdirp(opts())
+    readdirp(root)
       .on("error", function(err) {
         assert.fail("should not throw error", err);
       })
@@ -63,7 +63,7 @@ describe("integrated", function() {
   });
 
   it('normal: ["*.ext1", "*.ext3"]', function(done) {
-    readdirp(opts({ fileFilter: ["*.ext1", "*.ext3"] }))
+    readdirp(root, opts({ fileFilter: ["*.ext1", "*.ext3"] }))
       .on("error", function(err) {
         assert.fail("should not throw error", err);
       })
@@ -83,7 +83,7 @@ describe("integrated", function() {
   });
 
   it("files only", function(done) {
-    readdirp(opts({ entryType: "files" }))
+    readdirp(root, opts({ entryType: "files" }))
       .on("error", function(err) {
         assert.fail("should not throw error", err);
       })
@@ -99,7 +99,7 @@ describe("integrated", function() {
   });
 
   it("directories only", function(done) {
-    readdirp(opts({ entryType: "directories" }))
+    readdirp(root, opts({ entryType: "directories" }))
       .on("error", function(err) {
         assert.fail("should not throw error", err);
       })
@@ -119,7 +119,7 @@ describe("integrated", function() {
   });
 
   it("both directories + files", function(done) {
-    readdirp(opts({ entryType: "both" }))
+    readdirp(root, opts({ entryType: "both" }))
       .on("error", function(err) {
         assert.fail("should not throw error", err);
       })
@@ -139,7 +139,7 @@ describe("integrated", function() {
   });
 
   it("directory filter with directories only", function(done) {
-    readdirp(
+    readdirp(root,
       opts({
         entryType: "directories",
         directoryFilter: ["root_dir1", "*dir1_subdir1"]
@@ -160,7 +160,7 @@ describe("integrated", function() {
   });
 
   it("directory and file filters with both entries", function(done) {
-    readdirp(
+    readdirp(root,
       opts({
         entryType: "both",
         directoryFilter: ["root_dir1", "*dir1_subdir1"],
@@ -182,7 +182,7 @@ describe("integrated", function() {
   });
 
   it('negated: ["!*.ext1", "!*.ext3"]', function(done) {
-    readdirp(opts({ fileFilter: ["!*.ext1", "!*.ext3"] }))
+    readdirp(root, opts({ fileFilter: ["!*.ext1", "!*.ext3"] }))
       .on("error", function(err) {
         assert.fail("should not throw error", err);
       })
@@ -202,16 +202,22 @@ describe("integrated", function() {
 
   it("no options given", function(done) {
     readdirp().on("error", function(err) {
-      var re = /Need to pass at least one argument/;
+      var re = /root argument is required/;
+      assert.ok(re.test(err.toString()), "emits meaningful error");
+      done();
+    });
+  });
+
+  it("old API", function(done) {
+    readdirp({root: '.'}).on("error", function(err) {
+      var re = /root argument must be a string/;
       assert.ok(re.test(err.toString()), "emits meaningful error");
       done();
     });
   });
 
   it('mixed: ["*.ext1", "!*.ext3"]', function(done) {
-    readdirp(opts({ fileFilter: ["*.ext1", "!*.ext3"] })).on("error", function(
-      err
-    ) {
+    readdirp(root, opts({fileFilter: ["*.ext1", "!*.ext3"]})).on("error", function(err) {
       var re = /Cannot mix negated with non negated glob filters/;
       assert.ok(re.test(err.toString()), "emits meaningful error");
       done();
@@ -270,7 +276,7 @@ describe("api separately", function() {
   it("when a stream is paused it stops walking the fs", function(done) {
     var resumed = false;
 
-    stream = readdirp(opts())
+    const stream = readdirp(root, opts())
       .on("error", function(err) {
         assert.fail("should not throw error", err);
       })
