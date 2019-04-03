@@ -5,6 +5,7 @@ const fs       = require('fs');
 const util     = require('util');
 const net      = require('net');
 const readdirp = require('../');
+const os = process.platform;
 const root     = path.join(__dirname, '../test/bed');
 const totalDirs          =  6;
 const totalFiles         =  12;
@@ -86,19 +87,20 @@ describe('basic', () => {
     })
   })
 
-  it('reading non-standard fds', function (done) {
-
-    var server = net.createServer().listen(path.join(root, 'test.sock'), function(){
-      readdirp(root, opts({ entryType: 'all' }), function (err, res) {
-        assert.equal(res.files.length, totalFiles + 1, 'all files + socket');
-        readdirp(root, opts({ entryType: 'both' }), function (err, res) {
-          assert.equal(res.files.length, totalFiles, 'all regular files only');
-          server.close();
-          done()
+  if (os !== 'win32') {
+    it('reading non-standard fds', function (done) {
+      let server = net.createServer().listen(path.join(root, 'test.sock'), function(){
+        readdirp(root, opts({ entryType: 'all' }), function (err, res) {
+          assert.equal(res.files.length, totalFiles + 1, 'all files + socket');
+          readdirp(root, opts({ entryType: 'both' }), function (err, res) {
+            assert.equal(res.files.length, totalFiles, 'all regular files only');
+            server.close();
+            done()
+          })
         })
-      })
+      });
     });
-  })
+  }
 });
 
 describe('reading root using glob filter', function (done) {
