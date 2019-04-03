@@ -129,7 +129,7 @@ const findLinesMatching = (searchTerm) => {
 // create a stream of all javascript files found in this and all sub directories
 // find all lines matching the term
 // for each file (if none found, that file is ignored)
-readdirp({root: join(__dirname), fileFilter: '*.js'})
+readdirp(__dirname, {fileFilter: '*.js'})
   .pipe(findLinesMatching('arguments'))
   .pipe(es.mapSync(function (res) {
     // format the results and output
