@@ -18,31 +18,26 @@ readdirp('.', (file => console.log(file)), (error, files) => {
 
 // Streams example. Recommended.
 // Print out all JS files along with their size within the current folder & subfolders.
-const {Transform} = require('stream');
-
 readdirp('.', {fileFilter: '*.js'})
+  .on('data', (entry) => {
+    const {path} = entry;
+    const {size} = entry.stat;
+    // Turn each entry info into a string with a line break
+    console.log(`${JSON.stringify({path, size})}`);
+  })
   // Optionally call stream.destroy() in `warn()` in order to abort and cause 'close' to be emitted
   .on('warn', error => console.error('non-fatal error', error))
   .on('error', error => console.error('fatal error', error))
-  .on('end', () => console.log('done'))
-  .pipe(new Transform({
-    objectMode: true,
-    transform(entry, encoding, callback) {
-      const {path} = entry;
-      const {size} = entry.stat;
-      // Turn each entry info into a string with a line break
-      this.push(`${JSON.stringify({path, size})}\n`);
-      callback();
-    },
-  }))
-  .pipe(process.stdout);
+  .on('end', () => console.log('done'));
+
+// More idiomatic print example: use `require('stream').Transform` and .pipe(process.stdout);
 
 // Other options.
-readdirp('./test/bed', {fileFilter: '*.js'})
-readdirp('./test/bed', {fileFilter: ['*.js', '*.json']})
-readdirp('./test/bed', {directoryFilter: ['!.git', '!*modules']})
-readdirp('./test/bed', {directoryFilter: (di) => di.name.length === 9})
-readdirp('./test/bed', {depth: 1})
+readdirp('test', {fileFilter: '*.js'})
+readdirp('test', {fileFilter: ['*.js', '*.json']})
+readdirp('test', {directoryFilter: ['!.git', '!*modules']})
+readdirp('test', {directoryFilter: (di) => di.name.length === 9})
+readdirp('test', {depth: 1})
 ```
 
 # API
