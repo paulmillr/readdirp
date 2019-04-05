@@ -31,7 +31,7 @@
     "test": "mocha"
   },
   "dependencies": {
-    "micromatch": "^3.1.10",
+    "micromatch": "micromatch/micromatch#dev",
     "readable-stream": "^3.2.0"
   },
   "devDependencies": {
