@@ -12,7 +12,7 @@ npm install readdirp
 const readdirp = require('readdirp');
 
 // Use streams to achieve small RAM & CPU footprint.
-// 1) Streams example with for-await. Node.js 10+-only.
+// 1) Streams example with for-await. Node.js 10+ only.
 for await (const entry of readdirp('.', {fileFilter: '*.js'})) {
   const {path, stat: {size}} = entry;
   console.log(`${JSON.stringify({path, size})}`);
