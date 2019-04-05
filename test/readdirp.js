@@ -186,7 +186,9 @@ describe('reading root using function filter', function (done) {
   it('# file filter -> "contains root_dir2"', function (done) {
 
     readdirp(root,
-        opts( { fileFilter: function (fi) { return fi.name.indexOf('root_dir2') >= 0; } })
+        opts( { fileFilter: function (fi) {
+          return fi.basename.includes('root_dir2');
+        } })
       , function (err, res) {
           assert.equal(res.files.length, rootDir2Files, 'all rootDir2Files');
           done()
@@ -197,7 +199,7 @@ describe('reading root using function filter', function (done) {
   it('# directory filter -> "name has length 9"', function (done) {
 
     readdirp(root,
-        opts( { directoryFilter: function (di) { return di.name.length === 9; } })
+        opts( { directoryFilter: function (di) { return di.basename.length === 9; } })
       , function (err, res) {
           assert.equal(res.directories.length, nameHasLength9Dirs, 'all all dirs with name length 9');
           done()
@@ -225,7 +227,7 @@ describe('root', function () {
   it('progress callbacks', function (done) {
 
 
-    var pluckName = function(fi) { return fi.name; };
+    var pluckName = function(fi) { return fi.basename; };
     var processedFiles = [];
 
     readdirp(root, opts(), function(fi) { processedFiles.push(fi);}, function (err, res) {
@@ -261,13 +263,13 @@ describe('resolving of name, full and relative paths', function () {
       this.timeout(5000);
       readdirp(op.root, op, function(err, res) {
         assert.ifError(err);
-        assert.equal(res.files[0].name, expected.name, 'correct name');
+        assert.equal(res.files[0].basename, expected.name, 'correct name');
         assert.equal(res.files[0].path, path.join(op.prefix, expected.path), 'correct path');
 
         fs.realpath(op.root, function(err, fullRoot) {
           readdirp(op.root, op, function(err, res) {
             assert.equal(
-                res.files[0].fullParentDir
+                path.dirname(res.files[0].fullPath)
               , path.join(fullRoot, op.prefix, expected.parentDirName)
               , 'correct parentDir'
             );

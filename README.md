@@ -83,10 +83,8 @@ readdirp('test', {depth: 1})
 Has the following properties:
 
 - `path: 'test/bed/root_dir1/root_dir1_subdir1'`: path to the file/directory (relative to given root)
-- `parentDir: 'test/bed/root_dir1'`: directory in which entry was found (relative to given root)
-- `fullParentDir: '/User/dev/readdirp/test/bed/root_dir1'`: full path to parent directory
-- `name: 'root_dir1_subdir1'`: name of the file/directory
 - `fullPath: '/User/dev/readdirp/test/bed/root_dir1/root_dir1_subdir1'`: full path to the file/directory found
+- `basename: 'root_dir1_subdir1'`: name of the file/directory
 - `stat: fs.Stats`: built in [stat object](https://nodejs.org/api/fs.html#fs_class_fs_stats)
 
 ### More examples
