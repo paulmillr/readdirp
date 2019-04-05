@@ -11,18 +11,18 @@ npm install readdirp
 ```javascript
 const readdirp = require('readdirp');
 
-// Callback example. More RAM and CPU than streams.
-readdirp('.', (file => console.log(file)), (error, files) => {
-  console.log(files);
-});
+// Use streams to achieve small RAM & CPU footprint.
+// 1) Streams example with for-await. Node.js 10+-only.
+for await (const entry of readdirp('.', {fileFilter: '*.js'})) {
+  const {path, stat: {size}} = entry;
+  console.log(`${JSON.stringify({path, size})}`);
+}
 
-// Streams example. Recommended.
+// 2) Non-await streams example.
 // Print out all JS files along with their size within the current folder & subfolders.
 readdirp('.', {fileFilter: '*.js'})
   .on('data', (entry) => {
-    const {path} = entry;
-    const {size} = entry.stat;
-    // Turn each entry info into a string with a line break
+    const {path, stat: {size}} = entry;
     console.log(`${JSON.stringify({path, size})}`);
   })
   // Optionally call stream.destroy() in `warn()` in order to abort and cause 'close' to be emitted
@@ -30,7 +30,10 @@ readdirp('.', {fileFilter: '*.js'})
   .on('error', error => console.error('fatal error', error))
   .on('end', () => console.log('done'));
 
-// More idiomatic print example: use `require('stream').Transform` and .pipe(process.stdout);
+// 3) Callback example. Don't use: More RAM and CPU than streams.
+readdirp('.', (file => console.log(file)), (error, files) => {
+  console.log(files);
+});
 
 // Other options.
 readdirp('test', {fileFilter: '*.js'})
