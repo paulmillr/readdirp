@@ -139,6 +139,15 @@ readdirp(__dirname, {fileFilter: '*.js'})
   .pipe(process.stdout);
 ```
 
+# Changelog
+
+Version 3 brings huge performance improvements and stream `backPressure` support.
+
+- Upgrading 2.x to 3.x:
+    - Signature changed from `readdirp(options)` to `readdirp(root, options)`
+    - `EntryInfo`: Renamed `name` to `basename`
+    - `EntryInfo`: Removed `parentDir` and `fullParentDir` properties
+
 # License
 
 MIT License, see LICENSE file.
