@@ -12,9 +12,7 @@
     "node": ">=8"
   },
   "files": [
-    "index.js",
-    "lib/stream-api.js",
-    "lib/normalizer.js"
+    "lib/"
   ],
   "keywords": [
     "recursive",
@@ -26,13 +24,12 @@
     "find",
     "filter"
   ],
-  "main": "index.js",
+  "main": "lib/index.js",
   "scripts": {
     "test": "mocha"
   },
   "dependencies": {
-    "micromatch": "micromatch/micromatch#dev",
-    "readable-stream": "^3.2.0"
+    "micromatch": "micromatch/micromatch#dev"
   },
   "devDependencies": {
     "proxyquire": "^1.7.9",
