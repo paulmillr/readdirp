@@ -1,7 +1,7 @@
 /*jshint asi:true */
 
 const path = require("path");
-const TransformStream = require("readable-stream").Transform;
+const TransformStream = require("stream").Transform;
 const through = require("through2");
 const proxyquire = require("proxyquire");
 const streamapi = require("../lib/stream-api");

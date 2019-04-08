@@ -29,7 +29,7 @@
     "test": "mocha"
   },
   "dependencies": {
-    "micromatch": "micromatch/micromatch#dev"
+    "picomatch": "micromatch/picomatch#dev"
   },
   "devDependencies": {
     "proxyquire": "^1.7.9",
