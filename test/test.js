@@ -8,7 +8,7 @@ const rimraf = require('rimraf');
 const root = sysPath.join(__dirname, "fixtures");
 const readdirp = require('..');
 
-const fs = require('fs').promises;
+const fs = require('fs');
 let testCount = 0;
 let currPath;
 
@@ -18,10 +18,10 @@ const read = async (options) => {
 
 const touch = async (files=[], dirs=[]) => {
   for (const name of files) {
-    await fs.writeFile(sysPath.join(currPath, name), `${Date.now()}`);
+    await promisify(fs.writeFile)(sysPath.join(currPath, name), `${Date.now()}`);
   }
   for (const dir of dirs) {
-    await fs.mkdir(sysPath.join(currPath, dir));
+    await promisify(fs.mkdir)(sysPath.join(currPath, dir));
   }
 }
 
@@ -29,7 +29,7 @@ beforeEach(async () => {
   testCount++;
   currPath = sysPath.join(__dirname, 'fixtures', testCount.toString())
   await promisify(rimraf)(currPath);
-  await fs.mkdir(currPath);
+  await promisify(fs.mkdir)(currPath);
 });
 
 afterEach(async () => {
