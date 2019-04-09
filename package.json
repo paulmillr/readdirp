@@ -33,9 +33,7 @@
   },
   "devDependencies": {
     "mocha": "^6.1.1",
-    "proxyquire": "^1.7.9",
     "rimraf": "^2.6.3",
-    "through2": "^2.0.0",
     "chai": "^4.2.0"
   },
   "license": "MIT"

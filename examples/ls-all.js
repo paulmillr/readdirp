@@ -7,10 +7,6 @@ const start = async (stream) => {
     // Comment it out if you simply want to list files.
     await new Promise(resolve => setTimeout(resolve, 500));
     // i++;
-    if (i === 5) {
-      stream.pause();
-      setTimeout(() => {stream.resume()}, 1000);
-    }
     console.log(`${++i}: ${chunk.path}`);
   }
   console.log('DONE', i);
