@@ -76,15 +76,6 @@ describe('entryType', () => {
     res.should.have.lengthOf(files.length + dirs.length);
     res.map(e => e.basename).should.deep.equal(files.concat(dirs));
   });
-
-  // entryType: "directories",
-  // directoryFilter: ["root_dir1", "*dir1_subdir1"]
-
-  // entryType: "both",
-  // directoryFilter: ["root_dir1", "*dir1_subdir1"],
-  // fileFilter: ["!*.ext1"]
-
-  // fileFilter: ["!*.ext1", "!*.ext3"]
 });
 
 describe('depth', () => {
@@ -129,12 +120,34 @@ describe('EntryInfo', () => {
 });
 
 describe('filtering', () => {
-  ["*.ext1", "*.ext3"]
-  it('glob', async () => {});
-  it('negated glob', async () => {});
-  it('glob & negated glob', async () => {});
-  it('function', async () => {});
+  beforeEach(async () => {
+    await touch(['a.js', 'b.txt', 'c.js', 'd.js']);
+  });
+  it('glob', async () => {
+    const res = await read({fileFilter: '*.js'});
+    res.map(e => e.basename).should.deep.equal(['a.js', 'c.js', 'd.js']);
 
+    const res2 = await read({fileFilter: ['*.js']});
+    res2.map(e => e.basename).should.deep.equal(['a.js', 'c.js', 'd.js']);
+
+    const res3 = await read({fileFilter: ['*.txt']});
+    res3.map(e => e.basename).should.deep.equal(['b.txt']);
+  });
+  it('negated glob', async () => {
+    const res = await read({fileFilter: ['!d.js']});
+    res.map(e => e.basename).should.deep.equal(['a.js', 'b.txt', 'c.js']);
+  });
+  it('glob & negated glob', async () => {
+    const res = await read({fileFilter: ['*.js', '!d.js']});
+    res.map(e => e.basename).should.deep.equal(['a.js', 'c.js']);
+  });
+  it('function', async () => {
+    const res = await read({fileFilter: (entry) => sysPath.extname(entry.fullPath) === '.js'});
+    res.map(e => e.basename).should.deep.equal(['a.js', 'c.js', 'd.js']);
+
+    const res2 = await read({fileFilter: (entry) => entry.stat.size > 0 });
+    res2.map(e => e.basename).should.deep.equal(['a.js', 'b.txt', 'c.js', 'd.js']);
+  });
 });
 
 describe('various', () => {
