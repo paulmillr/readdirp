@@ -29,7 +29,7 @@
     "test": "mocha"
   },
   "dependencies": {
-    "picomatch": "github:micromatch/picomatch#dev"
+    "picomatch": "^2.0.3"
   },
   "devDependencies": {
     "mocha": "^6.1.1",
