@@ -12,7 +12,7 @@
     "node": ">=8"
   },
   "files": [
-    "lib/"
+    "index.js"
   ],
   "keywords": [
     "recursive",
@@ -24,7 +24,6 @@
     "find",
     "filter"
   ],
-  "main": "lib/index.js",
   "scripts": {
     "test": "mocha"
   },

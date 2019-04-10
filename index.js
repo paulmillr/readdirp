@@ -1,11 +1,49 @@
+'use strict';
+
+const fs = require('fs');
 const {Readable} = require('stream');
 const sysPath = require('path');
 const {promisify} = require('util');
-const fs = require('fs');
+const picomatch = require('picomatch');
 const readdir = promisify(fs.readdir);
 const stat = promisify(fs.stat);
 const lstat = promisify(fs.lstat);
-const normalizeFilter = require('./normalizer');
+
+
+const BANG = '!';
+const normalizeFilter = (filter) => {
+  if (filter === undefined) return;
+  if (typeof filter === "function") return filter;
+
+  if (typeof filter === "string") {
+    const glob = picomatch(filter.trim());
+    return (entry) => glob(entry.basename);
+  }
+
+  if (Array.isArray(filter)) {
+    const positive = [];
+    const negative = [];
+    for (const item of filter) {
+      const trimmed = item.trim();
+      if (trimmed.charAt(0) === BANG) {
+        negative.push(picomatch(trimmed.slice(1)));
+      } else {
+        positive.push(picomatch(trimmed));
+      }
+    }
+
+    if (negative.length) {
+      if (positive.length) {
+        return (entry) => positive.some(f => f(entry.basename)) &&
+          !negative.every(f => f(entry.basename));
+      } else {
+        return (entry) => !negative.every(f => f(entry.basename));
+      }
+    } else {
+      return (entry) => positive.some(f => f(entry.basename));
+    }
+  }
+};
 
 const FILE_TYPE = 'files';
 const DIR_TYPE = 'directories';
@@ -158,4 +196,40 @@ class ReaddirpStream extends Readable {
   }
 }
 
-module.exports = ReaddirpStream;
+/**
+ * @typedef {Object} ReaddirpArguments
+ * @property {Function=} fileFilter
+ * @property {Function=} directoryFilter
+ * @property {String=} entryType
+ * @property {Number=} depth
+ * @property {String=} root
+ * @property {Boolean=} lstat
+ */
+
+/**
+ * Main function which ends up calling readdirRec and reads all files and directories in given root recursively.
+ * @param {String} root Root directory
+ * @param {ReaddirpArguments=} options Options to specify root (start directory), filters and recursion depth
+ */
+const readdirp = (root, options = {}) => {
+  let error;
+  if (!error) options.root = root;
+  const stream = new ReaddirpStream(options);
+  if (error) stream._handleFatalError(error);
+  return stream;
+};
+
+const readdirpPromise = (root, options = {}) => {
+  return new Promise((resolve, reject) => {
+    const files = [];
+    readdirp(root, options)
+      .on('data', (entry) => { files.push(entry); })
+      .on('end', () => { resolve(files); })
+      .on('error', (error) => { reject(error); });
+  });
+};
+
+readdirp.promise = readdirpPromise;
+readdirp.ReaddirpStream = ReaddirpStream;
+
+module.exports = readdirp;
