@@ -1,3 +1,4 @@
+const fs = require('fs');
 const sysPath = require('path');
 const chai = require('chai');
 const {Readable} = require('stream');
@@ -5,10 +6,9 @@ chai.should();
 const {promisify} = require('util');
 const rimraf = require('rimraf');
 
-const root = sysPath.join(__dirname, "fixtures");
-const readdirp = require('..');
+const readdirp = require('.');
 
-const fs = require('fs');
+const root = sysPath.join(__dirname, 'test-fixtures');
 let testCount = 0;
 let currPath;
 
@@ -27,7 +27,7 @@ const touch = async (files=[], dirs=[]) => {
 
 beforeEach(async () => {
   testCount++;
-  currPath = sysPath.join(__dirname, 'fixtures', testCount.toString())
+  currPath = sysPath.join(root, testCount.toString())
   await promisify(rimraf)(currPath);
   await promisify(fs.mkdir)(currPath);
 });
@@ -35,6 +35,13 @@ beforeEach(async () => {
 afterEach(async () => {
   await promisify(rimraf)(currPath);
 });
+
+before(async () => {
+  await promisify(fs.mkdir)(root);
+});
+after(async () => {
+  await promisify(rimraf)(root);
+})
 
 describe('basic', () => {
   it('reads directory', async () => {
