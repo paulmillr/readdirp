@@ -25,15 +25,16 @@
     "filter"
   ],
   "scripts": {
-    "test": "mocha"
+    "test": "nyc mocha"
   },
   "dependencies": {
     "picomatch": "^2.0.3"
   },
   "devDependencies": {
-    "mocha": "^6.1.1",
-    "rimraf": "^2.6.3",
-    "chai": "^4.2.0"
+    "chai": "^4.2.0",
+    "mocha": "^6.1.2",
+    "nyc": "^13.3.0",
+    "rimraf": "^2.6.3"
   },
   "license": "MIT"
 }

@@ -57,12 +57,12 @@ const READ_OPTIONS = {encoding: 'utf8'};
 class ReaddirpStream extends Readable {
   static get defaultOptions() {
     return {
-      root: ".",
+      root: '.',
       fileFilter: (path) => true,
       directoryFilter: (path) => true,
-      entryType: "files",
+      entryType: 'files',
       lstat: false,
-      depth: Number.MAX_SAFE_INTEGER
+      depth: 2147483648
     }
   }
 
@@ -179,18 +179,15 @@ class ReaddirpStream extends Readable {
     }
   }
 
-  _handleError(err) {
-    if (this.isPaused()) {
-      return this._warnings.push(err);
-    }
-    if (!this.readable) {
-      this.emit("warn", err);
+  _handleError(error) {
+    if (this.readable) {
+      this.emit('warn', error);
     }
   }
 
   _handleFatalError(error) {
-    this.emit('error', error);
     this.destroy();
+    this.emit('error', error);
   }
 
   destroy() {
