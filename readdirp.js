@@ -23,9 +23,9 @@ function isUndefined (obj) {
 /**
  * Main function which ends up calling readdirRec and reads all files and directories in given root recursively.
  * @param { Object }   opts     Options to specify root (start directory), filters and recursion depth
- * @param { function } callback1  When callback2 is given calls back for each processed file - function (fileInfo) { ... },
+ * @param { function | Object } callback1  When callback2 is given calls back for each processed file - function (fileInfo) { ... },
  *                                when callback2 is not given, it behaves like explained in callback2
- * @param { function } callback2  Calls back once all files have been processed with an array of errors and file infos
+ * @param { function } [callback2]  Calls back once all files have been processed with an array of errors and file infos
  *                                function (err, fileInfos) { ... }
  */
 function readdir(opts, callback1, callback2) {
