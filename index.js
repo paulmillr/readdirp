@@ -81,9 +81,10 @@ class ReaddirpStream extends Readable {
     this._stat = opts.lstat ? lstat : stat;
     this._maxDepth = opts.depth;
     this._entryType = opts.entryType;
+    this._root = root;
 
     // Launch stream with one parent, the root dir.
-    this.parents = [{parentPath: opts.root, depth: 0}];
+    this.parents = [{parentPath: root, depth: 0}];
     this.filesToRead = 0;
   }
 
@@ -113,13 +114,14 @@ class ReaddirpStream extends Readable {
 
     this.filesToRead += files.length;
     for (const relativePath of files) {
-      const path = sysPath.join(parentPath, relativePath);
-      const stat = await this._stat(path);
-      const fullPath = sysPath.resolve(path);
-      const entry = {path, stat, fullPath, basename: sysPath.basename(path)};
+      const fullPath = sysPath.resolve(sysPath.join(parentPath, relativePath));
+      const stat = await this._stat(fullPath);
+      const path = sysPath.relative(this._root, fullPath);
+      const basename = sysPath.basename(path);
+      const entry = {path, stat, fullPath, basename, root: this._root};
 
       if (this._isDirAndMatchesFilter(entry)) {
-        this._pushNewParentIfLessThanMaxDepth(entry.path, depth + 1);
+        this._pushNewParentIfLessThanMaxDepth(fullPath, depth + 1);
         this._emitPushIfUserWantsDir(entry);
         if (!this.isPaused()) this._read();
       } else if (this._isFileAndMatchesFilter(entry)) {
