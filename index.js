@@ -45,6 +45,7 @@ const normalizeFilter = (filter) => {
   }
 };
 
+const NO_ENTRY_ERROR = 'ENOENT';
 const FILE_TYPE = 'files';
 const DIR_TYPE = 'directories';
 const FILE_DIR_TYPE = 'both';
@@ -52,6 +53,13 @@ const ALL_TYPE = 'all';
 const FILE_TYPES = Object.freeze(new Set([FILE_TYPE, FILE_DIR_TYPE, ALL_TYPE]));
 const DIR_TYPES = Object.freeze(new Set([DIR_TYPE, FILE_DIR_TYPE, ALL_TYPE]));
 const READ_OPTIONS = {encoding: 'utf8'};
+
+const handleNoEntryError = value => e => {
+  if (e.code === NO_ENTRY_ERROR) {
+    return value;
+  }
+  throw e;
+};
 
 
 class ReaddirpStream extends Readable {
@@ -109,13 +117,21 @@ class ReaddirpStream extends Readable {
 
     // To prevent race conditions, we increase counter while awaiting readdir.
     this.filesToRead++;
-    const files = await readdir(parentPath, READ_OPTIONS);
+    const files = await readdir(parentPath, READ_OPTIONS).catch(handleNoEntryError([]));
     this.filesToRead--;
 
+    // If the stream was destroyed, after readdir is completed
+    if (!this.readable) return;
+
     this.filesToRead += files.length;
+
     for (const relativePath of files) {
       const fullPath = sysPath.resolve(sysPath.join(parentPath, relativePath));
-      const stat = await this._stat(fullPath);
+      const stat = await this._stat(fullPath).catch(handleNoEntryError());
+      if (!stat) {
+        this.filesToRead--;
+        continue;
+      }
       const path = sysPath.relative(this._root, fullPath);
       const basename = sysPath.basename(path);
       const entry = {path, stat, fullPath, basename, root: this._root};
