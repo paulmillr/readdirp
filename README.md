@@ -147,6 +147,9 @@ Version 3 brings huge performance improvements and stream `backPressure` support
         - Renamed `stat` to `stats`
         - Renamed `name` to `basename`
         - Removed `parentDir` and `fullParentDir` properties
+- Supported node.js versions:
+    - 3.x: node 8+
+    - 2.1: node 0.6+
 
 # License
 
