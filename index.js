@@ -145,6 +145,7 @@ class ReaddirpStream extends Readable {
           throw error;
         }
       }
+      if (!this.readable) return;
       const path = sysPath.relative(this._root, fullPath);
       const basename = sysPath.basename(path);
 
