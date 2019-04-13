@@ -4,7 +4,8 @@ const chai = require('chai');
 const {Readable} = require('stream');
 chai.should();
 const {promisify} = require('util');
-const rimraf = require('rimraf');
+const rimraf = promisify(require('rimraf'));
+const mkdir = promisify(fs.mkdir);
 
 const readdirp = require('.');
 
@@ -21,27 +22,27 @@ const touch = async (files=[], dirs=[]) => {
     await promisify(fs.writeFile)(sysPath.join(currPath, name), `${Date.now()}`);
   }
   for (const dir of dirs) {
-    await promisify(fs.mkdir)(sysPath.join(currPath, dir));
+    await mkdir(sysPath.join(currPath, dir));
   }
 }
 
 beforeEach(async () => {
   testCount++;
   currPath = sysPath.join(root, testCount.toString())
-  await promisify(rimraf)(currPath);
-  await promisify(fs.mkdir)(currPath);
+  await rimraf(currPath);
+  await mkdir(currPath);
 });
 
 afterEach(async () => {
-  await promisify(rimraf)(currPath);
+  await rimraf(currPath);
 });
 
 before(async () => {
-  await promisify(rimraf)(root);
-  await promisify(fs.mkdir)(root);
+  await rimraf(root);
+  await mkdir(root);
 });
 after(async () => {
-  await promisify(rimraf)(root);
+  await rimraf(root);
 })
 
 describe('basic', () => {
@@ -182,11 +183,6 @@ describe('various', () => {
   it('disallows old API', () => {
     try {
       readdirp({root: '.'});
-    } catch (error) {
-      error.should.be.an.instanceof(Error);
-    }
-    try {
-      readdirp('.', {entryType: 'file'});
     } catch (error) {
       error.should.be.an.instanceof(Error);
     }

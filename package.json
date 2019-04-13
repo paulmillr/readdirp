@@ -32,6 +32,8 @@
     "picomatch": "^2.0.3"
   },
   "devDependencies": {
+    "@types/chai": "^4.1.7",
+    "@types/mocha": "^5.2.6",
     "@types/node": "^11.13.4",
     "chai": "^4.2.0",
     "mocha": "^6.1.2",
