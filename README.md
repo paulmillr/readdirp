@@ -31,7 +31,7 @@ readdirp('.', {fileFilter: '*.js'})
   .on('end', () => console.log('done'));
 
 // 3) Promise example. More RAM and CPU than streams.
-const files = await readdirp('.');
+const files = await readdirp.promise('.');
 console.log(files);
 
 // Other options.
