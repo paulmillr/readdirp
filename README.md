@@ -47,7 +47,8 @@ readdirp('test', {depth: 1})
 
 `const stream = readdirp(root[, options])` — **Stream API**
 
-- Reads given root recursively and returns a `stream` of [entry info](#entry-info)s.
+- Reads given root recursively and returns a `stream` of [entry infos](#entry-info)
+- Optionally can be used like `for await (const entry of readdirp(root))` with node.js 10+ (`asyncIterator`).
 - `on('data', (entry) => {})` [entry info](#entry-info) for every file / dir.
 - `on('warn', (error) => {})` non-fatal `Error` that prevents a file / dir from being processed. Example: inaccessible to the user.
 - `on('error', (error) => {})` fatal `Error` which also ends the stream. Example: illegal options where passed.
