@@ -137,7 +137,7 @@ class ReaddirpStream extends Readable {
         if (!fullPath) console.log('_stat', fullPath);
         stats = await this._stat(fullPath);
       } catch (error) {
-        console.log(466201, error.code);
+        console.log(466201, error.code, this.readable);
 
         if (error.code === ENOENT) {
           this.filesToRead--;
