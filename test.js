@@ -52,6 +52,15 @@ describe('basic', () => {
     const res = await read();
     res.should.have.lengthOf(files.length);
   });
+
+  it('handles symlinks', async () => {
+    const newPath = sysPath.join(currPath, 'test-symlinked.js');
+    await promisify(fs.symlink)(sysPath.join(__dirname, 'test.js'), newPath);
+    const res = await read();
+    const first = res[0];
+    const contents = await promisify(fs.readFile)(first.fullPath);
+    contents.should.match(/handles symlinks/); // name of this test
+  });
 });
 
 describe('type', () => {

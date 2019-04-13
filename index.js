@@ -9,6 +9,14 @@ const readdir = promisify(fs.readdir);
 const stat = promisify(fs.stat);
 const lstat = promisify(fs.lstat);
 
+/**
+ * @typedef {Object} EntryInfo
+ * @property {String} path
+ * @property {String} fullPath
+ * @property {fs.Stats} stats
+ * @property {String} basename
+ */
+
 
 const BANG = '!';
 const normalizeFilter = (filter) => {
@@ -139,6 +147,10 @@ class ReaddirpStream extends Readable {
       }
       const path = sysPath.relative(this._root, fullPath);
       const basename = sysPath.basename(path);
+
+      /**
+       * @type {EntryInfo}
+       */
       const entry = {path, stats, fullPath, basename};
 
       if (this._isDirAndMatchesFilter(entry)) {
