@@ -130,13 +130,14 @@ class ReaddirpStream extends Readable {
     this.filesToRead += files.length;
 
     for (const relativePath of files) {
+      if (!this.readable) return;
       const fullPath = sysPath.resolve(sysPath.join(parentPath, relativePath));
       let stats;
       try {
         if (!fullPath) console.log('_stat', fullPath);
         stats = await this._stat(fullPath);
       } catch (error) {
-        console.log(12312, error.code);
+        console.log(466201, error.code);
 
         if (error.code === ENOENT) {
           this.filesToRead--;
