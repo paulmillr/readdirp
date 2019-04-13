@@ -37,6 +37,7 @@ afterEach(async () => {
 });
 
 before(async () => {
+  await promisify(rimraf)(root);
   await promisify(fs.mkdir)(root);
 });
 after(async () => {
@@ -83,6 +84,14 @@ describe('entryType', () => {
     res.should.have.lengthOf(files.length + dirs.length);
     res.map(e => e.basename).should.deep.equal(files.concat(dirs));
   });
+
+  it('invalid', async () => {
+    try {
+      await read({entryType: 'bogus'})
+    } catch (error) {
+      error.message.should.match(/Invalid entryType/);
+    }
+  })
 });
 
 describe('depth', () => {
@@ -152,7 +161,7 @@ describe('filtering', () => {
     const res = await read({fileFilter: (entry) => sysPath.extname(entry.fullPath) === '.js'});
     res.map(e => e.basename).should.deep.equal(['a.js', 'c.js', 'd.js']);
 
-    const res2 = await read({fileFilter: (entry) => entry.stat.size > 0 });
+    const res2 = await read({fileFilter: (entry) => entry.stats.size > 0 });
     res2.map(e => e.basename).should.deep.equal(['a.js', 'b.txt', 'c.js', 'd.js']);
   });
 });
@@ -173,6 +182,11 @@ describe('various', () => {
   it('disallows old API', () => {
     try {
       readdirp({root: '.'});
+    } catch (error) {
+      error.should.be.an.instanceof(Error);
+    }
+    try {
+      readdirp('.', {entryType: 'file'});
     } catch (error) {
       error.should.be.an.instanceof(Error);
     }

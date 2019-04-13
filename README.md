@@ -1,6 +1,6 @@
 # readdirp
 
-> Recursive version of [fs.readdir](https://nodejs.org/api/fs.html#fs_fs_readdir_path_options_callback). Exposes a **stream api** and a **callback api**.
+> Recursive version of [fs.readdir](https://nodejs.org/api/fs.html#fs_fs_readdir_path_options_callback). Exposes a **stream api** and a **promise api**.
 
 [![NPM](https://nodei.co/npm/readdirp.png?downloads=true&stars=true)](https://nodei.co/npm/readdirp/)
 
@@ -18,7 +18,7 @@ for await (const entry of readdirp('.', {fileFilter: '*.js'})) {
   console.log(`${JSON.stringify({path, size})}`);
 }
 
-// 2) Non-await streams example.
+// 2) Streams example, non for-await.
 // Print out all JS files along with their size within the current folder & subfolders.
 readdirp('.', {fileFilter: '*.js'})
   .on('data', (entry) => {
@@ -30,16 +30,16 @@ readdirp('.', {fileFilter: '*.js'})
   .on('error', error => console.error('fatal error', error))
   .on('end', () => console.log('done'));
 
-// 3) Callback example. Don't use: More RAM and CPU than streams.
-readdirp('.', (file => console.log(file)), (error, files) => {
-  console.log(files);
-});
+// 3) Promise example. More RAM and CPU than streams.
+const files = await readdirp('.');
+console.log(files);
 
 // Other options.
 readdirp('test', {fileFilter: '*.js'})
 readdirp('test', {fileFilter: ['*.js', '*.json']})
 readdirp('test', {directoryFilter: ['!.git', '!*modules']})
-readdirp('test', {directoryFilter: (di) => di.name.length === 9})
+readdirp('test', {directoryFilter: (di) => di.basename.length === 9})
+readdirp('test', {type: 'files'});
 readdirp('test', {depth: 1})
 ```
 
@@ -58,37 +58,32 @@ readdirp('test', {depth: 1})
 - To learn more about streams, consult the very detailed [nodejs streams documentation](https://nodejs.org/api/stream.html)
   or the [stream-handbook](https://github.com/substack/stream-handbook)
 
-`readdirp(root, options, fileProcessed[, allProcessed])` — **Callback API**
-
-- `fileProcessed: (entry) => {...}`: function with [entry info](#entry-info) parameter
-- `allProcessed: (error, entries) => {}`:
-    - **error**: array of errors that occurred during the operation, **entries may still be present, even if errors occurred**
-    - **entries**: collection of file / dir [entry infos](#entry-info)
+`const entries = readdirp.promise(root[, options])` — **Promise API**. Returns a list of [entry infos](#entry-info).
 
 ### options
 
-- `root: './test'`: path in which to start reading and recursing into subdirectories
+- `root`: path in which to start reading and recursing into subdirectories
 - `fileFilter: ["*.js"]`: filter to include or exclude files. A `Function`, Glob string or Array of glob strings.
     - **Function**: a function that takes an entry info as a parameter and returns true to include or false to exclude the entry
-    - **Glob string**: a string (e.g., `*.js`) which is matched using [minimatch](https://github.com/isaacs/minimatch), so go there for more
+    - **Glob string**: a string (e.g., `*.js`) which is matched using [picomatch](https://github.com/micromatch/picomatch), so go there for more
         information. Globstars (`**`) are not supported since specifying a recursive pattern for an already recursive function doesn't make sense. Negated globs (as explained in the minimatch documentation) are allowed, e.g., `!*.txt` matches everything but text files.
     - **Array of glob strings**: either need to be all inclusive or all exclusive (negated) patterns otherwise an error is thrown.
-        `[ '*.json', '*.js' ]` includes all JavaScript and Json files.
-        `[ '!.git', '!node_modules' ]` includes all directories except the '.git' and 'node_modules'.
+        `['*.json', '*.js']` includes all JavaScript and Json files.
+        `['!.git', '!node_modules']` includes all directories except the '.git' and 'node_modules'.
     - Directories that do not pass a filter will not be recursed into.
-- `directoryFilter: ["!.git"]`: filter to include/exclude directories found and to recurse into. Directories that do not pass a filter will not be recursed into.
+- `directoryFilter: ['!.git']`: filter to include/exclude directories found and to recurse into. Directories that do not pass a filter will not be recursed into.
 - `depth: 5`: depth at which to stop recursing even if more subdirectories are found
-- `entryType: 'all'`: determines if data events on the stream should be emitted for `'files'`, `'directories'`, `'both'`, or `'all'`. Setting to `'all'` will also include entries for other types of file descriptors like character devices, unix sockets and named pipes. Defaults to `'files'`.
+- `type: 'all'`: determines if data events on the stream should be emitted for `'files'`, `'directories'`, `'files_directories'`, or `'all'`. Setting to `'all'` will also include entries for other types of file descriptors like character devices, unix sockets and named pipes. Defaults to `'files'`.
 - `lstat: false`: include symlink entries in the stream along with files. When `true`, `fs.lstat` would be used instead of `fs.stat`
 
-### entry info
+### `EntryInfo`
 
 Has the following properties:
 
-- `path: 'test/bed/root_dir1/root_dir1_subdir1'`: path to the file/directory (relative to given root)
-- `fullPath: '/User/dev/readdirp/test/bed/root_dir1/root_dir1_subdir1'`: full path to the file/directory found
-- `basename: 'root_dir1_subdir1'`: name of the file/directory
-- `stat: fs.Stats`: built in [stat object](https://nodejs.org/api/fs.html#fs_class_fs_stats)
+- `path: 'assets/javascripts/react.js'`: path to the file/directory (relative to given root)
+- `fullPath: '/Users/dev/projects/app/assets/javascripts/react.js'`: full path to the file/directory found
+- `basename: 'react.js'`: name of the file/directory
+- `stats: fs.Stats`: built in [stat object](https://nodejs.org/api/fs.html#fs_class_fs_stats)
 
 ### More examples
 
@@ -145,8 +140,13 @@ Version 3 brings huge performance improvements and stream `backPressure` support
 
 - Upgrading 2.x to 3.x:
     - Signature changed from `readdirp(options)` to `readdirp(root, options)`
-    - `EntryInfo`: Renamed `name` to `basename`
-    - `EntryInfo`: Removed `parentDir` and `fullParentDir` properties
+    - Replaced callback API with promise API.
+    - Renamed `entryType` option to `type`
+    - Renamed `entryType: 'both'` to `'files_directories'`
+    - `EntryInfo`
+        - Renamed `stat` to `stats`
+        - Renamed `name` to `basename`
+        - Removed `parentDir` and `fullParentDir` properties
 
 # License
 

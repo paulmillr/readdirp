@@ -48,8 +48,9 @@ const normalizeFilter = (filter) => {
 const ENOENT = 'ENOENT';
 const FILE_TYPE = 'files';
 const DIR_TYPE = 'directories';
-const FILE_DIR_TYPE = 'both';
+const FILE_DIR_TYPE = 'files_directories';
 const ALL_TYPE = 'all';
+const TYPES = [FILE_TYPE, DIR_TYPE, FILE_DIR_TYPE, ALL_TYPE];
 const FILE_TYPES = Object.freeze(new Set([FILE_TYPE, FILE_DIR_TYPE, ALL_TYPE]));
 const DIR_TYPES = Object.freeze(new Set([DIR_TYPE, FILE_DIR_TYPE, ALL_TYPE]));
 const READ_OPTIONS = Object.freeze({encoding: 'utf8'});
@@ -60,7 +61,7 @@ class ReaddirpStream extends Readable {
       root: '.',
       fileFilter: (path) => true,
       directoryFilter: (path) => true,
-      entryType: 'files',
+      type: 'files',
       lstat: false,
       depth: 2147483648
     }
@@ -70,17 +71,22 @@ class ReaddirpStream extends Readable {
     super({objectMode: true, highWaterMark: 1});
     const opts = {...ReaddirpStream.defaultOptions, ...options};
     const {root} = opts;
-    if (root == null || typeof root === 'undefined') {
-      this._handleFatalError(new Error('readdirp: root argument is required. Usage: readdirp(root, options)'));
-    } else if (typeof root !== 'string') {
-      this._handleFatalError(new Error(`readdirp: root argument must be a string. Usage: readdirp(root, options)`));
-    }
 
     this._fileFilter = normalizeFilter(opts.fileFilter);
     this._directoryFilter = normalizeFilter(opts.directoryFilter);
     this._stat = opts.lstat ? lstat : stat;
     this._maxDepth = opts.depth;
-    this._entryType = opts.entryType;
+    this._entryType = opts['entryType'] || opts.type;
+    if (this._entryType === 'both') this._entryType = FILE_DIR_TYPE;
+
+    if (root == null || typeof root === 'undefined') {
+      this._handleFatalError(new Error('readdirp: root argument is required. Usage: readdirp(root, options)'));
+    } else if (typeof root !== 'string') {
+      this._handleFatalError(new Error(`readdirp: root argument must be a string. Usage: readdirp(root, options)`));
+    } else if (!TYPES.includes(this._entryType)) {
+      this._handleFatalError(new Error(`readdirp: Invalid entryType passed. Use one of ${TYPES.join(', ')}`));
+    }
+
     this._root = root;
 
     // Launch stream with one parent, the root dir.
@@ -125,9 +131,9 @@ class ReaddirpStream extends Readable {
 
     for (const relativePath of files) {
       const fullPath = sysPath.resolve(sysPath.join(parentPath, relativePath));
-      let stat;
+      let stats;
       try {
-        stat = await this._stat(fullPath);
+        stats = await this._stat(fullPath);
       } catch (error) {
         if (error.code === ENOENT) {
           this.filesToRead--;
@@ -138,7 +144,7 @@ class ReaddirpStream extends Readable {
       }
       const path = sysPath.relative(this._root, fullPath);
       const basename = sysPath.basename(path);
-      const entry = {path, stat, fullPath, basename, root: this._root};
+      const entry = {path, stats, fullPath, basename};
 
       if (this._isDirAndMatchesFilter(entry)) {
         this._pushNewParentIfLessThanMaxDepth(fullPath, depth + 1);
@@ -169,14 +175,14 @@ class ReaddirpStream extends Readable {
   }
 
   _isDirAndMatchesFilter(entry) {
-    return entry.stat.isDirectory() && this._directoryFilter(entry);
+    return entry.stats.isDirectory() && this._directoryFilter(entry);
   }
 
   _isFileAndMatchesFilter(entry) {
-    const {stat} = entry;
+    const {stats} = entry;
     const isFileType = (
-      (this._entryType === ALL_TYPE && !stat.isDirectory()) ||
-      (stat.isFile() || stat.isSymbolicLink())
+      (this._entryType === ALL_TYPE && !stats.isDirectory()) ||
+      (stats.isFile() || stats.isSymbolicLink())
     );
     return isFileType && this._fileFilter(entry);
   }
@@ -219,7 +225,7 @@ class ReaddirpStream extends Readable {
  * @typedef {Object} ReaddirpArguments
  * @property {Function=} fileFilter
  * @property {Function=} directoryFilter
- * @property {String=} entryType
+ * @property {String=} type
  * @property {Number=} depth
  * @property {String=} root
  * @property {Boolean=} lstat
@@ -232,7 +238,7 @@ class ReaddirpStream extends Readable {
  */
 const readdirp = (root, options = {}) => {
   let error;
-  if (!error) options.root = root;
+  options.root = root;
   const stream = new ReaddirpStream(options);
   if (error) stream._handleFatalError(error);
   return stream;
@@ -250,5 +256,6 @@ const readdirpPromise = (root, options = {}) => {
 
 readdirp.promise = readdirpPromise;
 readdirp.ReaddirpStream = ReaddirpStream;
+readdirp.default = readdirp;
 
 module.exports = readdirp;

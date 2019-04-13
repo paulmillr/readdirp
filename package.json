@@ -12,7 +12,8 @@
     "node": ">=8"
   },
   "files": [
-    "index.js"
+    "index.js",
+    "index.d.ts"
   ],
   "keywords": [
     "recursive",
@@ -31,6 +32,7 @@
     "picomatch": "^2.0.3"
   },
   "devDependencies": {
+    "@types/node": "^11.13.4",
     "chai": "^4.2.0",
     "mocha": "^6.1.2",
     "nyc": "^13.3.0",
