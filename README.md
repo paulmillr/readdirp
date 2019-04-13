@@ -58,7 +58,7 @@ readdirp('test', {depth: 1})
 - To learn more about streams, consult the very detailed [nodejs streams documentation](https://nodejs.org/api/stream.html)
   or the [stream-handbook](https://github.com/substack/stream-handbook)
 
-`const entries = readdirp.promise(root[, options])` — **Promise API**. Returns a list of [entry infos](#entry-info).
+`const entries = await readdirp.promise(root[, options])` — **Promise API**. Returns a list of [entry infos](#entry-info).
 
 ### options
 
