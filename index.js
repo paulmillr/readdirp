@@ -32,8 +32,8 @@ const normalizeFilter = (filter) => {
       }
     }
 
-    if (negative.length) {
-      if (positive.length) {
+    if (negative.length > 0) {
+      if (positive.length > 0) {
         return (entry) => positive.some(f => f(entry.basename)) &&
           !negative.every(f => f(entry.basename));
       } else {
@@ -76,17 +76,7 @@ class ReaddirpStream extends Readable {
     this._directoryFilter = normalizeFilter(opts.directoryFilter);
     this._stat = opts.lstat ? lstat : stat;
     this._maxDepth = opts.depth;
-    this._entryType = opts['entryType'] || opts.type;
-    if (this._entryType === 'both') this._entryType = FILE_DIR_TYPE;
-
-    if (root == null || typeof root === 'undefined') {
-      this._handleFatalError(new Error('readdirp: root argument is required. Usage: readdirp(root, options)'));
-    } else if (typeof root !== 'string') {
-      this._handleFatalError(new Error(`readdirp: root argument must be a string. Usage: readdirp(root, options)`));
-    } else if (!TYPES.includes(this._entryType)) {
-      this._handleFatalError(new Error(`readdirp: Invalid entryType passed. Use one of ${TYPES.join(', ')}`));
-    }
-
+    this._entryType = opts.type
     this._root = root;
 
     // Launch stream with one parent, the root dir.
@@ -116,8 +106,10 @@ class ReaddirpStream extends Readable {
     // To prevent race conditions, we increase counter while awaiting readdir.
     this.filesToRead++;
     let files;
+    if (!parentPath) console.log("INVALID ARG", parentPath);
+
     try {
-      files = await readdir(parentPath, READ_OPTIONS)
+      files = await readdir(parentPath, READ_OPTIONS);
     } catch (error) {
       if (error.code === ENOENT) files = [];
       else throw error;
@@ -133,8 +125,11 @@ class ReaddirpStream extends Readable {
       const fullPath = sysPath.resolve(sysPath.join(parentPath, relativePath));
       let stats;
       try {
+        if (!fullPath) console.log('_stat', fullPath);
         stats = await this._stat(fullPath);
       } catch (error) {
+        console.log(12312, error.code);
+
         if (error.code === ENOENT) {
           this.filesToRead--;
           continue;
@@ -206,14 +201,19 @@ class ReaddirpStream extends Readable {
   }
 
   _handleError(error) {
-    if (this.readable) {
+    setImmediate(() => {
       this.emit('warn', error);
-    }
+    });
   }
 
   _handleFatalError(error) {
-    this.destroy();
     this.emit('error', error);
+    this.destroy();
+
+    setImmediate(() => {
+      // this.emit('error', error);
+      // this.destroy();
+    });
   }
 
   destroy() {
@@ -238,6 +238,18 @@ class ReaddirpStream extends Readable {
  */
 const readdirp = (root, options = {}) => {
   let error;
+
+  let type = options['entryType'] || options.type;
+  if (type === 'both') type = FILE_DIR_TYPE;
+  if (type) options.type = type;
+  if (root == null || typeof root === 'undefined') {
+    throw new Error('readdirp: root argument is required. Usage: readdirp(root, options)');
+  } else if (typeof root !== 'string') {
+    throw new Error(`readdirp: root argument must be a string. Usage: readdirp(root, options)`);
+  } else if (type && !TYPES.includes(type)) {
+    throw new Error(`readdirp: Invalid type passed. Use one of ${TYPES.join(', ')}`);
+  }
+
   options.root = root;
   const stream = new ReaddirpStream(options);
   if (error) stream._handleFatalError(error);

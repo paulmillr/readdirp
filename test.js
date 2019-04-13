@@ -53,43 +53,43 @@ describe('basic', () => {
   });
 });
 
-describe('entryType', () => {
+describe('type', () => {
   const files = ['a.txt', 'b.txt', 'c.txt'];
   const dirs = ['d', 'e', 'f', 'g'];
 
   it('files', async () => {
     await touch(files, dirs);
-    const res = await read({entryType: 'files'});
+    const res = await read({type: 'files'});
     res.should.have.lengthOf(files.length);
     res.map(e => e.basename).should.deep.equal(files);
   });
 
   it('directories', async () => {
     await touch(files, dirs);
-    const res = await read({entryType: 'directories'});
+    const res = await read({type: 'directories'});
     res.should.have.lengthOf(dirs.length);
     res.map(e => e.basename).should.deep.equal(dirs);
   });
 
   it('both', async () => {
     await touch(files, dirs);
-    const res = await read({entryType: 'both'});
+    const res = await read({type: 'both'});
     res.should.have.lengthOf(files.length + dirs.length);
     res.map(e => e.basename).should.deep.equal(files.concat(dirs));
   });
 
   it('all', async () => {
     await touch(files, dirs);
-    const res = await read({entryType: 'all'});
+    const res = await read({type: 'all'});
     res.should.have.lengthOf(files.length + dirs.length);
     res.map(e => e.basename).should.deep.equal(files.concat(dirs));
   });
 
   it('invalid', async () => {
     try {
-      await read({entryType: 'bogus'})
+      await read({type: 'bogus'})
     } catch (error) {
-      error.message.should.match(/Invalid entryType/);
+      error.message.should.match(/Invalid type/);
     }
   })
 });
