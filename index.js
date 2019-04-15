@@ -88,7 +88,8 @@ class ReaddirpStream extends Readable {
     this._root = root;
 
     // Launch stream with one parent, the root dir.
-    this.parents = [{parentPath: root, depth: 0}];
+    /** @type Array<[string, number]>  */
+    this.parents = [[root, 0]];
     this.filesToRead = 0;
   }
 
@@ -109,13 +110,11 @@ class ReaddirpStream extends Readable {
       return;
     }
 
-    const {parentPath, depth} = parent;
+    const [parentPath, depth] = parent;
+    let files;
 
     // To prevent race conditions, we increase counter while awaiting readdir.
     this.filesToRead++;
-    let files;
-    if (!parentPath) console.log("INVALID ARG", parentPath);
-
     try {
       files = await readdir(parentPath, READ_OPTIONS);
     } catch (error) {
@@ -137,8 +136,6 @@ class ReaddirpStream extends Readable {
         if (!fullPath) console.log('_stat', fullPath);
         stats = await this._stat(fullPath);
       } catch (error) {
-        console.log(466201, error.code, this.readable);
-
         if (error.code === ENOENT) {
           this.filesToRead--;
           continue;
@@ -165,10 +162,10 @@ class ReaddirpStream extends Readable {
       this.filesToRead--;
     }
 
-    this._endStreamIfQueueIsEmpty(parentPath);
+    this._endStreamIfQueueIsEmpty();
   }
 
-  _endStreamIfQueueIsEmpty(pp) {
+  _endStreamIfQueueIsEmpty() {
     if (this.parents.length === 0 && this.filesToRead === 0 && this.readable) {
       this.push(null);
     }
@@ -176,7 +173,7 @@ class ReaddirpStream extends Readable {
 
   _pushNewParentIfLessThanMaxDepth(parentPath, depth) {
     if (depth <= this._maxDepth) {
-      this.parents.push({parentPath, depth});
+      this.parents.push([parentPath, depth]);
       return true
     } else {
       return false;
@@ -223,11 +220,6 @@ class ReaddirpStream extends Readable {
   _handleFatalError(error) {
     this.emit('error', error);
     this.destroy();
-
-    setImmediate(() => {
-      // this.emit('error', error);
-      // this.destroy();
-    });
   }
 
   destroy() {
@@ -251,10 +243,8 @@ class ReaddirpStream extends Readable {
  * @param {ReaddirpArguments=} options Options to specify root (start directory), filters and recursion depth
  */
 const readdirp = (root, options = {}) => {
-  let error;
-
   let type = options['entryType'] || options.type;
-  if (type === 'both') type = FILE_DIR_TYPE;
+  if (type === 'both') type = FILE_DIR_TYPE; // backwards-compatibility
   if (type) options.type = type;
   if (root == null || typeof root === 'undefined') {
     throw new Error('readdirp: root argument is required. Usage: readdirp(root, options)');
@@ -265,18 +255,16 @@ const readdirp = (root, options = {}) => {
   }
 
   options.root = root;
-  const stream = new ReaddirpStream(options);
-  if (error) stream._handleFatalError(error);
-  return stream;
+  return new ReaddirpStream(options);
 };
 
 const readdirpPromise = (root, options = {}) => {
   return new Promise((resolve, reject) => {
     const files = [];
     readdirp(root, options)
-      .on('data', (entry) => { files.push(entry); })
-      .on('end', () => { resolve(files); })
-      .on('error', (error) => { reject(error); });
+      .on('data', (entry) => files.push(entry))
+      .on('end', () => resolve(files))
+      .on('error', (error) => reject(error));
   });
 };
 

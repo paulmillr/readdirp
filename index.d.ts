@@ -28,10 +28,7 @@ declare class ReaddirpStream extends Readable implements AsyncIterable<EntryInfo
 
 interface Readdirp {
   (root: string, options?: ReaddirpOptions): ReaddirpStream;
-  promise(
-    root: string,
-    options?: ReaddirpOptions
-  ): Promise<Array<EntryInfo>>;
+  promise(root: string, options?: ReaddirpOptions): Promise<Array<EntryInfo>>;
   ReaddirpStream: ReaddirpStream;
   EntryInfo: EntryInfo;
 }

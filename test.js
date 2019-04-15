@@ -178,7 +178,9 @@ describe('filtering', () => {
 
 describe('various', () => {
   it('emits readable stream', () => {
-    readdirp(currPath).should.be.an.instanceof(Readable);
+    const stream = readdirp(currPath);
+    stream.should.be.an.instanceof(Readable);
+    stream.should.be.an.instanceof(readdirp.ReaddirpStream);
   });
 
   it('fails without root option passed', async () => {
@@ -202,5 +204,6 @@ describe('various', () => {
     await touch(created);
     const result = await readdirp.promise(currPath);
     result.map(e => e.basename).should.deep.equal(created);
+    await readdirp.promise();
   });
 });
