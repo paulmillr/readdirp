@@ -9,7 +9,8 @@ interface EntryInfo {
   path: string,
   fullPath: string,
   basename: string,
-  stats: fs.Stats
+  stats?: fs.Stats,
+  dirent?: fs.Dirent
 }
 
 interface ReaddirpOptions {
@@ -19,6 +20,7 @@ interface ReaddirpOptions {
   type?: 'files' | 'directories' | 'files_directories' | 'all'
   lstat?: boolean,
   depth?: number
+  alwaysStat?: boolean
 }
 
 declare class ReaddirpStream extends Readable implements AsyncIterable<EntryInfo> {

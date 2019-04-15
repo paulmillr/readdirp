@@ -127,7 +127,7 @@ describe('depth', () => {
 
   it('1', async () => {
     const res = await read({depth: 1});
-    res.map(e => e.basename).should.deep.equal(depth0.concat(depth1Names));
+    res.map(e => e.basename).sort().should.deep.equal(depth0.concat(depth1Names));
   });
 
   it('2', async () => {
@@ -171,7 +171,14 @@ describe('filtering', () => {
     const res = await read({fileFilter: (entry) => sysPath.extname(entry.fullPath) === '.js'});
     res.map(e => e.basename).should.deep.equal(['a.js', 'c.js', 'd.js']);
 
-    const res2 = await read({fileFilter: (entry) => entry.stats.size > 0 });
+    const res2 = await read({fileFilter: (entry) => entry.dirent.isFile() });
+    res2.map(e => e.basename).should.deep.equal(['a.js', 'b.txt', 'c.js', 'd.js']);
+  });
+  it('function with stats', async () => {
+    const res = await read({alwaysStat: true, fileFilter: (entry) => sysPath.extname(entry.fullPath) === '.js'});
+    res.map(e => e.basename).should.deep.equal(['a.js', 'c.js', 'd.js']);
+
+    const res2 = await read({alwaysStat: true, fileFilter: (entry) => entry.stats.size > 0 });
     res2.map(e => e.basename).should.deep.equal(['a.js', 'b.txt', 'c.js', 'd.js']);
   });
 });
@@ -204,6 +211,5 @@ describe('various', () => {
     await touch(created);
     const result = await readdirp.promise(currPath);
     result.map(e => e.basename).should.deep.equal(created);
-    await readdirp.promise();
   });
 });

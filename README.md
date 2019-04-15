@@ -74,7 +74,8 @@ readdirp('test', {depth: 1})
     - Directories that do not pass a filter will not be recursed into.
 - `directoryFilter: ['!.git']`: filter to include/exclude directories found and to recurse into. Directories that do not pass a filter will not be recursed into.
 - `depth: 5`: depth at which to stop recursing even if more subdirectories are found
-- `type: 'all'`: determines if data events on the stream should be emitted for `'files'`, `'directories'`, `'files_directories'`, or `'all'`. Setting to `'all'` will also include entries for other types of file descriptors like character devices, unix sockets and named pipes. Defaults to `'files'`.
+- `type: 'files'`: determines if data events on the stream should be emitted for `'files'` (default), `'directories'`, `'files_directories'`, or `'all'`. Setting to `'all'` will also include entries for other types of file descriptors like character devices, unix sockets and named pipes.
+- `alwaysStat: false`: always return `stats` property for every file. Setting it to `true` can double readdir execution time - use it only when you need file `size`, `mtime` etc. Cannot be enabled on node <10.10.0.
 - `lstat: false`: include symlink entries in the stream along with files. When `true`, `fs.lstat` would be used instead of `fs.stat`
 
 ### `EntryInfo`
@@ -84,7 +85,8 @@ Has the following properties:
 - `path: 'assets/javascripts/react.js'`: path to the file/directory (relative to given root)
 - `fullPath: '/Users/dev/projects/app/assets/javascripts/react.js'`: full path to the file/directory found
 - `basename: 'react.js'`: name of the file/directory
-- `stats: fs.Stats`: built in [stat object](https://nodejs.org/api/fs.html#fs_class_fs_stats)
+- `dirent: fs.Dirent`: built-in [dir entry object](https://nodejs.org/api/fs.html#fs_class_fs_dirent) - only with `alwaysStat: false`
+- `stats: fs.Stats`: built in [stat object](https://nodejs.org/api/fs.html#fs_class_fs_stats) - only with `alwaysStat: true`
 
 ### More examples
 
@@ -145,7 +147,8 @@ Version 3 brings huge performance improvements and stream `backPressure` support
     - Renamed `entryType` option to `type`
     - Renamed `entryType: 'both'` to `'files_directories'`
     - `EntryInfo`
-        - Renamed `stat` to `stats`
+        - Renamed `stat` to `stats`. Emitted only when `alwaysStat: true`
+            - Use `dirent` by default
         - Renamed `name` to `basename`
         - Removed `parentDir` and `fullParentDir` properties
 - Supported node.js versions:
