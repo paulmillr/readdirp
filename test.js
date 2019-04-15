@@ -6,6 +6,7 @@ chai.should();
 const {promisify} = require('util');
 const rimraf = promisify(require('rimraf'));
 const mkdir = promisify(fs.mkdir);
+const supportsDirent = 'Dirent' in fs;
 
 const readdirp = require('.');
 
@@ -171,8 +172,10 @@ describe('filtering', () => {
     const res = await read({fileFilter: (entry) => sysPath.extname(entry.fullPath) === '.js'});
     res.map(e => e.basename).should.deep.equal(['a.js', 'c.js', 'd.js']);
 
-    const res2 = await read({fileFilter: (entry) => entry.dirent.isFile() });
-    res2.map(e => e.basename).should.deep.equal(['a.js', 'b.txt', 'c.js', 'd.js']);
+    if (supportsDirent) {
+      const res2 = await read({fileFilter: (entry) => entry.dirent.isFile() });
+      res2.map(e => e.basename).should.deep.equal(['a.js', 'b.txt', 'c.js', 'd.js']);
+    }
   });
   it('function with stats', async () => {
     const res = await read({alwaysStat: true, fileFilter: (entry) => sysPath.extname(entry.fullPath) === '.js'});
