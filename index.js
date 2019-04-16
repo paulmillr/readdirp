@@ -19,6 +19,7 @@ const supportsDirent = 'Dirent' in fs;
 
 const BANG = '!';
 const ENOENT = 'ENOENT';
+const EPERM = 'EPERM';
 const FILE_TYPE = 'files';
 const DIR_TYPE = 'directories';
 const FILE_DIR_TYPE = 'files_directories';
@@ -26,6 +27,8 @@ const ALL_TYPE = 'all';
 const TYPES = [FILE_TYPE, DIR_TYPE, FILE_DIR_TYPE, ALL_TYPE];
 const FILE_TYPES = Object.freeze(new Set([FILE_TYPE, FILE_DIR_TYPE, ALL_TYPE]));
 const DIR_TYPES = Object.freeze(new Set([DIR_TYPE, FILE_DIR_TYPE, ALL_TYPE]));
+
+const isNormalFlowError = err => err.code === ENOENT || (process.platform === 'win32' && err.code === EPERM);
 
 const normalizeFilter = (filter) => {
   if (filter === undefined) return;
@@ -122,7 +125,7 @@ class ReaddirpStream extends Readable {
     try {
       files = await readdir(parentPath, this._readdir_options);
     } catch (error) {
-      if (error.code !== ENOENT) throw error;
+      if (!isNormalFlowError(error)) throw error;
     }
     this.filesToRead--;
 
@@ -144,7 +147,7 @@ class ReaddirpStream extends Readable {
         try {
           stats = await this._stat(fullPath);
         } catch (error) {
-          if (error.code === ENOENT) {
+          if (isNormalFlowError(error)) {
             this.filesToRead--;
             continue;
           } else {
