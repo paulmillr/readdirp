@@ -117,7 +117,7 @@ class ReaddirpStream extends Readable {
 
     const [parentPath, depth] = parent;
 
-    /** @type Array<fs.Dirent> */
+    /** @type Array<fs.Dirent|string> */
     let files = [];
 
     // To prevent race conditions, we increase counter while awaiting readdir.

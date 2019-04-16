@@ -43,6 +43,8 @@ readdirp('test', {type: 'files'});
 readdirp('test', {depth: 1})
 ```
 
+For more examples, check out `examples` directory.
+
 # API
 
 `const stream = readdirp(root[, options])` — **Stream API**
@@ -88,55 +90,6 @@ Has the following properties:
 - `dirent: fs.Dirent`: built-in [dir entry object](https://nodejs.org/api/fs.html#fs_class_fs_dirent) - only with `alwaysStat: false`
 - `stats: fs.Stats`: built in [stat object](https://nodejs.org/api/fs.html#fs_class_fs_stats) - only with `alwaysStat: true`
 
-### More examples
-
-- `grep` example:
-
-```js
-let {join} = require('path');
-let {createReadStream} = require('fs');
-let es = require('event-stream');
-
-const findLinesMatching = (searchTerm) => {
-  return es.through(function (entry) {
-    let lineno = 0;
-    let matchingLines = [];
-    let fileStream = this;
-
-    fsCreateReadStream(entry.fullPath, {encoding: 'utf-8'})
-      // handle file contents line by line
-      .pipe(es.split('\n'))
-      // filter, keep only the lines that matched the term
-      .pipe(es.mapSync((line) => {
-        lineno++;
-        return ~line.indexOf(searchTerm) ? lineno + ': ' + line : undefined;
-      }))
-      // aggregate matching lines and delegate control back to the file stream
-      .pipe(es.through(
-        (data) => { matchingLines.push(data); },
-        () => {
-        // drop files that had no matches
-        if (matchingLines.length) {
-          let result = { file: entry, lines: matchingLines };
-          fileStream.emit('data', result); // pass result on to file stream
-        }
-        this.emit('end');
-      }));
-  });
-};
-
-// create a stream of all javascript files found in this and all sub directories
-// find all lines matching the term
-// for each file (if none found, that file is ignored)
-readdirp(__dirname, {fileFilter: '*.js'})
-  .pipe(findLinesMatching('arguments'))
-  .pipe(es.mapSync(function (res) {
-    // format the results and output
-    return '\n\n' + res.file.path + '\n\t' + res.lines.join('\n\t');
-  }))
-  .pipe(process.stdout);
-```
-
 # Changelog
 
 Version 3 brings huge performance improvements and stream `backPressure` support.
@@ -153,7 +106,7 @@ Version 3 brings huge performance improvements and stream `backPressure` support
         - Removed `parentDir` and `fullParentDir` properties
 - Supported node.js versions:
     - 3.x: node 8+
-    - 2.1: node 0.6+
+    - 2.x: node 0.6+
 
 # License
 
