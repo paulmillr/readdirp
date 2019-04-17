@@ -49,9 +49,9 @@ For more examples, check out `examples` directory.
 
 `const stream = readdirp(root[, options])` — **Stream API**
 
-- Reads given root recursively and returns a `stream` of [entry infos](#entry-info)
+- Reads given root recursively and returns a `stream` of [entry infos](#entryinfo)
 - Optionally can be used like `for await (const entry of stream)` with node.js 10+ (`asyncIterator`).
-- `on('data', (entry) => {})` [entry info](#entry-info) for every file / dir.
+- `on('data', (entry) => {})` [entry info](#entryinfo) for every file / dir.
 - `on('warn', (error) => {})` non-fatal `Error` that prevents a file / dir from being processed. Example: inaccessible to the user.
 - `on('error', (error) => {})` fatal `Error` which also ends the stream. Example: illegal options where passed.
 - `on('end')` — we are done. Called when all entries were found and no more will be emitted.
@@ -61,11 +61,12 @@ For more examples, check out `examples` directory.
 - To learn more about streams, consult the very detailed [nodejs streams documentation](https://nodejs.org/api/stream.html)
   or the [stream-handbook](https://github.com/substack/stream-handbook)
 
-`const entries = await readdirp.promise(root[, options])` — **Promise API**. Returns a list of [entry infos](#entry-info).
+`const entries = await readdirp.promise(root[, options])` — **Promise API**. Returns a list of [entry infos](#entryinfo).
+
+First argument is awalys `root`, path in which to start reading and recursing into subdirectories.
 
 ### options
 
-- `root`: path in which to start reading and recursing into subdirectories
 - `fileFilter: ["*.js"]`: filter to include or exclude files. A `Function`, Glob string or Array of glob strings.
     - **Function**: a function that takes an entry info as a parameter and returns true to include or false to exclude the entry
     - **Glob string**: a string (e.g., `*.js`) which is matched using [picomatch](https://github.com/micromatch/picomatch), so go there for more
@@ -92,7 +93,7 @@ Has the following properties:
 
 # Changelog
 
-Version 3 brings huge performance improvements and stream `backPressure` support.
+Version 3 brings huge performance improvements and stream backpressure support.
 
 - Upgrading 2.x to 3.x:
     - Signature changed from `readdirp(options)` to `readdirp(root, options)`
@@ -100,8 +101,9 @@ Version 3 brings huge performance improvements and stream `backPressure` support
     - Renamed `entryType` option to `type`
     - Renamed `entryType: 'both'` to `'files_directories'`
     - `EntryInfo`
-        - Renamed `stat` to `stats`. Emitted only when `alwaysStat: true`
-            - Use `dirent` by default
+        - Renamed `stat` to `stats`
+            - Emitted only when `alwaysStat: true`
+            -  `dirent` is emitted instead of `stats` by default with `alwaysStat: false`
         - Renamed `name` to `basename`
         - Removed `parentDir` and `fullParentDir` properties
 - Supported node.js versions:
