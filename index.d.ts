@@ -28,12 +28,10 @@ declare class ReaddirpStream extends Readable implements AsyncIterable<EntryInfo
   [Symbol.asyncIterator](): AsyncIterableIterator<EntryInfo>;
 }
 
-interface Readdirp {
+declare const readdir: {
   (root: string, options?: ReaddirpOptions): ReaddirpStream;
   promise(root: string, options?: ReaddirpOptions): Promise<Array<EntryInfo>>;
   ReaddirpStream: ReaddirpStream;
   EntryInfo: EntryInfo;
-}
-
-declare const readdir: Readdirp;
+};
 export = readdir;
