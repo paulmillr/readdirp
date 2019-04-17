@@ -9,7 +9,7 @@
     "url": "git://github.com/paulmillr/readdirp.git"
   },
   "engines": {
-    "node": ">=8"
+    "node": ">= 8"
   },
   "files": [
     "index.js",
@@ -29,7 +29,7 @@
     "test": "nyc mocha"
   },
   "dependencies": {
-    "picomatch": "^2.0.3"
+    "picomatch": "^2.0.4"
   },
   "devDependencies": {
     "@types/chai": "^4.1.7",
