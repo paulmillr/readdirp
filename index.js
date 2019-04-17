@@ -17,18 +17,19 @@ const supportsDirent = 'Dirent' in fs;
  * @property {String} basename
  */
 
+const isWindows = process.platform === 'win32';
 const BANG = '!';
 const ENOENT = 'ENOENT';
 const EPERM = 'EPERM';
 const FILE_TYPE = 'files';
 const DIR_TYPE = 'directories';
 const FILE_DIR_TYPE = 'files_directories';
-const ALL_TYPE = 'all';
-const TYPES = [FILE_TYPE, DIR_TYPE, FILE_DIR_TYPE, ALL_TYPE];
-const FILE_TYPES = Object.freeze(new Set([FILE_TYPE, FILE_DIR_TYPE, ALL_TYPE]));
-const DIR_TYPES = Object.freeze(new Set([DIR_TYPE, FILE_DIR_TYPE, ALL_TYPE]));
+const EVERYTHING_TYPE = 'all';
+const FILE_TYPES = Object.freeze(new Set([FILE_TYPE, FILE_DIR_TYPE, EVERYTHING_TYPE]));
+const DIR_TYPES = Object.freeze(new Set([DIR_TYPE, FILE_DIR_TYPE, EVERYTHING_TYPE]));
+const ALL_TYPES = [FILE_TYPE, DIR_TYPE, FILE_DIR_TYPE, EVERYTHING_TYPE];
 
-const isNormalFlowError = err => err.code === ENOENT || (process.platform === 'win32' && err.code === EPERM);
+const isNormalFlowError = err => err.code === ENOENT || (isWindows && err.code === EPERM);
 
 const normalizeFilter = (filter) => {
   if (filter === undefined) return;
@@ -198,7 +199,7 @@ class ReaddirpStream extends Readable {
   _isFileAndMatchesFilter(entry) {
     const stats = entry[this._statsProp];
     const isFileType = (
-      (this._entryType === ALL_TYPE && !stats.isDirectory()) ||
+      (this._entryType === EVERYTHING_TYPE && !stats.isDirectory()) ||
       (stats.isFile() || stats.isSymbolicLink())
     );
     return isFileType && this._fileFilter(entry);
@@ -264,8 +265,8 @@ const readdirp = (root, options = {}) => {
     throw new Error('readdirp: root argument is required. Usage: readdirp(root, options)');
   } else if (typeof root !== 'string') {
     throw new Error(`readdirp: root argument must be a string. Usage: readdirp(root, options)`);
-  } else if (type && !TYPES.includes(type)) {
-    throw new Error(`readdirp: Invalid type passed. Use one of ${TYPES.join(', ')}`);
+  } else if (type && !ALL_TYPES.includes(type)) {
+    throw new Error(`readdirp: Invalid type passed. Use one of ${ALL_TYPES.join(', ')}`);
   }
 
   options.root = root;
