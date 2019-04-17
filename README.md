@@ -113,4 +113,6 @@ Version 3 brings huge performance improvements and stream backpressure support.
 
 # License
 
+Copyright (c) 2012-2019 Thorsten Lorenz, Paul Miller (https://paulmillr.com)
+
 MIT License, see LICENSE file.
