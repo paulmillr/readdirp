@@ -35,12 +35,13 @@ const files = await readdirp.promise('.');
 console.log(files);
 
 // Other options.
-readdirp('test', {fileFilter: '*.js'})
-readdirp('test', {fileFilter: ['*.js', '*.json']})
-readdirp('test', {directoryFilter: ['!.git', '!*modules']})
-readdirp('test', {directoryFilter: (di) => di.basename.length === 9})
-readdirp('test', {type: 'files'});
-readdirp('test', {depth: 1})
+readdirp('test', {
+  fileFilter: '*.js',
+  directoryFilter: ['!.git', '!*modules']
+  // directoryFilter: (di) => di.basename.length === 9
+  type: 'files_directories',
+  depth: 1
+});
 ```
 
 For more examples, check out `examples` directory.
