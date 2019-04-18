@@ -32,17 +32,12 @@ const touch = async (files=[], dirs=[]) => {
   }
 }
 
-const formatEntry = (file, dir = root, withDirent = true) => {
+const formatEntry = (file, dir = root) => {
   const basename = sysPath.basename(file);
   return {
     basename,
     path: file,
     fullPath: sysPath.join(dir, file),
-    ...(withDirent && {
-      dirent: {
-        name: basename,
-      }
-    }),
   };
 };
 
@@ -72,7 +67,7 @@ describe('basic', () => {
     const res = await read();
     res.should.have.lengthOf(files.length);
     res.forEach((entry, index) => 
-      entry.should.deep.equal(formatEntry(files[index], currPath))
+      entry.should.containSubset(formatEntry(files[index], currPath))
     );
   });
 
@@ -81,7 +76,7 @@ describe('basic', () => {
     await symlink(sysPath.join(__dirname, 'test.js'), newPath);
     const res = await read();
     const first = res[0];
-    first.should.deep.equal(formatEntry('test-symlinked.js', currPath));
+    first.should.containSubset(formatEntry('test-symlinked.js', currPath));
     const contents = await readFile(first.fullPath);
     contents.should.match(/handles symlinks/); // name of this test
   });
@@ -113,7 +108,7 @@ describe('type', () => {
     const res = await read({type: 'files'});
     res.should.have.lengthOf(files.length);
     res.forEach((entry, index) => 
-      entry.should.deep.equal(formatEntry(files[index], currPath))
+      entry.should.containSubset(formatEntry(files[index], currPath))
     );
   });
 
@@ -122,7 +117,7 @@ describe('type', () => {
     const res = await read({type: 'directories'});
     res.should.have.lengthOf(dirs.length);
     res.map((entry, index) => 
-      entry.should.deep.equal(formatEntry(dirs[index], currPath))
+      entry.should.containSubset(formatEntry(dirs[index], currPath))
     );
   });
 
@@ -132,7 +127,7 @@ describe('type', () => {
     const both = files.concat(dirs);
     res.should.have.lengthOf(both.length);
     res.map((entry, index) => 
-      entry.should.deep.equal(formatEntry(both[index], currPath))
+      entry.should.containSubset(formatEntry(both[index], currPath))
     );
   });
 
@@ -142,7 +137,7 @@ describe('type', () => {
     const all = files.concat(dirs);
     res.should.have.lengthOf(all.length);
     res.map((entry, index) => 
-      entry.should.deep.equal(formatEntry(all[index], currPath))
+      entry.should.containSubset(formatEntry(all[index], currPath))
     );
   });
 
@@ -172,7 +167,7 @@ describe('depth', () => {
     const res = await read({depth: 0});
     res.should.have.lengthOf(depth0.length);
     res.map((entry, index) => 
-      entry.should.deep.equal(formatEntry(depth0[index], currPath))
+      entry.should.containSubset(formatEntry(depth0[index], currPath))
     );
   });
 
@@ -183,7 +178,7 @@ describe('depth', () => {
     res
       .sort((a, b) => a.basename > b.basename ? 1 : -1)
       .map((entry, index) => 
-        entry.should.deep.equal(formatEntry(expect[index], currPath))
+        entry.should.containSubset(formatEntry(expect[index], currPath))
       );
   });
 
@@ -194,7 +189,7 @@ describe('depth', () => {
     res
       .sort((a, b) => a.basename > b.basename ? 1 : -1)
       .map((entry, index) => 
-        entry.should.deep.equal(formatEntry(expect[index], currPath))
+        entry.should.containSubset(formatEntry(expect[index], currPath))
       );
   });
 
@@ -205,7 +200,7 @@ describe('depth', () => {
     res
       .sort((a, b) => a.basename > b.basename ? 1 : -1)
       .map((entry, index) => 
-        entry.should.deep.equal(formatEntry(expect[index], currPath))
+        entry.should.containSubset(formatEntry(expect[index], currPath))
       );
   });
 });
@@ -219,20 +214,20 @@ describe('filtering', () => {
     const res = await read({fileFilter: '*.js'});
     res.should.have.lengthOf(expect1.length);
     res.map((entry, index) => 
-      entry.should.deep.equal(formatEntry(expect1[index], currPath))
+      entry.should.containSubset(formatEntry(expect1[index], currPath))
     );
 
     const res2 = await read({fileFilter: ['*.js']});
     res2.should.have.lengthOf(expect1.length);
     res2.map((entry, index) => 
-      entry.should.deep.equal(formatEntry(expect1[index], currPath))
+      entry.should.containSubset(formatEntry(expect1[index], currPath))
     );
 
     const expect2 = ['b.txt'];
     const res3 = await read({fileFilter: ['*.txt']});
     res3.should.have.lengthOf(expect2.length);
     res3.map((entry, index) => 
-      entry.should.deep.equal(formatEntry(expect2[index], currPath))
+      entry.should.containSubset(formatEntry(expect2[index], currPath))
     );
   });
   it('leading and trailing spaces', async () => {
@@ -240,7 +235,7 @@ describe('filtering', () => {
     const res = await read({fileFilter: [' *.js', '*.rb ']});
     res.should.have.lengthOf(expect.length);
     res.map((entry, index) => 
-      entry.should.deep.equal(formatEntry(expect[index], currPath))
+      entry.should.containSubset(formatEntry(expect[index], currPath))
     );
   });
   it('multiple glob', async () => {
@@ -248,7 +243,7 @@ describe('filtering', () => {
     const res = await read({fileFilter: ['*.js', '*.txt']});
     res.should.have.lengthOf(expect.length);
     res.map((entry, index) => 
-      entry.should.deep.equal(formatEntry(expect[index], currPath))
+      entry.should.containSubset(formatEntry(expect[index], currPath))
     );
   });
   it('negated glob', async () => {
@@ -256,7 +251,7 @@ describe('filtering', () => {
     const res = await read({fileFilter: ['!d.js']});
     res.should.have.lengthOf(expect.length);
     res.map((entry, index) => 
-      entry.should.deep.equal(formatEntry(expect[index], currPath))
+      entry.should.containSubset(formatEntry(expect[index], currPath))
     );
   });
   it('glob & negated glob', async () => {
@@ -264,7 +259,7 @@ describe('filtering', () => {
     const res = await read({fileFilter: ['*.js', '!d.js']});
     res.should.have.lengthOf(expect.length);
     res.map((entry, index) => 
-      entry.should.deep.equal(formatEntry(expect[index], currPath))
+      entry.should.containSubset(formatEntry(expect[index], currPath))
     );
   });
   it('function', async () => {
@@ -272,7 +267,7 @@ describe('filtering', () => {
     const res = await read({fileFilter: (entry) => sysPath.extname(entry.fullPath) === '.js'});
     res.should.have.lengthOf(expect.length);
     res.map((entry, index) => 
-      entry.should.deep.equal(formatEntry(expect[index], currPath))
+      entry.should.containSubset(formatEntry(expect[index], currPath))
     );
 
     if (supportsDirent) {
@@ -280,7 +275,7 @@ describe('filtering', () => {
       const res2 = await read({fileFilter: (entry) => entry.dirent.isFile() });
       res2.should.have.lengthOf(expect2.length);
       res2.map((entry, index) => 
-        entry.should.deep.equal(formatEntry(expect2[index], currPath))
+        entry.should.containSubset(formatEntry(expect2[index], currPath))
       );
     }
   });
@@ -289,7 +284,7 @@ describe('filtering', () => {
     const res = await read({alwaysStat: true, fileFilter: (entry) => sysPath.extname(entry.fullPath) === '.js'});
     res.should.have.lengthOf(expect.length);
     res.map((entry, index) => {
-      entry.should.containSubset(formatEntry(expect[index], currPath, false))
+      entry.should.containSubset(formatEntry(expect[index], currPath))
       entry.should.include.own.key("stats");
     });
 
@@ -297,7 +292,7 @@ describe('filtering', () => {
     const res2 = await read({alwaysStat: true, fileFilter: (entry) => entry.stats.size > 0 });
     res2.should.have.lengthOf(expect2.length);
     res2.map((entry, index) => {
-      entry.should.containSubset(formatEntry(expect2[index], currPath, false))
+      entry.should.containSubset(formatEntry(expect2[index], currPath))
       entry.should.include.own.key("stats");
     });
   });
@@ -332,7 +327,7 @@ describe('various', () => {
     const result = await readdirp.promise(currPath);
     result.should.have.lengthOf(created.length);
     result.map((entry, index) => 
-      entry.should.deep.equal(formatEntry(created[index], currPath))
+      entry.should.containSubset(formatEntry(created[index], currPath))
     );
   });
 });
