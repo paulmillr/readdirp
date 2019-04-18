@@ -71,7 +71,7 @@ describe('basic', () => {
     await touch(files);
     const res = await read();
     res.should.have.lengthOf(files.length);
-    res.every((entry, index) => 
+    res.forEach((entry, index) => 
       entry.should.deep.equal(formatEntry(files[index], currPath))
     );
   });
@@ -85,6 +85,23 @@ describe('basic', () => {
     const contents = await readFile(first.fullPath);
     contents.should.match(/handles symlinks/); // name of this test
   });
+  it('should use lstat instead stat', async () => {
+    const files = ['a.txt', 'b.txt', 'c.txt'];
+    const symlinkName = 'test-symlinked.js';
+    const newPath = sysPath.join(currPath, symlinkName);
+    await symlink(sysPath.join(__dirname, 'test.js'), newPath);
+    await touch(files);
+    const expect = [...files, symlinkName];
+    const res = await read({lstat: true, alwaysStat: true});
+    res.should.have.lengthOf(expect.length);
+    res.forEach((entry, index) => {
+      entry.should.containSubset(formatEntry(expect[index], currPath, false))
+      entry.should.include.own.key("stats");
+      if (entry.basename === symlinkName) {
+        entry.stats.isSymbolicLink().should.equals(true);
+      }
+    });
+  });
 });
 
 describe('type', () => {
@@ -95,7 +112,7 @@ describe('type', () => {
     await touch(files, dirs);
     const res = await read({type: 'files'});
     res.should.have.lengthOf(files.length);
-    res.every((entry, index) => 
+    res.forEach((entry, index) => 
       entry.should.deep.equal(formatEntry(files[index], currPath))
     );
   });
@@ -195,7 +212,7 @@ describe('depth', () => {
 
 describe('filtering', () => {
   beforeEach(async () => {
-    await touch(['a.js', 'b.txt', 'c.js', 'd.js']);
+    await touch(['a.js', 'b.txt', 'c.js', 'd.js', 'e.rb']);
   });
   it('glob', async () => {
     const expect1 = ['a.js', 'c.js', 'd.js'];
@@ -218,8 +235,24 @@ describe('filtering', () => {
       entry.should.deep.equal(formatEntry(expect2[index], currPath))
     );
   });
+  it('leading and trailing spaces', async () => {
+    const expect = ['a.js', 'c.js', 'd.js', 'e.rb'];
+    const res = await read({fileFilter: [' *.js', '*.rb ']});
+    res.should.have.lengthOf(expect.length);
+    res.map((entry, index) => 
+      entry.should.deep.equal(formatEntry(expect[index], currPath))
+    );
+  });
+  it('multiple glob', async () => {
+    const expect = ['a.js', 'b.txt', 'c.js', 'd.js'];
+    const res = await read({fileFilter: ['*.js', '*.txt']});
+    res.should.have.lengthOf(expect.length);
+    res.map((entry, index) => 
+      entry.should.deep.equal(formatEntry(expect[index], currPath))
+    );
+  });
   it('negated glob', async () => {
-    const expect = ['a.js', 'b.txt', 'c.js'];
+    const expect = ['a.js', 'b.txt', 'c.js', 'e.rb'];
     const res = await read({fileFilter: ['!d.js']});
     res.should.have.lengthOf(expect.length);
     res.map((entry, index) => 
@@ -243,7 +276,7 @@ describe('filtering', () => {
     );
 
     if (supportsDirent) {
-      const expect2 = ['a.js', 'b.txt', 'c.js', 'd.js'];
+      const expect2 = ['a.js', 'b.txt', 'c.js', 'd.js', 'e.rb'];
       const res2 = await read({fileFilter: (entry) => entry.dirent.isFile() });
       res2.should.have.lengthOf(expect2.length);
       res2.map((entry, index) => 
@@ -260,7 +293,7 @@ describe('filtering', () => {
       entry.should.include.own.key("stats");
     });
 
-    const expect2 = ['a.js', 'b.txt', 'c.js', 'd.js'];
+    const expect2 = ['a.js', 'b.txt', 'c.js', 'd.js', 'e.rb'];
     const res2 = await read({alwaysStat: true, fileFilter: (entry) => entry.stats.size > 0 });
     res2.should.have.lengthOf(expect2.length);
     res2.map((entry, index) => {
