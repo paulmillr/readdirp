@@ -32,12 +32,14 @@ const touch = async (files=[], dirs=[]) => {
   }
 }
 
+const convertPath = path => process.platform === "win32" ? path.replace(/\//gi, "\\") : path;
+
 const formatEntry = (file, dir = root) => {
   const basename = sysPath.basename(file);
   return {
     basename,
     path: file,
-    fullPath: sysPath.resolve(sysPath.join(dir, file)),
+    fullPath: convertPath(sysPath.join(dir, file)),
   };
 };
 
