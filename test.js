@@ -38,7 +38,7 @@ const formatEntry = (file, dir = root) => {
   const basename = sysPath.basename(file);
   return {
     basename,
-    path: file,
+    path: convertPath(file),
     fullPath: convertPath(sysPath.join(dir, file)),
   };
 };
