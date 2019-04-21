@@ -14,13 +14,13 @@ const readdirp = require('readdirp');
 // Use streams to achieve small RAM & CPU footprint.
 // 1) Streams example with for-await. Node.js 10+ only.
 for await (const entry of readdirp('.')) {
-  const {path, stat: {size}} = entry;
-  console.log(`${JSON.stringify({path, size})}`);
+  const {path} = entry;
+  console.log(`${JSON.stringify({path})}`);
 }
 
 // 2) Streams example, non for-await.
 // Print out all JS files along with their size within the current folder & subfolders.
-readdirp('.', {fileFilter: '*.js'})
+readdirp('.', {fileFilter: '*.js', alwaysStat: true})
   .on('data', (entry) => {
     const {path, stat: {size}} = entry;
     console.log(`${JSON.stringify({path, size})}`);
@@ -32,7 +32,7 @@ readdirp('.', {fileFilter: '*.js'})
 
 // 3) Promise example. More RAM and CPU than streams.
 const files = await readdirp.promise('.');
-console.log(files);
+console.log(files.map(file => file.path));
 
 // Other options.
 readdirp('test', {
