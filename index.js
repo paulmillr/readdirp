@@ -126,7 +126,7 @@ class ReaddirpStream extends Readable {
       files = await readdir(parentPath, this._readdir_options);
     } catch (error) {
       if (isNormalFlowError(error.code)) {
-        this.emit('warn', error);
+        this._handleError(error);
       } else {
         throw error;
       }
@@ -152,7 +152,7 @@ class ReaddirpStream extends Readable {
           stats = await this._stat(fullPath);
         } catch (error) {
           if (isNormalFlowError(error.code)) {
-            this.emit('warn', error);
+            this._handleError(error);
             this.filesToRead--;
             continue;
           } else {
