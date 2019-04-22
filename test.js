@@ -333,7 +333,7 @@ describe('various', () => {
     );
   });
   it('should emit warning for missing file', function(done) {
-    this.timeout(3000);
+    this.timeout(4000);
     const unlinkedDir = sysPath.join(currPath, 'unlinked');
     fs.mkdirSync(unlinkedDir);
     let isWarningCalled = false;
@@ -359,10 +359,10 @@ describe('various', () => {
       if (!isWarningCalled) {
         done();
       }
-    }, 3000);
+    }, 4000);
   });
   it('should emit warning for file with strict permission', function(done) {
-    this.timeout(3000);
+    this.timeout(4000);
     const permitedDir = sysPath.join(currPath, 'permited');
     fs.mkdirSync(permitedDir, 000);
     let isWarningCalled = false;
@@ -382,6 +382,6 @@ describe('various', () => {
       if (!isWarningCalled) {
         done();
       }
-    }, 3000);
+    }, 4000);
   });
 });
