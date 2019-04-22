@@ -332,7 +332,7 @@ describe('various', () => {
       entry.should.containSubset(formatEntry(created[index], currPath))
     );
   });
-	it('should emit warning for missing file', function(done) {
+  it('should emit warning for missing file', function(done) {
     this.timeout(3000);
     const unlinkedDir = sysPath.join(currPath, 'unlinked');
     fs.mkdirSync(unlinkedDir);
