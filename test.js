@@ -332,4 +332,56 @@ describe('various', () => {
       entry.should.containSubset(formatEntry(created[index], currPath))
     );
   });
+  it('should emit warning for missing file', function(done) {
+    this.timeout(3000);
+    const unlinkedDir = sysPath.join(currPath, 'unlinked');
+    fs.mkdirSync(unlinkedDir);
+    let isWarningCalled = false;
+    let isUnlinked = false;
+    const stream = readdirp(currPath, { type: 'all' });
+    stream.pause();
+    stream.on('readable', async function() {
+      if (!isUnlinked) {
+        await rimraf(unlinkedDir);
+        this.resume();
+      }
+    });
+    let timer
+    stream.on('warn', warning => {
+      warning.should.be.an.instanceof(Error);
+      warning.code.should.equals('ENOENT');
+      isWarningCalled = true;
+      clearTimeout(timer);
+      done();
+    });
+    timer = setTimeout(() => {
+      isWarningCalled.should.equals(true);
+      if (!isWarningCalled) {
+        done();
+      }
+    }, 3000);
+  });
+  it('should emit warning for file with strict permission', function(done) {
+    this.timeout(3000);
+    const permitedDir = sysPath.join(currPath, 'permited');
+    fs.mkdirSync(permitedDir, 000);
+    let isWarningCalled = false;
+    let isUnlinked = false;
+    let timer;
+    const stream = readdirp(currPath, { type: 'all' })
+      .on('data', () => {})
+      .on('warn', warning => {
+        warning.should.be.an.instanceof(Error);
+        warning.code.should.equals('EACCES');
+        isWarningCalled = true;
+        clearTimeout(timer);
+        done();
+      });
+    timer = setTimeout(() => {
+      isWarningCalled.should.equals(true);
+      if (!isWarningCalled) {
+        done();
+      }
+    }, 3000);
+  });
 });
