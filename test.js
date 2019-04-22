@@ -332,8 +332,13 @@ describe('various', () => {
       entry.should.containSubset(formatEntry(created[index], currPath))
     );
   });
+<<<<<<< HEAD
   it('should emit warning for missing file', function(done) {
     this.timeout(4000);
+=======
+	it('should emit warning for missing file', function(done) {
+    this.timeout(3000);
+>>>>>>> test(Issue #75): Add tests of warning emiting.
     const unlinkedDir = sysPath.join(currPath, 'unlinked');
     fs.mkdirSync(unlinkedDir);
     let isWarningCalled = false;
