@@ -333,7 +333,7 @@ describe('various', () => {
     );
   });
   it('should emit warning for missing file', function(done) {
-    this.timeout(4000);
+    this.timeout(5000);
     const unlinkedDir = sysPath.join(currPath, 'unlinked');
     fs.mkdirSync(unlinkedDir);
     let timer;
