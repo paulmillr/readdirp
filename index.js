@@ -231,12 +231,16 @@ class ReaddirpStream extends Readable {
   }
 
   _handleError(error) {
-    setImmediate(() => {
-      this.emit('warn', error);
-    });
+    if (!this.readable) {
+      return;
+    }
+    this.emit('warn', error);
   }
 
   _handleFatalError(error) {
+    if (!this.readable) {
+      return;
+    }
     this.emit('error', error);
     this.destroy();
   }

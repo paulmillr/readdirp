@@ -336,37 +336,35 @@ describe('various', () => {
     this.timeout(4000);
     const unlinkedDir = sysPath.join(currPath, 'unlinked');
     fs.mkdirSync(unlinkedDir);
-    let isWarningCalled = false;
+    let timer;
     let isUnlinked = false;
+    let isWarningCalled = false;
     const stream = readdirp(currPath, { type: 'all' });
     stream.pause();
-    stream.on('readable', async function() {
-      if (!isUnlinked) {
-        await rimraf(unlinkedDir);
-        this.resume();
-      }
-    });
-    let timer
-    stream.on('warn', warning => {
-      warning.should.be.an.instanceof(Error);
-      warning.code.should.equals('ENOENT');
-      isWarningCalled = true;
-      clearTimeout(timer);
-      done();
-    });
+    stream
+      .on('readable', async function() {
+        if (!isUnlinked) {
+          await rimraf(unlinkedDir);
+          this.resume();
+        }
+      })
+      .on('warn', warning => {
+        warning.should.be.an.instanceof(Error);
+        warning.code.should.equals('ENOENT');
+        isWarningCalled = true;
+        clearTimeout(timer);
+        done();
+      });
     timer = setTimeout(() => {
       isWarningCalled.should.equals(true);
-      if (!isWarningCalled) {
-        done();
-      }
-    }, 4000);
+      done();
+    }, 3000);
   });
   it('should emit warning for file with strict permission', function(done) {
     this.timeout(4000);
     const permitedDir = sysPath.join(currPath, 'permited');
     fs.mkdirSync(permitedDir, 000);
     let isWarningCalled = false;
-    let isUnlinked = false;
     let timer;
     const stream = readdirp(currPath, { type: 'all' })
       .on('data', () => {})
@@ -379,9 +377,36 @@ describe('various', () => {
       });
     timer = setTimeout(() => {
       isWarningCalled.should.equals(true);
-      if (!isWarningCalled) {
+      done();
+    }, 3000);
+  });
+  it('should not emit warning after "end" event', function(done) {
+    this.timeout(4000);
+    const subdir = sysPath.join(currPath, 'subdir');
+    const permitedDir = sysPath.join(subdir, 'permited');
+    fs.mkdirSync(subdir);
+    fs.mkdirSync(permitedDir, 000);
+    let isWarningCalled = false;
+    let isEnded = false;
+    let timer;
+    const stream = readdirp(currPath, { type: 'all' })
+      .on('data', () => {})
+      .on('warn', warning => {
+        warning.should.be.an.instanceof(Error);
+        warning.code.should.equals('EACCES');
+        isEnded.should.equals(false);
+        isWarningCalled = true;
+        clearTimeout(timer);
+      })
+      .on('end', () => {
+        isWarningCalled.should.equals(true);
+        isEnded = true;
         done();
-      }
-    }, 4000);
+      });
+    timer = setTimeout(() => {
+      isWarningCalled.should.equals(true);
+      isEnded.should.equals(true);
+      done();
+    }, 3000);
   });
 });
