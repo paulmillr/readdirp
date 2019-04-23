@@ -333,7 +333,7 @@ describe('various', () => {
     );
   });
   it('should emit warning for missing file', function(done) {
-    this.timeout(5000);
+    this.timeout(4000);
     const unlinkedDir = sysPath.join(currPath, 'unlinked');
     fs.mkdirSync(unlinkedDir);
     let timer;
@@ -357,10 +357,8 @@ describe('various', () => {
       });
     timer = setTimeout(() => {
       isWarningCalled.should.equals(true);
-      if (!isWarningCalled) {
-        done();
-      }
-    }, 5000);
+      done();
+    }, 3000);
   });
   it('should emit warning for file with strict permission', function(done) {
     this.timeout(4000);
@@ -379,10 +377,8 @@ describe('various', () => {
       });
     timer = setTimeout(() => {
       isWarningCalled.should.equals(true);
-      if (!isWarningCalled) {
-        done();
-      }
-    }, 4000);
+      done();
+    }, 3000);
   });
   it('should not emit warning after "end" event', function(done) {
     this.timeout(4000);
@@ -410,9 +406,7 @@ describe('various', () => {
     timer = setTimeout(() => {
       isWarningCalled.should.equals(true);
       isEnded.should.equals(true);
-      if (!isWarningCalled || !isEnded) {
-        done();
-      }
-    }, 4000);
+      done();
+    }, 3000);
   });
 });
