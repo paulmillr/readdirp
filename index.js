@@ -181,12 +181,8 @@ class ReaddirpStream extends Readable {
     this._endStreamIfQueueIsEmpty();
   }
 
-  _isStreamShouldBeEnded() {
-    return this.parents.length === 0 && this.filesToRead === 0 && this.readable;
-  }
-
   _endStreamIfQueueIsEmpty() {
-    if (this._isStreamShouldBeEnded()) {
+    if (this.parents.length === 0 && this.filesToRead === 0 && this.readable) {
       this.push(null);
     }
   }
@@ -235,14 +231,14 @@ class ReaddirpStream extends Readable {
   }
 
   _handleError(error) {
-    if (this._isStreamShouldBeEnded()) {
+    if (!this.readable) {
       return;
     }
     this.emit('warn', error);
   }
 
   _handleFatalError(error) {
-    if (this._isStreamShouldBeEnded()) {
+    if (!this.readable) {
       return;
     }
     this.emit('error', error);
