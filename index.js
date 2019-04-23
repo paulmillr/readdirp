@@ -82,6 +82,7 @@ class ReaddirpStream extends Readable {
     const opts = {...ReaddirpStream.defaultOptions, ...options};
     const {root} = opts;
 
+    this._ended = false;
     this._fileFilter = normalizeFilter(opts.fileFilter);
     this._directoryFilter = normalizeFilter(opts.directoryFilter);
     this._stat = opts.lstat ? lstat : stat;
@@ -184,6 +185,7 @@ class ReaddirpStream extends Readable {
   _endStreamIfQueueIsEmpty() {
     if (this.parents.length === 0 && this.filesToRead === 0 && this.readable) {
       this.push(null);
+      this._ended = true;
     }
   }
 
