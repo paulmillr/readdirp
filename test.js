@@ -43,6 +43,10 @@ const formatEntry = (file, dir = root) => {
   };
 };
 
+const delay = ms => new Promise(res => setTimeout(res, ms));
+
+const waitForEnd = stream => new Promise(res => stream.on('end', res));
+
 beforeEach(async () => {
   testCount++;
   currPath = sysPath.join(root, testCount.toString())
@@ -332,11 +336,9 @@ describe('various', () => {
       entry.should.containSubset(formatEntry(created[index], currPath))
     );
   });
-  it('should emit warning for missing file', function(done) {
-    this.timeout(4000);
+  it('should emit warning for missing file', async () => {
     const unlinkedDir = sysPath.join(currPath, 'unlinked');
     fs.mkdirSync(unlinkedDir);
-    let timer;
     let isUnlinked = false;
     let isWarningCalled = false;
     const stream = readdirp(currPath, { type: 'all' });
@@ -352,36 +354,31 @@ describe('various', () => {
         warning.should.be.an.instanceof(Error);
         warning.code.should.equals('ENOENT');
         isWarningCalled = true;
-        clearTimeout(timer);
-        done();
       });
-    timer = setTimeout(() => {
-      isWarningCalled.should.equals(true);
-      done();
-    }, 3000);
+    await Promise.race([
+      waitForEnd(stream),
+      delay(1000)
+    ]);
+    isWarningCalled.should.equals(true);
   });
-  it('should emit warning for file with strict permission', function(done) {
-    this.timeout(4000);
+  it('should emit warning for file with strict permission', async () => {
     const permitedDir = sysPath.join(currPath, 'permited');
     fs.mkdirSync(permitedDir, 000);
     let isWarningCalled = false;
-    let timer;
     const stream = readdirp(currPath, { type: 'all' })
       .on('data', () => {})
       .on('warn', warning => {
         warning.should.be.an.instanceof(Error);
         warning.code.should.equals('EACCES');
         isWarningCalled = true;
-        clearTimeout(timer);
-        done();
-      });
-    timer = setTimeout(() => {
-      isWarningCalled.should.equals(true);
-      done();
-    }, 3000);
+      })
+    await Promise.race([
+      waitForEnd(stream),
+      delay(1000)
+    ]);
+    isWarningCalled.should.equals(true);
   });
-  it('should not emit warning after "end" event', function(done) {
-    this.timeout(4000);
+  it('should not emit warning after "end" event', async () => {
     const subdir = sysPath.join(currPath, 'subdir');
     const permitedDir = sysPath.join(subdir, 'permited');
     fs.mkdirSync(subdir);
@@ -401,12 +398,12 @@ describe('various', () => {
       .on('end', () => {
         isWarningCalled.should.equals(true);
         isEnded = true;
-        done();
       });
-    timer = setTimeout(() => {
-      isWarningCalled.should.equals(true);
-      isEnded.should.equals(true);
-      done();
-    }, 3000);
+    await Promise.race([
+      waitForEnd(stream),
+      delay(1000)
+    ]);
+    isWarningCalled.should.equals(true);
+    isEnded.should.equals(true);
   });
 });
