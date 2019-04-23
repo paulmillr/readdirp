@@ -22,7 +22,7 @@ for await (const entry of readdirp('.')) {
 // Print out all JS files along with their size within the current folder & subfolders.
 readdirp('.', {fileFilter: '*.js', alwaysStat: true})
   .on('data', (entry) => {
-    const {path, stat: {size}} = entry;
+    const {path, stats: {size}} = entry;
     console.log(`${JSON.stringify({path, size})}`);
   })
   // Optionally call stream.destroy() in `warn()` in order to abort and cause 'close' to be emitted
