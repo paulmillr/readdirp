@@ -409,4 +409,35 @@ describe('various', () => {
       done();
     }, 3000);
   });
+  it('should not emit warning after "end" event', function(done) {
+    this.timeout(4000);
+    const subdir = sysPath.join(currPath, 'subdir');
+    const permitedDir = sysPath.join(subdir, 'permited');
+    fs.mkdirSync(subdir);
+    fs.mkdirSync(permitedDir, 000);
+    let isWarningCalled = false;
+    let isEnded = false;
+    let timer;
+    const stream = readdirp(currPath, { type: 'all' })
+      .on('data', () => {})
+      .on('warn', warning => {
+        warning.should.be.an.instanceof(Error);
+        warning.code.should.equals('EACCES');
+        isEnded.should.equals(false);
+        isWarningCalled = true;
+        clearTimeout(timer);
+      })
+      .on('end', () => {
+        isWarningCalled.should.equals(true);
+        isEnded = true;
+        done();
+      });
+    timer = setTimeout(() => {
+      isWarningCalled.should.equals(true);
+      isEnded.should.equals(true);
+      if (!isWarningCalled || !isEnded) {
+        done();
+      }
+    }, 4000);
+  });
 });
