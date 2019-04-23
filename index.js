@@ -82,7 +82,6 @@ class ReaddirpStream extends Readable {
     const opts = {...ReaddirpStream.defaultOptions, ...options};
     const {root} = opts;
 
-    this._ended = false;
     this._fileFilter = normalizeFilter(opts.fileFilter);
     this._directoryFilter = normalizeFilter(opts.directoryFilter);
     this._stat = opts.lstat ? lstat : stat;
@@ -182,10 +181,13 @@ class ReaddirpStream extends Readable {
     this._endStreamIfQueueIsEmpty();
   }
 
+  _isStreamShouldBeEnded() {
+    return this.parents.length === 0 && this.filesToRead === 0 && this.readable;
+  }
+
   _endStreamIfQueueIsEmpty() {
-    if (this.parents.length === 0 && this.filesToRead === 0 && this.readable) {
+    if (this._isStreamShouldBeEnded()) {
       this.push(null);
-      this._ended = true;
     }
   }
 
@@ -233,14 +235,14 @@ class ReaddirpStream extends Readable {
   }
 
   _handleError(error) {
-    if (this._ended) {
+    if (this._isStreamShouldBeEnded()) {
       return;
     }
     this.emit('warn', error);
   }
 
   _handleFatalError(error) {
-    if (this._ended) {
+    if (this._isStreamShouldBeEnded()) {
       return;
     }
     this.emit('error', error);
