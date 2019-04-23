@@ -344,10 +344,11 @@ describe('various', () => {
     const stream = readdirp(currPath, { type: 'all' });
     stream.pause();
     stream
-      .on('readable', async function() {
+      .on('readable', async () => {
         if (!isUnlinked) {
           await rimraf(unlinkedDir);
-          this.resume();
+          stream.resume();
+          stream.read();
         }
       })
       .on('warn', warning => {
@@ -357,7 +358,7 @@ describe('various', () => {
       });
     await Promise.race([
       waitForEnd(stream),
-      delay(1000)
+      delay(2000)
     ]);
     isWarningCalled.should.equals(true);
   });
@@ -374,7 +375,7 @@ describe('various', () => {
       })
     await Promise.race([
       waitForEnd(stream),
-      delay(1000)
+      delay(2000)
     ]);
     isWarningCalled.should.equals(true);
   });
@@ -401,7 +402,7 @@ describe('various', () => {
       });
     await Promise.race([
       waitForEnd(stream),
-      delay(1000)
+      delay(2000)
     ]);
     isWarningCalled.should.equals(true);
     isEnded.should.equals(true);
