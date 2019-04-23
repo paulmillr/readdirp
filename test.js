@@ -15,6 +15,7 @@ const supportsDirent = 'Dirent' in fs;
 
 const readdirp = require('.');
 
+const isWindows = process.platform === 'win32';
 const root = sysPath.join(__dirname, 'test-fixtures');
 let testCount = 0;
 let currPath;
@@ -363,6 +364,10 @@ describe('various', () => {
     isWarningCalled.should.equals(true);
   });
   it('should emit warning for file with strict permission', async () => {
+    // Windows doesn't throw permission error if you access permited directory
+    if (isWindows) {
+      return true;
+    }
     const permitedDir = sysPath.join(currPath, 'permited');
     fs.mkdirSync(permitedDir, 000);
     let isWarningCalled = false;
@@ -380,6 +385,10 @@ describe('various', () => {
     isWarningCalled.should.equals(true);
   });
   it('should not emit warning after "end" event', async () => {
+    // Windows doesn't throw permission error if you access permited directory
+    if (isWindows) {
+      return true;
+    }
     const subdir = sysPath.join(currPath, 'subdir');
     const permitedDir = sysPath.join(subdir, 'permited');
     fs.mkdirSync(subdir);
