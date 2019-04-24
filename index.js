@@ -19,7 +19,7 @@ const supportsDirent = 'Dirent' in fs;
 
 const isWindows = process.platform === 'win32';
 const BANG = '!';
-const NORMAL_FLOW_ERRORS = Object.freeze(new Set(['ENOENT', 'EPERM', 'EACCES']));
+const NORMAL_FLOW_ERRORS = Object.freeze(new Set(['ENOENT', 'EPERM', 'EACCES', 'ELOOP']));
 const FILE_TYPE = 'files';
 const DIR_TYPE = 'directories';
 const FILE_DIR_TYPE = 'files_directories';
@@ -128,7 +128,7 @@ class ReaddirpStream extends Readable {
       if (isNormalFlowError(error.code)) {
         this._handleError(error);
       } else {
-        throw error;
+        this._handleFatalError(error);
       }
     }
     this.filesToRead--;
@@ -156,7 +156,8 @@ class ReaddirpStream extends Readable {
             this.filesToRead--;
             continue;
           } else {
-            throw error;
+            this._handleFatalError(error);
+            return;
           }
         }
       }
