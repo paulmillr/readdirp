@@ -269,6 +269,14 @@ describe('filtering', () => {
       entry.should.containSubset(formatEntry(expect[index], currPath))
     );
   });
+  it('two negated glob', async () => {
+    const expect = ['b.txt'];
+    const res = await read({fileFilter: ['!*.js', '!*.rb']});
+    res.should.have.lengthOf(expect.length);
+    res.map((entry, index) => 
+      entry.should.containSubset(formatEntry(expect[index], currPath))
+    );
+  });
   it('function', async () => {
     const expect = ['a.js', 'c.js', 'd.js'];
     const res = await read({fileFilter: (entry) => sysPath.extname(entry.fullPath) === '.js'});
