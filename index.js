@@ -54,9 +54,9 @@ const normalizeFilter = (filter) => {
     if (negative.length > 0) {
       if (positive.length > 0) {
         return (entry) => positive.some(f => f(entry.basename)) &&
-          !negative.every(f => f(entry.basename));
+          !negative.some(f => f(entry.basename));
       } else {
-        return (entry) => !negative.every(f => f(entry.basename));
+        return (entry) => !negative.some(f => f(entry.basename));
       }
     } else {
       return (entry) => positive.some(f => f(entry.basename));
