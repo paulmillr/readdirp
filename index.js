@@ -79,9 +79,7 @@ class ReaddirpStream extends Readable {
 
   constructor(options = {}) {
     super({objectMode: true, highWaterMark: 1});
-    const opts = {};
-    Object.assign(opts, ReaddirpStream.defaultOptions);
-    Object.assign(opts, options);
+    const opts = Object.assign({}, ReaddirpStream.defaultOptions, options);
     const {root} = opts;
 
     this._fileFilter = normalizeFilter(opts.fileFilter);
