@@ -260,6 +260,7 @@ class ReaddirpStream extends Readable {
  * @property {Number=} depth
  * @property {String=} root
  * @property {Boolean=} lstat
+ * @property {Boolean=} bigint
  */
 
 /**
