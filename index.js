@@ -64,6 +64,13 @@ const normalizeFilter = (filter) => {
   }
 };
 
+class ExploringDir {
+  constructor(path, depth) {
+    this.path = path;
+    this.depth = depth;
+  }
+}
+
 class ReaddirpStream extends Readable {
   static get defaultOptions() {
     return {
@@ -94,7 +101,7 @@ class ReaddirpStream extends Readable {
 
     // Launch stream with one parent, the root dir.
     /** @type Array<[string, number]>  */
-    this.parents = [[root, 0]];
+    this.parents = [new ExploringDir(root, 0)];
     this.filesToRead = 0;
   }
 
@@ -102,28 +109,28 @@ class ReaddirpStream extends Readable {
     // If the stream was destroyed, we must not proceed.
     if (!this.readable) return;
 
-    const parent = this.parents.pop();
+    do {
+      const parent = this.parents.pop();
+      if (!parent) {
+        // ...we have files to process; but not directories.
+        // hence, parent is undefined; and we cannot execute fs.readdir().
+        // The files are being processed anywhere.
+        break;
+      }
+      await this._exploreDirectory(parent);
+    } while(!this.isPaused() && !this._isQueueEmpty());
 
-    // All directories have been read...
-    if (!parent) {
-      // ...stop stream when there are no files to process.
-      this._endStreamIfQueueIsEmpty();
+    this._endStreamIfQueueIsEmpty();
+  }
 
-      // ...we have files to process; but not directories.
-      // hence, parent is undefined; and we cannot execute fs.readdir().
-      // The files are being processed anywhere.
-      return;
-    }
-
-    const [parentPath, depth] = parent;
-
+  async _exploreDirectory(parent) {
     /** @type Array<fs.Dirent|string> */
     let files = [];
 
     // To prevent race conditions, we increase counter while awaiting readdir.
     this.filesToRead++;
     try {
-      files = await readdir(parentPath, this._readdir_options);
+      files = await readdir(parent.path, this._readdir_options);
     } catch (error) {
       if (isNormalFlowError(error.code)) {
         this._handleError(error);
@@ -138,59 +145,66 @@ class ReaddirpStream extends Readable {
 
     this.filesToRead += files.length;
 
-    for (const dirent of files) {
-      if (!this.readable) return;
+    const entries = await Promise.all(files.map(dirent =>  this._formatEntry(dirent, parent)));
 
-      const relativePath = this._isDirent ? dirent.name : dirent;
-      const fullPath = sysPath.resolve(sysPath.join(parentPath, relativePath));
+    if (!this.readable) return;
 
-      let stats;
-      if (this._isDirent) {
-        stats = dirent;
-      } else {
-        try {
-          stats = await this._stat(fullPath);
-        } catch (error) {
-          if (isNormalFlowError(error.code)) {
-            this._handleError(error);
-            this.filesToRead--;
-            continue;
-          } else {
-            this._handleFatalError(error);
-            return;
-          }
-        }
+    for (let i = 0; i < entries.length; i++) {
+      const entry = entries[i];
+      this.filesToRead--;
+      if (!entry) {
+        continue;
       }
-      if (!this.readable) return;
-      const path = sysPath.relative(this._root, fullPath);
-      const basename = sysPath.basename(path);
-
-      /** @type {EntryInfo} */
-      const entry = {path, fullPath, basename};
-      entry[this._statsProp] = stats;
-
       if (this._isDirAndMatchesFilter(entry)) {
-        this._pushNewParentIfLessThanMaxDepth(fullPath, depth + 1);
+        this._pushNewParentIfLessThanMaxDepth(entry.fullPath, parent.depth + 1);
         this._emitPushIfUserWantsDir(entry);
-        if (!this.isPaused()) this._read();
       } else if (this._isFileAndMatchesFilter(entry)) {
         this._emitPushIfUserWantsFile(entry);
       }
-      this.filesToRead--;
     }
+  }
 
-    this._endStreamIfQueueIsEmpty();
+  async _formatEntry(dirent, parent) {
+    const relativePath = this._isDirent ? dirent.name : dirent;
+    const fullPath = sysPath.resolve(sysPath.join(parent.path, relativePath));
+
+    let stats;
+    if (this._isDirent) {
+      stats = dirent;
+    } else {
+      try {
+        stats = await this._stat(fullPath);
+      } catch (error) {
+        if (isNormalFlowError(error.code)) {
+          this._handleError(error);
+        } else {
+          this._handleFatalError(error);
+        }
+        return;
+      }
+    }
+    const path = sysPath.relative(this._root, fullPath);
+    const basename = sysPath.basename(path);
+
+    /** @type {EntryInfo} */
+    const entry = {path, fullPath, basename, [this._statsProp]: stats};
+
+    return entry;
+  }
+
+  _isQueueEmpty() {
+    return this.parents.length === 0 && this.filesToRead === 0 && this.readable;
   }
 
   _endStreamIfQueueIsEmpty() {
-    if (this.parents.length === 0 && this.filesToRead === 0 && this.readable) {
+    if (this._isQueueEmpty()) {
       this.push(null);
     }
   }
 
   _pushNewParentIfLessThanMaxDepth(parentPath, depth) {
     if (depth <= this._maxDepth) {
-      this.parents.push([parentPath, depth]);
+      this.parents.push(new ExploringDir(parentPath, depth));
       return true
     } else {
       return false;
