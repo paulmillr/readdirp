@@ -15,7 +15,7 @@ interface EntryInfo {
 
 interface ReaddirpOptions {
   root?: string;
-  fileFilter?: (entry: EntryInfo) => boolean,
+  fileFilter?: string | string[] | ((entry: EntryInfo) => boolean),
   directoryFilter?: (entry: EntryInfo) => boolean,
   type?: 'files' | 'directories' | 'files_directories' | 'all'
   lstat?: boolean,
