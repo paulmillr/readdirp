@@ -19,13 +19,13 @@ const supportsDirent = 'Dirent' in fs;
 
 const isWindows = process.platform === 'win32';
 const BANG = '!';
-const NORMAL_FLOW_ERRORS = Object.freeze(new Set(['ENOENT', 'EPERM', 'EACCES', 'ELOOP']));
+const NORMAL_FLOW_ERRORS = new Set(['ENOENT', 'EPERM', 'EACCES', 'ELOOP']);
 const FILE_TYPE = 'files';
 const DIR_TYPE = 'directories';
 const FILE_DIR_TYPE = 'files_directories';
 const EVERYTHING_TYPE = 'all';
-const FILE_TYPES = Object.freeze(new Set([FILE_TYPE, FILE_DIR_TYPE, EVERYTHING_TYPE]));
-const DIR_TYPES = Object.freeze(new Set([DIR_TYPE, FILE_DIR_TYPE, EVERYTHING_TYPE]));
+const FILE_TYPES = new Set([FILE_TYPE, FILE_DIR_TYPE, EVERYTHING_TYPE]);
+const DIR_TYPES = new Set([DIR_TYPE, FILE_DIR_TYPE, EVERYTHING_TYPE]);
 const ALL_TYPES = [FILE_TYPE, DIR_TYPE, FILE_DIR_TYPE, EVERYTHING_TYPE];
 
 const isNormalFlowError = (errorCode) => NORMAL_FLOW_ERRORS.has(errorCode);
