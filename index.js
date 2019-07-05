@@ -92,25 +92,18 @@ class ReaddirpStream extends Readable {
     this._fileFilter = normalizeFilter(opts.fileFilter);
     this._directoryFilter = normalizeFilter(opts.directoryFilter);
     this._statMethod = opts.lstat ? lstat : stat;
+    this._statOpts = {bigint: isWindows};
     this._maxDepth = opts.depth;
     this._entryType = opts.type
     this._root = root;
     this._isDirent = !opts.alwaysStat && supportsDirent;
     this._statsProp = this._isDirent ? 'dirent' : 'stats';
     this._readdir_options = {encoding: 'utf8', withFileTypes: this._isDirent};
-    this._useBigInt = opts.bigint;
 
     // Launch stream with one parent, the root dir.
     /** @type Array<[string, number]>  */
     this.parents = [new ExploringDir(root, 0)];
     this.filesToRead = 0;
-  }
-
-  _stat(path) {
-    if (this._statMethod.length > 2) {
-      return this._statMethod(path, { bigint: this._useBigInt })
-    }
-    return this._statMethod(path);
   }
 
   async _read() {
@@ -181,7 +174,7 @@ class ReaddirpStream extends Readable {
       stats = dirent;
     } else {
       try {
-        stats = await this._stat(fullPath);
+        stats = await this._statMethod(fullPath, this._statOpts);
       } catch (error) {
         if (isNormalFlowError(error.code)) {
           this._handleError(error);
