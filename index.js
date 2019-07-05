@@ -18,6 +18,7 @@ const supportsDirent = 'Dirent' in fs;
  */
 
 const isWindows = process.platform === 'win32';
+const supportsBigint = /^v8/.test(process.version);
 const BANG = '!';
 const NORMAL_FLOW_ERRORS = new Set(['ENOENT', 'EPERM', 'EACCES', 'ELOOP']);
 const FILE_TYPE = 'files';
@@ -165,6 +166,14 @@ class ReaddirpStream extends Readable {
     }
   }
 
+  _stat(fullPath) {
+    if (isWindows && supportsBigint) {
+      return this._statMethod(fullPath, this._statOpts);
+    } else {
+      return this._statMethod(fullPath);
+    }
+  }
+
   async _formatEntry(dirent, parent) {
     const relativePath = this._isDirent ? dirent.name : dirent;
     const fullPath = sysPath.resolve(sysPath.join(parent.path, relativePath));
@@ -174,7 +183,7 @@ class ReaddirpStream extends Readable {
       stats = dirent;
     } else {
       try {
-        stats = await this._statMethod(fullPath, this._statOpts);
+        stats = await this._stat(fullPath);
       } catch (error) {
         if (isNormalFlowError(error.code)) {
           this._handleError(error);
