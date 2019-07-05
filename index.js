@@ -18,7 +18,7 @@ const supportsDirent = 'Dirent' in fs;
  */
 
 const isWindows = process.platform === 'win32';
-const supportsBigint = /^v8/.test(process.version);
+const supportsBigint = !/^v8\./.test(process.version);
 const BANG = '!';
 const NORMAL_FLOW_ERRORS = new Set(['ENOENT', 'EPERM', 'EACCES', 'ELOOP']);
 const FILE_TYPE = 'files';
