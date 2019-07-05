@@ -1,5 +1,4 @@
 {
-  "author": "Thorsten Lorenz <thlorenz@gmx.de> (thlorenz.com)",
   "name": "readdirp",
   "description": "Recursive version of fs.readdir with streaming api.",
   "version": "3.0.2",
@@ -8,6 +7,11 @@
     "type": "git",
     "url": "git://github.com/paulmillr/readdirp.git"
   },
+  "author": "Thorsten Lorenz <thlorenz@gmx.de> (thlorenz.com)",
+  "contributors": [
+    "Thorsten Lorenz <thlorenz@gmx.de> (thlorenz.com)",
+    "Paul Miller (https://paulmillr.com)"
+  ],
   "engines": {
     "node": ">= 8"
   },
