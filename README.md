@@ -94,6 +94,8 @@ Has the following properties:
 
 # Changelog
 
+3.1 (Jul 7, 2019) brings `bigint` support to `stat` outputs on windows. This is backwards-incompatible for some cases. Be careful.
+
 Version 3 brings huge performance improvements and stream backpressure support.
 
 - Upgrading 2.x to 3.x:
