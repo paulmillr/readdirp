@@ -18,6 +18,10 @@ const supportsDirent = 'Dirent' in fs;
  */
 
 const isWindows = process.platform === 'win32';
+// Electron (<4.0.x) utilises custom versions of fs  
+// https://github.com/electron/electron/pull/15323
+const isUnsupportedElectron = process.versions.hasOwnProperty('electron') 
+                                && process.versions.electron[0] <= 4;
 const supportsBigint = typeof BigInt === 'function';
 const BANG = '!';
 const NORMAL_FLOW_ERRORS = new Set(['ENOENT', 'EPERM', 'EACCES', 'ELOOP']);
@@ -167,7 +171,7 @@ class ReaddirpStream extends Readable {
   }
 
   _stat(fullPath) {
-    if (isWindows && supportsBigint) {
+    if (isWindows && supportsBigint && !isUnsupportedElectron) {
       return this._statMethod(fullPath, this._statOpts);
     } else {
       return this._statMethod(fullPath);
