@@ -21,6 +21,7 @@ const isWindows = process.platform === 'win32';
 const supportsBigint = typeof BigInt === 'function';
 const BANG = '!';
 const NORMAL_FLOW_ERRORS = new Set(['ENOENT', 'EPERM', 'EACCES', 'ELOOP']);
+const STAT_OPTIONS_SUPPORT_LENGTH = 3;
 const FILE_TYPE = 'files';
 const DIR_TYPE = 'directories';
 const FILE_DIR_TYPE = 'files_directories';
@@ -166,8 +167,12 @@ class ReaddirpStream extends Readable {
     }
   }
 
+  _isStatOptionsSupported() {
+    return this._statMethod.length === STAT_OPTIONS_SUPPORT_LENGTH; 
+  }
+
   _stat(fullPath) {
-    if (isWindows && supportsBigint) {
+    if (isWindows && this._isStatOptionsSupported()) {
       return this._statMethod(fullPath, this._statOpts);
     } else {
       return this._statMethod(fullPath);
