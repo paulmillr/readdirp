@@ -94,7 +94,9 @@ Has the following properties:
 
 # Changelog
 
-3.1 (Jul 7, 2019) brings `bigint` support to `stat` outputs on windows. This is backwards-incompatible for some cases. Be careful.
+3.1 (Jul 7, 2019) brings `bigint` support to `stat` outputs on windows. This is backwards-incompatible for some cases.
+
+Be careful. It you use it incorrectly, you'll see "TypeError: Cannot mix BigInt and other types, use explicit conversions".
 
 Version 3 brings huge performance improvements and stream backpressure support.
 
