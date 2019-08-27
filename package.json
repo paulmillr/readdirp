@@ -30,7 +30,7 @@
     "filter"
   ],
   "scripts": {
-    "test": "mocha"
+    "test": "node -v && nyc mocha"
   },
   "dependencies": {
     "picomatch": "^2.0.4"
