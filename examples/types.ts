@@ -1,7 +1,7 @@
-import readdirp from '..';
+import readdirp from 'readdirp';
 
 const read = async (directory: string) => {
-  const stream = readdirp(directory, {type: 'all'});
+  const stream = readdirp(directory, { type: 'all' });
   let i = 0;
   for await (const chunk of stream) {
     // Check memory usage with this line. It should be 10MB or so.

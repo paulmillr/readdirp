@@ -30,7 +30,7 @@
     "filter"
   ],
   "scripts": {
-    "test": "nyc mocha"
+    "test": "nyc mocha && dtslint"
   },
   "dependencies": {
     "picomatch": "^2.0.4"
@@ -41,6 +41,7 @@
     "@types/node": "^12",
     "chai": "^4.2",
     "chai-subset": "^1.6",
+    "dtslint": "^0.9.8",
     "mocha": "~6.1.3",
     "nyc": "^14.1.1",
     "rimraf": "^2.6.3"
