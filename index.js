@@ -16,6 +16,7 @@ const DEFAULT_OPTIONS = {
   type: 'files',
   root: '.',
   depth: 2147483648,
+  alwaysStat: false,
   _currentDepth: 0,
 };
 
@@ -23,10 +24,7 @@ const READDIRP_ARGS = {withFileTypes: true};
 
 async function* _opendir(parentPath) {
   if (opendir) {
-    const dir = await opendir(parentPath);
-    for await (const dirent of dir) {
-      yield dirent;
-    }
+    yield* await opendir(parentPath);
   } else {
     const dir = await readdir(parentPath, READDIRP_ARGS);
     for (const dirent of dir) {
