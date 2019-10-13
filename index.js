@@ -87,7 +87,7 @@ class ReaddirpStream extends Readable {
   }
 
   constructor(options = {}) {
-    super({objectMode: true, highWaterMark: 1});
+    super({objectMode: true, highWaterMark: 1, autoDestroy: true});
     const opts = Object.assign({}, ReaddirpStream.defaultOptions, options);
     const {root} = opts;
 
@@ -109,10 +109,10 @@ class ReaddirpStream extends Readable {
   }
 
   async _read() {
-    // If the stream was destroyed, we must not proceed.
-    if (!this.readable) return;
-
     do {
+      // If the stream was destroyed, we must not proceed.
+      if (this.destroyed) return;
+
       const parent = this.parents.pop();
       if (!parent) {
         // ...we have files to process; but not directories.
@@ -144,13 +144,13 @@ class ReaddirpStream extends Readable {
     this.filesToRead--;
 
     // If the stream was destroyed, after readdir is completed
-    if (!this.readable) return;
+    if (this.destroyed) return;
 
     this.filesToRead += files.length;
 
     const entries = await Promise.all(files.map(dirent =>  this._formatEntry(dirent, parent)));
 
-    if (!this.readable) return;
+    if (this.destroyed) return;
 
     for (let i = 0; i < entries.length; i++) {
       const entry = entries[i];
@@ -255,28 +255,19 @@ class ReaddirpStream extends Readable {
   }
 
   _push(entry) {
-    if (this.readable) {
+    if (!this.destroyed) {
       this.push(entry);
     }
   }
 
   _handleError(error) {
-    if (!this.readable) {
-      return;
+    if (!this.destroyed) {
+      this.emit('warn', error);
     }
-    this.emit('warn', error);
   }
 
   _handleFatalError(error) {
-    if (!this.readable) {
-      return;
-    }
-    this.emit('error', error);
-    this.destroy();
-  }
-
-  destroy() {
-    this.emit('close');
+    this.destroy(error);
   }
 }
 
