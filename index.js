@@ -1,10 +1,10 @@
 'use strict';
 
 const fs = require('fs');
-const {Readable} = require('stream');
+const { Readable } = require('stream');
 const sysPath = require('path');
 const picomatch = require('picomatch');
-const {promisify} = require('util');
+const { promisify } = require('util');
 const [readdir, stat, lstat] = [promisify(fs.readdir), promisify(fs.stat), promisify(fs.lstat)];
 const supportsDirent = 'Dirent' in fs;
 
@@ -30,15 +30,17 @@ const FILE_TYPES = new Set([FILE_TYPE, FILE_DIR_TYPE, EVERYTHING_TYPE]);
 const DIR_TYPES = new Set([DIR_TYPE, FILE_DIR_TYPE, EVERYTHING_TYPE]);
 const ALL_TYPES = [FILE_TYPE, DIR_TYPE, FILE_DIR_TYPE, EVERYTHING_TYPE];
 
-const isNormalFlowError = (errorCode) => NORMAL_FLOW_ERRORS.has(errorCode);
+const isNormalFlowError = errorCode => NORMAL_FLOW_ERRORS.has(errorCode);
 
-const normalizeFilter = (filter) => {
+const checkBasename = f => f(entry.basename);
+
+const normalizeFilter = filter => {
   if (filter === undefined) return;
   if (typeof filter === 'function') return filter;
 
   if (typeof filter === 'string') {
     const glob = picomatch(filter.trim());
-    return (entry) => glob(entry.basename);
+    return entry => glob(entry.basename);
   }
 
   if (Array.isArray(filter)) {
@@ -55,13 +57,13 @@ const normalizeFilter = (filter) => {
 
     if (negative.length > 0) {
       if (positive.length > 0) {
-        return (entry) => positive.some(f => f(entry.basename)) &&
-          !negative.some(f => f(entry.basename));
+        return entry =>
+          positive.some(f => f(entry.basename)) && !negative.some(f => f(entry.basename));
       } else {
-        return (entry) => !negative.some(f => f(entry.basename));
+        return entry => !negative.some(f => f(entry.basename));
       }
     } else {
-      return (entry) => positive.some(f => f(entry.basename));
+      return entry => positive.some(f => f(entry.basename));
     }
   }
 };
@@ -77,30 +79,30 @@ class ReaddirpStream extends Readable {
   static get defaultOptions() {
     return {
       root: '.',
-      fileFilter: (path) => true,
-      directoryFilter: (path) => true,
+      fileFilter: path => true,
+      directoryFilter: path => true,
       type: 'files',
       lstat: false,
       depth: 2147483648,
       alwaysStat: false
-    }
+    };
   }
 
   constructor(options = {}) {
-    super({objectMode: true, highWaterMark: 1, autoDestroy: true});
+    super({ objectMode: true, highWaterMark: 1, autoDestroy: true });
     const opts = Object.assign({}, ReaddirpStream.defaultOptions, options);
-    const {root} = opts;
+    const { root } = opts;
 
     this._fileFilter = normalizeFilter(opts.fileFilter);
     this._directoryFilter = normalizeFilter(opts.directoryFilter);
     this._statMethod = opts.lstat ? lstat : stat;
-    this._statOpts = {bigint: isWindows};
+    this._statOpts = { bigint: isWindows };
     this._maxDepth = opts.depth;
-    this._entryType = opts.type
+    this._entryType = opts.type;
     this._root = sysPath.resolve(root);
     this._isDirent = !opts.alwaysStat && supportsDirent;
     this._statsProp = this._isDirent ? 'dirent' : 'stats';
-    this._readdir_options = {encoding: 'utf8', withFileTypes: this._isDirent};
+    this._readdir_options = { encoding: 'utf8', withFileTypes: this._isDirent };
 
     // Launch stream with one parent, the root dir.
     /** @type Array<[string, number]>  */
@@ -121,7 +123,7 @@ class ReaddirpStream extends Readable {
         break;
       }
       await this._exploreDirectory(parent);
-    } while(!this.isPaused() && !this._isQueueEmpty());
+    } while (!this.isPaused() && !this._isQueueEmpty());
 
     this._endStreamIfQueueIsEmpty();
   }
@@ -148,7 +150,7 @@ class ReaddirpStream extends Readable {
 
     this.filesToRead += files.length;
 
-    const entries = await Promise.all(files.map(dirent =>  this._formatEntry(dirent, parent)));
+    const entries = await Promise.all(files.map(dirent => this._formatEntry(dirent, parent)));
 
     if (this.destroyed) return;
 
@@ -180,8 +182,8 @@ class ReaddirpStream extends Readable {
   }
 
   async _formatEntry(dirent, parent) {
-    const relativePath = this._isDirent ? dirent.name : dirent;
-    const fullPath = sysPath.resolve(sysPath.join(parent.path, relativePath));
+    const basename = this._isDirent ? dirent.name : dirent;
+    const fullPath = sysPath.resolve(sysPath.join(parent.path, basename));
 
     let stats;
     if (this._isDirent) {
@@ -199,10 +201,9 @@ class ReaddirpStream extends Readable {
       }
     }
     const path = sysPath.relative(this._root, fullPath);
-    const basename = sysPath.basename(path);
 
     /** @type {EntryInfo} */
-    const entry = {path, fullPath, basename, [this._statsProp]: stats};
+    const entry = { path, fullPath, basename, [this._statsProp]: stats };
 
     return entry;
   }
@@ -220,7 +221,7 @@ class ReaddirpStream extends Readable {
   _pushNewParentIfLessThanMaxDepth(parentPath, depth) {
     if (depth <= this._maxDepth) {
       this.parents.push(new ExploringDir(parentPath, depth));
-      return true
+      return true;
     } else {
       return false;
     }
@@ -232,17 +233,18 @@ class ReaddirpStream extends Readable {
 
   _isFileAndMatchesFilter(entry) {
     const stats = entry[this._statsProp];
-    const isFileType = (
+    const isFileType =
       (this._entryType === EVERYTHING_TYPE && !stats.isDirectory()) ||
-      (stats.isFile() || stats.isSymbolicLink())
-    );
+      (stats.isFile() || stats.isSymbolicLink());
     return isFileType && this._fileFilter(entry);
   }
 
   _emitPushIfUserWantsDir(entry) {
     if (DIR_TYPES.has(this._entryType)) {
       // TODO: Understand why this happens.
-      const fn = () => {this.push(entry)};
+      const fn = () => {
+        this.push(entry);
+      };
       if (this._isDirent) setImmediate(fn);
       else fn();
     }
@@ -301,9 +303,9 @@ const readdirpPromise = (root, options = {}) => {
   return new Promise((resolve, reject) => {
     const files = [];
     readdirp(root, options)
-      .on('data', (entry) => files.push(entry))
+      .on('data', entry => files.push(entry))
       .on('end', () => resolve(files))
-      .on('error', (error) => reject(error));
+      .on('error', error => reject(error));
   });
 };
 
