@@ -97,7 +97,7 @@ class ReaddirpStream extends Readable {
     this._statOpts = {bigint: isWindows};
     this._maxDepth = opts.depth;
     this._entryType = opts.type
-    this._root = root;
+    this._root = sysPath.resolve(root);
     this._isDirent = !opts.alwaysStat && supportsDirent;
     this._statsProp = this._isDirent ? 'dirent' : 'stats';
     this._readdir_options = {encoding: 'utf8', withFileTypes: this._isDirent};
@@ -168,7 +168,7 @@ class ReaddirpStream extends Readable {
   }
 
   _isStatOptionsSupported() {
-    return this._statMethod.length === STAT_OPTIONS_SUPPORT_LENGTH; 
+    return this._statMethod.length === STAT_OPTIONS_SUPPORT_LENGTH;
   }
 
   _stat(fullPath) {
