@@ -242,7 +242,7 @@ class ReaddirpStream extends Readable {
   _emitPushIfUserWantsDir(entry) {
     if (DIR_TYPES.has(this._entryType)) {
       // TODO: Understand why this happens.
-      const fn = () => {this._push(entry)};
+      const fn = () => {this.push(entry)};
       if (this._isDirent) setImmediate(fn);
       else fn();
     }
@@ -250,12 +250,6 @@ class ReaddirpStream extends Readable {
 
   _emitPushIfUserWantsFile(entry) {
     if (FILE_TYPES.has(this._entryType)) {
-      this._push(entry);
-    }
-  }
-
-  _push(entry) {
-    if (!this.destroyed) {
       this.push(entry);
     }
   }
