@@ -75,8 +75,8 @@ class ReaddirpStream extends Readable {
   static get defaultOptions() {
     return {
       root: '.',
-      fileFilter: () => true,
-      directoryFilter: () => true,
+      fileFilter: (path) => true,
+      directoryFilter: (path) => true,
       type: 'files',
       lstat: false,
       depth: 2147483648,
