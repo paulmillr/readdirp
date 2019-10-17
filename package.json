@@ -7,11 +7,16 @@
     "type": "git",
     "url": "git://github.com/paulmillr/readdirp.git"
   },
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/paulmillr/readdirp/issues"
+  },
   "author": "Thorsten Lorenz <thlorenz@gmx.de> (thlorenz.com)",
   "contributors": [
     "Thorsten Lorenz <thlorenz@gmx.de> (thlorenz.com)",
     "Paul Miller (https://paulmillr.com)"
   ],
+  "main": "index.js",
   "engines": {
     "node": ">= 8"
   },
@@ -45,6 +50,5 @@
     "mocha": "~6.1.3",
     "nyc": "^14.1.1",
     "rimraf": "^2.6.3"
-  },
-  "license": "MIT"
+  }
 }
