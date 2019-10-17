@@ -3,8 +3,9 @@
 const fs = require('fs');
 const { Readable } = require('stream');
 const sysPath = require('path');
-const picomatch = require('picomatch');
 const { promisify } = require('util');
+const picomatch = require('picomatch');
+
 const [readdir, stat, lstat] = [promisify(fs.readdir), promisify(fs.stat), promisify(fs.lstat)];
 const supportsDirent = 'Dirent' in fs;
 
@@ -18,7 +19,6 @@ const supportsDirent = 'Dirent' in fs;
  */
 
 const isWindows = process.platform === 'win32';
-const supportsBigint = typeof BigInt === 'function';
 const BANG = '!';
 const NORMAL_FLOW_ERRORS = new Set(['ENOENT', 'EPERM', 'EACCES', 'ELOOP']);
 const STAT_OPTIONS_SUPPORT_LENGTH = 3;
@@ -31,8 +31,6 @@ const DIR_TYPES = new Set([DIR_TYPE, FILE_DIR_TYPE, EVERYTHING_TYPE]);
 const ALL_TYPES = [FILE_TYPE, DIR_TYPE, FILE_DIR_TYPE, EVERYTHING_TYPE];
 
 const isNormalFlowError = errorCode => NORMAL_FLOW_ERRORS.has(errorCode);
-
-const checkBasename = f => f(entry.basename);
 
 const normalizeFilter = filter => {
   if (filter === undefined) return;
@@ -59,12 +57,10 @@ const normalizeFilter = filter => {
       if (positive.length > 0) {
         return entry =>
           positive.some(f => f(entry.basename)) && !negative.some(f => f(entry.basename));
-      } else {
-        return entry => !negative.some(f => f(entry.basename));
       }
-    } else {
-      return entry => positive.some(f => f(entry.basename));
+      return entry => !negative.some(f => f(entry.basename));
     }
+    return entry => positive.some(f => f(entry.basename));
   }
 };
 
@@ -79,8 +75,8 @@ class ReaddirpStream extends Readable {
   static get defaultOptions() {
     return {
       root: '.',
-      fileFilter: path => true,
-      directoryFilter: path => true,
+      fileFilter: () => true,
+      directoryFilter: () => true,
       type: 'files',
       lstat: false,
       depth: 2147483648,
@@ -90,7 +86,7 @@ class ReaddirpStream extends Readable {
 
   constructor(options = {}) {
     super({ objectMode: true, highWaterMark: 1, autoDestroy: true });
-    const opts = Object.assign({}, ReaddirpStream.defaultOptions, options);
+    const opts = { ...ReaddirpStream.defaultOptions, ...options };
     const { root } = opts;
 
     this._fileFilter = normalizeFilter(opts.fileFilter);
@@ -154,8 +150,7 @@ class ReaddirpStream extends Readable {
 
     if (this.destroyed) return;
 
-    for (let i = 0; i < entries.length; i++) {
-      const entry = entries[i];
+    for (const entry of entries) {
       this.filesToRead--;
       if (!entry) {
         continue;
@@ -176,9 +171,8 @@ class ReaddirpStream extends Readable {
   _stat(fullPath) {
     if (isWindows && this._isStatOptionsSupported()) {
       return this._statMethod(fullPath, this._statOpts);
-    } else {
-      return this._statMethod(fullPath);
     }
+    return this._statMethod(fullPath);
   }
 
   async _formatEntry(dirent, parent) {
@@ -222,9 +216,8 @@ class ReaddirpStream extends Readable {
     if (depth <= this._maxDepth) {
       this.parents.push(new ExploringDir(parentPath, depth));
       return true;
-    } else {
-      return false;
     }
+    return false;
   }
 
   _isDirAndMatchesFilter(entry) {
@@ -284,13 +277,13 @@ class ReaddirpStream extends Readable {
  * @param {ReaddirpArguments=} options Options to specify root (start directory), filters and recursion depth
  */
 const readdirp = (root, options = {}) => {
-  let type = options['entryType'] || options.type;
+  let type = options.entryType || options.type;
   if (type === 'both') type = FILE_DIR_TYPE; // backwards-compatibility
   if (type) options.type = type;
   if (root == null || typeof root === 'undefined') {
     throw new Error('readdirp: root argument is required. Usage: readdirp(root, options)');
   } else if (typeof root !== 'string') {
-    throw new Error(`readdirp: root argument must be a string. Usage: readdirp(root, options)`);
+    throw new TypeError('readdirp: root argument must be a string. Usage: readdirp(root, options)');
   } else if (type && !ALL_TYPES.includes(type)) {
     throw new Error(`readdirp: Invalid type passed. Use one of ${ALL_TYPES.join(', ')}`);
   }

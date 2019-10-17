@@ -1,11 +1,15 @@
+'use strict';
+
 const fs = require('fs');
 const sysPath = require('path');
+const {Readable} = require('stream');
+const {promisify} = require('util');
 const chai = require('chai');
 const chaiSubset = require('chai-subset');
-const {Readable} = require('stream');
+
 chai.use(chaiSubset);
 chai.should();
-const {promisify} = require('util');
+
 const rimraf = promisify(require('rimraf'));
 const mkdir = promisify(fs.mkdir);
 const symlink = promisify(fs.symlink);
@@ -21,36 +25,36 @@ let testCount = 0;
 let currPath;
 
 const read = async (options) => {
-  return await readdirp.promise(currPath, options);
+  return readdirp.promise(currPath, options);
 };
 
-const touch = async (files=[], dirs=[]) => {
+const touch = async (files = [], dirs = []) => {
   for (const name of files) {
     await writeFile(sysPath.join(currPath, name), `${Date.now()}`);
   }
   for (const dir of dirs) {
     await mkdir(sysPath.join(currPath, dir));
   }
-}
+};
 
-const convertPath = path => process.platform === "win32" ? path.replace(/\//gi, "\\") : path;
+const convertPath = path => process.platform === 'win32' ? path.replace(/\//gi, '\\') : path;
 
 const formatEntry = (file, dir = root) => {
   const basename = sysPath.basename(file);
   return {
     basename,
     path: convertPath(file),
-    fullPath: convertPath(sysPath.join(dir, file)),
+    fullPath: convertPath(sysPath.join(dir, file))
   };
 };
 
-const delay = ms => new Promise(res => setTimeout(res, ms));
+const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
 
-const waitForEnd = stream => new Promise(res => stream.on('end', res));
+const waitForEnd = stream => new Promise(resolve => stream.on('end', resolve));
 
 beforeEach(async () => {
   testCount++;
-  currPath = sysPath.join(root, testCount.toString())
+  currPath = sysPath.join(root, testCount.toString());
   await rimraf(currPath);
   await mkdir(currPath);
 });
@@ -65,7 +69,7 @@ before(async () => {
 });
 after(async () => {
   await rimraf(root);
-})
+});
 
 describe('basic', () => {
   it('reads directory', async () => {
@@ -97,8 +101,8 @@ describe('basic', () => {
     const res = await read({lstat: true, alwaysStat: true});
     res.should.have.lengthOf(expect.length);
     res.forEach((entry, index) => {
-      entry.should.containSubset(formatEntry(expect[index], currPath, false))
-      entry.should.include.own.key("stats");
+      entry.should.containSubset(formatEntry(expect[index], currPath, false));
+      entry.should.include.own.key('stats');
       if (entry.basename === symlinkName) {
         entry.stats.isSymbolicLink().should.equals(true);
       }
@@ -123,7 +127,7 @@ describe('type', () => {
     await touch(files, dirs);
     const res = await read({type: 'directories'});
     res.should.have.lengthOf(dirs.length);
-    res.map((entry, index) =>
+    res.forEach((entry, index) =>
       entry.should.containSubset(formatEntry(dirs[index], currPath))
     );
   });
@@ -133,7 +137,7 @@ describe('type', () => {
     const res = await read({type: 'both'});
     const both = files.concat(dirs);
     res.should.have.lengthOf(both.length);
-    res.map((entry, index) =>
+    res.forEach((entry, index) =>
       entry.should.containSubset(formatEntry(both[index], currPath))
     );
   });
@@ -143,18 +147,18 @@ describe('type', () => {
     const res = await read({type: 'all'});
     const all = files.concat(dirs);
     res.should.have.lengthOf(all.length);
-    res.map((entry, index) =>
+    res.forEach((entry, index) =>
       entry.should.containSubset(formatEntry(all[index], currPath))
     );
   });
 
   it('invalid', async () => {
     try {
-      await read({type: 'bogus'})
+      await read({type: 'bogus'});
     } catch (error) {
       error.message.should.match(/Invalid type/);
     }
-  })
+  });
 });
 
 describe('depth', () => {
@@ -173,7 +177,7 @@ describe('depth', () => {
   it('0', async () => {
     const res = await read({depth: 0});
     res.should.have.lengthOf(depth0.length);
-    res.map((entry, index) =>
+    res.forEach((entry, index) =>
       entry.should.containSubset(formatEntry(depth0[index], currPath))
     );
   });
@@ -184,7 +188,7 @@ describe('depth', () => {
     res.should.have.lengthOf(expect.length);
     res
       .sort((a, b) => a.basename > b.basename ? 1 : -1)
-      .map((entry, index) =>
+      .forEach((entry, index) =>
         entry.should.containSubset(formatEntry(expect[index], currPath))
       );
   });
@@ -195,7 +199,7 @@ describe('depth', () => {
     res.should.have.lengthOf(expect.length);
     res
       .sort((a, b) => a.basename > b.basename ? 1 : -1)
-      .map((entry, index) =>
+      .forEach((entry, index) =>
         entry.should.containSubset(formatEntry(expect[index], currPath))
       );
   });
@@ -206,7 +210,7 @@ describe('depth', () => {
     res.should.have.lengthOf(expect.length);
     res
       .sort((a, b) => a.basename > b.basename ? 1 : -1)
-      .map((entry, index) =>
+      .forEach((entry, index) =>
         entry.should.containSubset(formatEntry(expect[index], currPath))
       );
   });
@@ -220,20 +224,20 @@ describe('filtering', () => {
     const expect1 = ['a.js', 'c.js', 'd.js'];
     const res = await read({fileFilter: '*.js'});
     res.should.have.lengthOf(expect1.length);
-    res.map((entry, index) =>
+    res.forEach((entry, index) =>
       entry.should.containSubset(formatEntry(expect1[index], currPath))
     );
 
     const res2 = await read({fileFilter: ['*.js']});
     res2.should.have.lengthOf(expect1.length);
-    res2.map((entry, index) =>
+    res2.forEach((entry, index) =>
       entry.should.containSubset(formatEntry(expect1[index], currPath))
     );
 
     const expect2 = ['b.txt'];
     const res3 = await read({fileFilter: ['*.txt']});
     res3.should.have.lengthOf(expect2.length);
-    res3.map((entry, index) =>
+    res3.forEach((entry, index) =>
       entry.should.containSubset(formatEntry(expect2[index], currPath))
     );
   });
@@ -241,7 +245,7 @@ describe('filtering', () => {
     const expect = ['a.js', 'c.js', 'd.js', 'e.rb'];
     const res = await read({fileFilter: [' *.js', '*.rb ']});
     res.should.have.lengthOf(expect.length);
-    res.map((entry, index) =>
+    res.forEach((entry, index) =>
       entry.should.containSubset(formatEntry(expect[index], currPath))
     );
   });
@@ -249,7 +253,7 @@ describe('filtering', () => {
     const expect = ['a.js', 'b.txt', 'c.js', 'd.js'];
     const res = await read({fileFilter: ['*.js', '*.txt']});
     res.should.have.lengthOf(expect.length);
-    res.map((entry, index) =>
+    res.forEach((entry, index) =>
       entry.should.containSubset(formatEntry(expect[index], currPath))
     );
   });
@@ -257,7 +261,7 @@ describe('filtering', () => {
     const expect = ['a.js', 'b.txt', 'c.js', 'e.rb'];
     const res = await read({fileFilter: ['!d.js']});
     res.should.have.lengthOf(expect.length);
-    res.map((entry, index) =>
+    res.forEach((entry, index) =>
       entry.should.containSubset(formatEntry(expect[index], currPath))
     );
   });
@@ -265,7 +269,7 @@ describe('filtering', () => {
     const expect = ['a.js', 'c.js'];
     const res = await read({fileFilter: ['*.js', '!d.js']});
     res.should.have.lengthOf(expect.length);
-    res.map((entry, index) =>
+    res.forEach((entry, index) =>
       entry.should.containSubset(formatEntry(expect[index], currPath))
     );
   });
@@ -273,7 +277,7 @@ describe('filtering', () => {
     const expect = ['b.txt'];
     const res = await read({fileFilter: ['!*.js', '!*.rb']});
     res.should.have.lengthOf(expect.length);
-    res.map((entry, index) =>
+    res.forEach((entry, index) =>
       entry.should.containSubset(formatEntry(expect[index], currPath))
     );
   });
@@ -281,7 +285,7 @@ describe('filtering', () => {
     const expect = ['a.js', 'c.js', 'd.js'];
     const res = await read({fileFilter: (entry) => sysPath.extname(entry.fullPath) === '.js'});
     res.should.have.lengthOf(expect.length);
-    res.map((entry, index) =>
+    res.forEach((entry, index) =>
       entry.should.containSubset(formatEntry(expect[index], currPath))
     );
 
@@ -289,7 +293,7 @@ describe('filtering', () => {
       const expect2 = ['a.js', 'b.txt', 'c.js', 'd.js', 'e.rb'];
       const res2 = await read({fileFilter: (entry) => entry.dirent.isFile() });
       res2.should.have.lengthOf(expect2.length);
-      res2.map((entry, index) =>
+      res2.forEach((entry, index) =>
         entry.should.containSubset(formatEntry(expect2[index], currPath))
       );
     }
@@ -298,17 +302,17 @@ describe('filtering', () => {
     const expect = ['a.js', 'c.js', 'd.js'];
     const res = await read({alwaysStat: true, fileFilter: (entry) => sysPath.extname(entry.fullPath) === '.js'});
     res.should.have.lengthOf(expect.length);
-    res.map((entry, index) => {
-      entry.should.containSubset(formatEntry(expect[index], currPath))
-      entry.should.include.own.key("stats");
+    res.forEach((entry, index) => {
+      entry.should.containSubset(formatEntry(expect[index], currPath));
+      entry.should.include.own.key('stats');
     });
 
     const expect2 = ['a.js', 'b.txt', 'c.js', 'd.js', 'e.rb'];
     const res2 = await read({alwaysStat: true, fileFilter: (entry) => entry.stats.size > 0 });
     res2.should.have.lengthOf(expect2.length);
-    res2.map((entry, index) => {
-      entry.should.containSubset(formatEntry(expect2[index], currPath))
-      entry.should.include.own.key("stats");
+    res2.forEach((entry, index) => {
+      entry.should.containSubset(formatEntry(expect2[index], currPath));
+      entry.should.include.own.key('stats');
     });
   });
 });
@@ -341,15 +345,15 @@ describe('various', () => {
     await touch(created);
     const result = await readdirp.promise(currPath);
     result.should.have.lengthOf(created.length);
-    result.map((entry, index) =>
+    result.forEach((entry, index) =>
       entry.should.containSubset(formatEntry(created[index], currPath))
     );
   });
   it('should emit warning for missing file', async function() {
-    this.timeout(4000)
+    this.timeout(4000);
     const unlinkedDir = sysPath.join(currPath, 'unlinked');
     fs.mkdirSync(unlinkedDir);
-    let isUnlinked = false;
+    const isUnlinked = false;
     let isWarningCalled = false;
     const stream = readdirp(currPath, { type: 'all' });
     stream.pause();
@@ -386,7 +390,7 @@ describe('various', () => {
         warning.should.be.an.instanceof(Error);
         warning.code.should.equals('EACCES');
         isWarningCalled = true;
-      })
+      });
     await Promise.race([
       waitForEnd(stream),
       delay(2000)
