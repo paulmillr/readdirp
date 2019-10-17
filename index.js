@@ -146,11 +146,12 @@ class ReaddirpStream extends Readable {
 
     this.filesToRead += files.length;
 
-    const entries = await Promise.all(files.map(dirent => this._formatEntry(dirent, parent)));
+    const promises = files.map(dirent => this._formatEntry(dirent, parent));
 
-    if (this.destroyed) return;
-
-    for (const entry of entries) {
+    for (const promise of promises) {
+      const entry = await promise
+      // If the stream was destroyed, after readdir is completed
+      if (this.destroyed) return;
       this.filesToRead--;
       if (!entry) {
         continue;
