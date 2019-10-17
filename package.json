@@ -30,7 +30,9 @@
     "filter"
   ],
   "scripts": {
-    "test": "nyc mocha && dtslint"
+    "dtslint": "dtslint",
+    "mocha": "mocha",
+    "test": "nyc npm run mocha && npm run dtslint"
   },
   "dependencies": {
     "picomatch": "^2.0.4"
