@@ -13,7 +13,7 @@
     "Paul Miller (https://paulmillr.com)"
   ],
   "engines": {
-    "node": ">= 8"
+    "node": ">=8.10.0"
   },
   "files": [
     "index.js",
