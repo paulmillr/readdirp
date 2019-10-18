@@ -37,7 +37,8 @@
   "scripts": {
     "dtslint": "dtslint",
     "mocha": "mocha",
-    "test": "nyc npm run mocha && npm run dtslint"
+    "lint": "eslint --report-unused-disable-directives --ignore-path .gitignore .",
+    "test": "npm run lint && nyc npm run mocha && npm run dtslint"
   },
   "dependencies": {
     "picomatch": "^2.0.7"
@@ -49,6 +50,7 @@
     "chai": "^4.2",
     "chai-subset": "^1.6",
     "dtslint": "^0.9.8",
+    "eslint": "^6.5.1",
     "mocha": "^6.2.1",
     "nyc": "^14.1.1",
     "rimraf": "^2.6.3"
@@ -58,5 +60,53 @@
       "html",
       "text"
     ]
+  },
+  "eslintConfig": {
+    "extends": "eslint:recommended",
+    "parserOptions": {
+      "ecmaVersion": 9,
+      "sourceType": "script"
+    },
+    "env": {
+      "node": true,
+      "es6": true
+    },
+    "rules": {
+      "no-empty": [
+        "error",
+        {
+          "allowEmptyCatch": true
+        }
+      ],
+      "object-shorthand": "error",
+      "prefer-arrow-callback": [
+        "error",
+        {
+          "allowNamedFunctions": true
+        }
+      ],
+      "prefer-const": [
+        "error",
+        {
+          "ignoreReadBeforeAssign": true
+        }
+      ],
+      "prefer-destructuring": [
+        "error",
+        {
+          "object": true,
+          "array": false
+        }
+      ],
+      "prefer-spread": "error",
+      "prefer-template": "error",
+      "radix": "error",
+      "strict": "error",
+      "quotes": [
+        "error",
+        "single"
+      ],
+      "no-var": "error"
+    }
   }
 }

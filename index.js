@@ -75,8 +75,10 @@ class ReaddirpStream extends Readable {
   static get defaultOptions() {
     return {
       root: '.',
+      /* eslint-disable no-unused-vars */
       fileFilter: (path) => true,
       directoryFilter: (path) => true,
+      /* eslint-enable no-unused-vars */
       type: 'files',
       lstat: false,
       depth: 2147483648,
