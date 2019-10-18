@@ -81,6 +81,12 @@ describe('basic', () => {
       entry.should.containSubset(formatEntry(files[index], currPath))
     );
   });
+});
+
+describe('symlinks', () => {
+  before(function() {
+    if (isWindows) this.skip();
+  });
 
   it('handles symlinks', async () => {
     const newPath = sysPath.join(currPath, 'test-symlinked.js');
@@ -91,6 +97,7 @@ describe('basic', () => {
     const contents = await readFile(first.fullPath);
     contents.should.match(/handles symlinks/); // name of this test
   });
+
   it('should use lstat instead stat', async () => {
     const files = ['a.txt', 'b.txt', 'c.txt'];
     const symlinkName = 'test-symlinked.js';
