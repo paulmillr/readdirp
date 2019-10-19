@@ -39,6 +39,7 @@ const touch = async (files = [], dirs = []) => {
   }
 };
 
+// todo: replace with sysPath.normalize?
 const convertPath = path => process.platform === 'win32' ? path.replace(/\//g, '\\') : path;
 
 const formatEntry = (file, dir = root) => {
@@ -87,6 +88,7 @@ describe('basic', () => {
 
 describe('symlinks', () => {
   before(function() {
+    // GitHub Actions don't support git symlinks as per 19 Oct 2019
     if (isWindows) this.skip();
   });
 
