@@ -1,3 +1,5 @@
+'use strict';
+
 const {createReadStream} = require('fs');
 const es = require('event-stream');
 const readdirp = require('..');

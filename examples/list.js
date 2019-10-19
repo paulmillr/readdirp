@@ -1,3 +1,7 @@
+/* eslint-disable no-unused-vars */
+
+'use strict';
+
 const readdirp = require('..');
 
 const read = async (directory) => {
