@@ -46,7 +46,7 @@ readdirp('test', {
 
 For more examples, check out `examples` directory.
 
-# API
+## API
 
 `const stream = readdirp(root[, options])` — **Stream API**
 
@@ -92,10 +92,10 @@ Has the following properties:
 - `dirent: fs.Dirent`: built-in [dir entry object](https://nodejs.org/api/fs.html#fs_class_fs_dirent) - only with `alwaysStat: false`
 - `stats: fs.Stats`: built in [stat object](https://nodejs.org/api/fs.html#fs_class_fs_stats) - only with `alwaysStat: true`
 
-# Changelog
+## Changelog
 
 - 3.2 (Oct 14, 2019) improves performance by 250% and makes streams implementation more idiomatic.
-- 3.1 (Jul 7, 2019) brings `bigint` support to `stat` outputs on windows. This is backwards-incompatible for some cases. Be careful. It you use it incorrectly, you'll see "TypeError: Cannot mix BigInt and other types, use explicit conversions".
+- 3.1 (Jul 7, 2019) brings `bigint` support to `stat` output on Windows. This is backwards-incompatible for some cases. Be careful. It you use it incorrectly, you'll see "TypeError: Cannot mix BigInt and other types, use explicit conversions".
 - 3.0 brings huge performance improvements and stream backpressure support.
 - Upgrading 2.x to 3.x:
     - Signature changed from `readdirp(options)` to `readdirp(root, options)`
@@ -105,15 +105,15 @@ Has the following properties:
     - `EntryInfo`
         - Renamed `stat` to `stats`
             - Emitted only when `alwaysStat: true`
-            -  `dirent` is emitted instead of `stats` by default with `alwaysStat: false`
+            - `dirent` is emitted instead of `stats` by default with `alwaysStat: false`
         - Renamed `name` to `basename`
         - Removed `parentDir` and `fullParentDir` properties
 - Supported node.js versions:
     - 3.x: node 8+
     - 2.x: node 0.6+
 
-# License
+## License
 
-Copyright (c) 2012-2019 Thorsten Lorenz, Paul Miller (https://paulmillr.com)
+Copyright (c) 2012-2019 Thorsten Lorenz, Paul Miller (<https://paulmillr.com>)
 
 MIT License, see LICENSE file.
