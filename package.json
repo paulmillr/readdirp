@@ -52,5 +52,11 @@
     "mocha": "^6.2.1",
     "nyc": "^14.1.1",
     "rimraf": "^2.6.3"
+  },
+  "nyc": {
+    "reporter": [
+      "html",
+      "text"
+    ]
   }
 }
