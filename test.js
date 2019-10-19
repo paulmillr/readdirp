@@ -39,7 +39,7 @@ const touch = async (files = [], dirs = []) => {
   }
 };
 
-const convertPath = path => process.platform === 'win32' ? path.replace(/\//gi, '\\') : path;
+const convertPath = path => process.platform === 'win32' ? path.replace(/\//g, '\\') : path;
 
 const formatEntry = (file, dir = root) => {
   const basename = sysPath.basename(file);
