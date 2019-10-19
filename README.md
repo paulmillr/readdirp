@@ -1,4 +1,4 @@
-# readdirp [![Weekly downloads](https://img.shields.io/npm/dw/readdirp.svg)](https://github.com/paulmillr/readdirp)
+# readdirp [![Weekly downloads](https://img.shields.io/npm/dw/readdirp.svg)](https://github.com/paulmillr/readdirp) [![Build Status](https://github.com/paulmillr/readdirp/workflows/Node%20CI/badge.svg)](https://github.com/paulmillr/readdirp/actions?workflow=Node+CI)
 
 > Recursive version of [fs.readdir](https://nodejs.org/api/fs.html#fs_fs_readdir_path_options_callback). Exposes a **stream api** and a **promise api**.
 
