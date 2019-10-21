@@ -101,6 +101,7 @@
       "prefer-spread": "error",
       "prefer-template": "error",
       "radix": "error",
+      "semi": "error",
       "strict": "error",
       "quotes": [
         "error",
