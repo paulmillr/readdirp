@@ -88,7 +88,7 @@ describe('basic', () => {
 
 describe('symlinks', () => {
   before(function() {
-    // GitHub Actions don't support git symlinks as per 19 Oct 2019
+    // GitHub Actions / default windows installation disable symlink support unless admin
     if (isWindows) this.skip();
   });
 
