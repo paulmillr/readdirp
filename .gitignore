@@ -6,10 +6,11 @@
 *.pid
 *.gz
 
-/lib-cov/
-/coverage/
-/node_modules/
 /.nyc_output/
+/coverage/
+/lib-cov/
+/node_modules/
+/test-fixtures/
 pids
 logs
 results
