@@ -39,15 +39,12 @@ const touch = async (files = [], dirs = []) => {
   }
 };
 
-// todo: replace with sysPath.normalize?
-const convertPath = path => process.platform === 'win32' ? path.replace(/\//g, '\\') : path;
-
 const formatEntry = (file, dir = root) => {
   const basename = sysPath.basename(file);
   return {
     basename,
-    path: convertPath(file),
-    fullPath: convertPath(sysPath.join(dir, file))
+    path: sysPath.normalize(file),
+    fullPath: sysPath.join(dir, file)
   };
 };
 
