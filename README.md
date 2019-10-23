@@ -2,7 +2,7 @@
 
 > Recursive version of [fs.readdir](https://nodejs.org/api/fs.html#fs_fs_readdir_path_options_callback). Exposes a **stream api** and a **promise api**.
 
-[![NPM](https://nodei.co/npm/readdirp.png?downloads=true&stars=true)](https://www.npmjs.com/package/readdirp)
+[![NPM](https://nodei.co/npm/readdirp.png)](https://www.npmjs.com/package/readdirp)
 
 ```sh
 npm install readdirp
