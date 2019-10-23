@@ -36,7 +36,7 @@
   ],
   "scripts": {
     "dtslint": "dtslint",
-    "mocha": "mocha",
+    "mocha": "mocha --exit",
     "lint": "eslint --report-unused-disable-directives --ignore-path .gitignore .",
     "test": "npm run lint && nyc npm run mocha && npm run dtslint"
   },
