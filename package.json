@@ -38,7 +38,7 @@
     "dtslint": "dtslint",
     "mocha": "mocha --exit",
     "lint": "eslint --report-unused-disable-directives --ignore-path .gitignore .",
-    "test": "npm run lint && nyc npm run mocha && npm run dtslint"
+    "test": "npm run lint && nyc npm run mocha"
   },
   "dependencies": {
     "picomatch": "^2.0.7"

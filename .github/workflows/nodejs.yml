@@ -15,10 +15,17 @@ jobs:
 
     steps:
       - uses: actions/checkout@v1
+
       - name: Use Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v1
         with:
           node-version: ${{ matrix.node-version }}
+
       - run: npm install
+
       - name: Run tests
         run: npm test
+
+      - name: Run dtslint
+        run: npm run dtslint
+        if: startsWith(matrix.os, 'ubuntu') && matrix.node-version == 12
