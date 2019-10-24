@@ -5,27 +5,23 @@ env:
 
 jobs:
   build:
-    name: node ${{ matrix.node-version }} @ ${{ matrix.os }}
+    name: node ${{ matrix.node }} @ ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
-        node-version: [8, 10, 12]
+        node: [8, 10, 12]
         os: [ubuntu-latest, windows-latest, macOS-latest]
 
     steps:
       - uses: actions/checkout@v1
 
-      - name: Use Node.js ${{ matrix.node-version }}
+      - name: Use Node.js ${{ matrix.node }}
         uses: actions/setup-node@v1
         with:
-          node-version: ${{ matrix.node-version }}
+          node-version: ${{ matrix.node }}
 
       - run: npm install
 
       - name: Run tests
         run: npm test
-
-      - name: Run dtslint
-        run: npm run dtslint
-        if: startsWith(matrix.os, 'ubuntu') && matrix.node-version == 12
