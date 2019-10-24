@@ -72,6 +72,7 @@
       "es6": true
     },
     "rules": {
+      "array-callback-return": "error",
       "no-empty": [
         "error",
         {
