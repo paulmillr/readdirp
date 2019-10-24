@@ -44,8 +44,6 @@
     "picomatch": "^2.0.7"
   },
   "devDependencies": {
-    "@types/chai": "^4.2",
-    "@types/mocha": "^5.2",
     "@types/node": "^12",
     "chai": "^4.2",
     "chai-subset": "^1.6",
