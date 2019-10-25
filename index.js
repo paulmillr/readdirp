@@ -283,7 +283,7 @@ const readdirp = (root, options = {}) => {
   let type = options.entryType || options.type;
   if (type === 'both') type = FILE_DIR_TYPE; // backwards-compatibility
   if (type) options.type = type;
-  if (root == null || typeof root === 'undefined') {
+  if (!root) {
     throw new Error('readdirp: root argument is required. Usage: readdirp(root, options)');
   } else if (typeof root !== 'string') {
     throw new TypeError('readdirp: root argument must be a string. Usage: readdirp(root, options)');
