@@ -49,11 +49,11 @@
     "@types/node": "^12",
     "chai": "^4.2",
     "chai-subset": "^1.6",
-    "dtslint": "^0.9.8",
-    "eslint": "^6.5.1",
-    "mocha": "^6.2.1",
+    "dtslint": "^0.9.9",
+    "eslint": "^6.6.0",
+    "mocha": "^6.2.2",
     "nyc": "^14.1.1",
-    "rimraf": "^2.6.3"
+    "rimraf": "^3.0.0"
   },
   "nyc": {
     "reporter": [
