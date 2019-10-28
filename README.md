@@ -1,6 +1,6 @@
 # readdirp [![Weekly downloads](https://img.shields.io/npm/dw/readdirp.svg)](https://github.com/paulmillr/readdirp)
 
-> Recursive version of [fs.readdir](https://nodejs.org/api/fs.html#fs_fs_readdir_path_options_callback). Exposes a **stream api** and a **promise api**.
+> Recursive version of [fs.readdir](https://nodejs.org/api/fs.html#fs_fs_readdir_path_options_callback). Exposes a **stream API** and a **promise API**.
 
 [![NPM](https://nodei.co/npm/readdirp.png)](https://www.npmjs.com/package/readdirp)
 
@@ -116,4 +116,4 @@ Has the following properties:
 
 Copyright (c) 2012-2019 Thorsten Lorenz, Paul Miller (<https://paulmillr.com>)
 
-MIT License, see LICENSE file.
+MIT License, see [LICENSE](LICENSE) file.
