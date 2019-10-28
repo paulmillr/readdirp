@@ -97,7 +97,7 @@ describe('symlinks', () => {
     contents.should.match(/handles symlinks/); // name of this test
   });
 
-  it('should use lstat instead stat', async () => {
+  it('should use lstat instead of stat', async () => {
     const files = ['a.txt', 'b.txt', 'c.txt'];
     const symlinkName = 'test-symlinked.js';
     const newPath = sysPath.join(currPath, symlinkName);
@@ -383,7 +383,7 @@ describe('various', () => {
     isWarningCalled.should.equals(true);
   });
   it('should emit warning for file with strict permission', async () => {
-    // Windows doesn't throw permission error if you access permited directory
+    // Windows doesn't throw permission error if you access permitted directory
     if (isWindows) {
       return true;
     }
@@ -404,7 +404,7 @@ describe('various', () => {
     isWarningCalled.should.equals(true);
   });
   it('should not emit warning after "end" event', async () => {
-    // Windows doesn't throw permission error if you access permited directory
+    // Windows doesn't throw permission error if you access permitted directory
     if (isWindows) {
       return true;
     }
