@@ -6,8 +6,9 @@ const sysPath = require('path');
 const { promisify } = require('util');
 const picomatch = require('picomatch');
 
-const [readdir, stat, lstat] = [promisify(fs.readdir), promisify(fs.stat), promisify(fs.lstat)];
-const supportsDirent = 'Dirent' in fs;
+const readdir = promisify(fs.readdir);
+const stat = promisify(fs.stat);
+const lstat = promisify(fs.lstat);
 
 /**
  * @typedef {Object} EntryInfo
@@ -18,6 +19,7 @@ const supportsDirent = 'Dirent' in fs;
  * @property {String} basename
  */
 
+const supportsDirent = 'Dirent' in fs;
 const isWindows = process.platform === 'win32';
 const BANG = '!';
 const NORMAL_FLOW_ERRORS = new Set(['ENOENT', 'EPERM', 'EACCES', 'ELOOP']);

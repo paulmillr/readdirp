@@ -8,27 +8,26 @@ const {Readable} = require('stream');
 const {promisify} = require('util');
 const chai = require('chai');
 const chaiSubset = require('chai-subset');
+const rimraf = require('rimraf');
+const readdirp = require('.');
 
 chai.use(chaiSubset);
 chai.should();
 
-const rimraf = promisify(require('rimraf'));
+const pRimraf = promisify(rimraf);
 const mkdir = promisify(fs.mkdir);
 const symlink = promisify(fs.symlink);
 const readFile = promisify(fs.readFile);
 const writeFile = promisify(fs.writeFile);
+
 const supportsDirent = 'Dirent' in fs;
-
-const readdirp = require('.');
-
 const isWindows = process.platform === 'win32';
 const root = sysPath.join(__dirname, 'test-fixtures');
+
 let testCount = 0;
 let currPath;
 
-const read = async (options) => {
-  return readdirp.promise(currPath, options);
-};
+const read = async (options) => readdirp.promise(currPath, options);
 
 const touch = async (files = [], dirs = []) => {
   for (const name of files) {
@@ -40,9 +39,8 @@ const touch = async (files = [], dirs = []) => {
 };
 
 const formatEntry = (file, dir = root) => {
-  const basename = sysPath.basename(file);
   return {
-    basename,
+    basename: sysPath.basename(file),
     path: sysPath.normalize(file),
     fullPath: sysPath.join(dir, file)
   };
@@ -55,20 +53,20 @@ const waitForEnd = stream => new Promise(resolve => stream.on('end', resolve));
 beforeEach(async () => {
   testCount++;
   currPath = sysPath.join(root, testCount.toString());
-  await rimraf(currPath);
+  await pRimraf(currPath);
   await mkdir(currPath);
 });
 
 afterEach(async () => {
-  await rimraf(currPath);
+  await pRimraf(currPath);
 });
 
 before(async () => {
-  await rimraf(root);
+  await pRimraf(root);
   await mkdir(root);
 });
 after(async () => {
-  await rimraf(root);
+  await pRimraf(root);
 });
 
 describe('basic', () => {
@@ -85,7 +83,7 @@ describe('basic', () => {
 
 describe('symlinks', () => {
   before(function() {
-    // GitHub Actions / default windows installation disable symlink support unless admin
+    // GitHub Actions / default Windows installation disable symlink support unless admin
     if (isWindows) this.skip();
   });
 
@@ -368,7 +366,7 @@ describe('various', () => {
     stream
       .on('readable', async () => {
         if (!isUnlinked) {
-          await rimraf(unlinkedDir);
+          await pRimraf(unlinkedDir);
           stream.resume();
           stream.read();
         }
