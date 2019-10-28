@@ -21,7 +21,7 @@ jobs:
       - name: Run dtslint
         run: npm run dtslint
 
-  lint:
+  eslint:
     runs-on: ubuntu-latest
 
     steps:
