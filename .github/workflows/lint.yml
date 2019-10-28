@@ -1,4 +1,4 @@
-name: dtslint
+name: Lint
 on: [push, pull_request]
 env:
   CI: true
@@ -20,3 +20,20 @@ jobs:
 
       - name: Run dtslint
         run: npm run dtslint
+
+  lint:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Clone repository
+        uses: actions/checkout@v1
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v1
+        with:
+          node-version: "12"
+
+      - run: npm install
+
+      - name: Run ESLint
+        run: npm run lint
