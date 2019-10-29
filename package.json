@@ -36,6 +36,7 @@
   ],
   "scripts": {
     "dtslint": "dtslint",
+    "nyc": "nyc",
     "mocha": "mocha --exit",
     "lint": "eslint --report-unused-disable-directives --ignore-path .gitignore .",
     "test": "npm run lint && nyc npm run mocha"
