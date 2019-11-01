@@ -48,7 +48,7 @@
     "@types/node": "^12",
     "chai": "^4.2",
     "chai-subset": "^1.6",
-    "dtslint": "^0.9.9",
+    "dtslint": "^1.0.2",
     "eslint": "^6.6.0",
     "mocha": "^6.2.2",
     "nyc": "^14.1.1",
