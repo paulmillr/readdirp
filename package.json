@@ -78,6 +78,8 @@
           "allowEmptyCatch": true
         }
       ],
+      "no-lonely-if": "error",
+      "no-var": "error",
       "object-shorthand": "error",
       "prefer-arrow-callback": [
         "error",
@@ -106,8 +108,7 @@
       "quotes": [
         "error",
         "single"
-      ],
-      "no-var": "error"
+      ]
     }
   }
 }
