@@ -241,6 +241,7 @@ class ReaddirpStream extends Readable {
     if (DIR_TYPES.has(this._entryType)) {
       // TODO: Understand why this happens.
       const fn = () => {
+        if (this.destroyed) return;
         this.push(entry);
       };
       if (this._isDirent) setImmediate(fn);
