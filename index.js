@@ -89,7 +89,9 @@ class ReaddirpStream extends Readable {
   }
 
   constructor(options = {}) {
-    super({ objectMode: true, highWaterMark: 1, autoDestroy: true });
+    // Note: highWaterMark is used by Readable as hint for how many chunks it
+    // requests when calling _read().
+    super({ objectMode: true, autoDestroy: true });
     const opts = { ...ReaddirpStream.defaultOptions, ...options };
     const { root } = opts;
 
@@ -107,34 +109,59 @@ class ReaddirpStream extends Readable {
     // Launch stream with one parent, the root dir.
     /** @type Array<[string, number]>  */
     this.parents = [new ExploringDir(root, 0)];
-    this.filesToRead = 0;
+
+    // Buffer of entries that need to be push()'ed onto the stream, pending
+    // downstream demand
+    this._entryBuffer = [];
   }
 
   async _read() {
-    do {
-      // If the stream was destroyed, we must not proceed.
-      if (this.destroyed) return;
+    // Ignore read requests if we're already working
+    if (this._reading) return;
+    this._reading = true;
 
-      const parent = this.parents.pop();
-      if (!parent) {
-        // ...we have files to process; but not directories.
-        // hence, parent is undefined; and we cannot execute fs.readdir().
-        // The files are being processed anywhere.
-        break;
+    // This loop push()'es data onto the stream until told to stop (indicated
+    // by push() returning false)
+    while (true) { // eslint-disable-line no-constant-condition
+      // Read directories until we have more entries to push
+      while (!this._entryBuffer.length && this.parents.length) {
+        const parent = this.parents.pop();
+        const entries = await this._exploreDirectory(parent);
+        if (entries.length) {
+          this._entryBuffer = this._entryBuffer.concat(entries);
+        }
       }
-      await this._exploreDirectory(parent);
-    } while (!this.isPaused() && !this._isQueueEmpty());
 
-    this._endStreamIfQueueIsEmpty();
+      // Make sure stream is still viable (might have changed during async
+      // operations, above)
+      if (this.destroyed) {
+        this._reading = false;
+        return;
+      }
+
+      // End stream if there's nothing left to do
+      if (!this._entryBuffer.length && !this.parents.length) {
+        this.push(null);
+        this._reading = false;
+        return;
+      }
+
+      // Push entries onto the stream until told to stop
+      while (this._entryBuffer.length) {
+        if (!this.push(this._entryBuffer.shift())) {
+          this._reading = false;
+          return;
+        }
+      }
+    }
   }
 
   async _exploreDirectory(parent) {
     /** @type Array<fs.Dirent|string> */
     let files = [];
 
-    // To prevent race conditions, we increase counter while awaiting readdir.
-    this.filesToRead++;
     try {
+      // Get directory entries
       files = await readdir(parent.path, this._readdir_options);
     } catch (error) {
       if (isNormalFlowError(error.code)) {
@@ -143,30 +170,22 @@ class ReaddirpStream extends Readable {
         this._handleFatalError(error);
       }
     }
-    this.filesToRead--;
 
-    // If the stream was destroyed, after readdir is completed
-    if (this.destroyed) return;
+    // Flesh entries out with stats info
+    const entries = await Promise.all(files.map(dirent => this._formatEntry(dirent, parent)));
 
-    this.filesToRead += files.length;
-
-    const promises = files.map(dirent => this._formatEntry(dirent, parent));
-
-    for (const promise of promises) {
-      const entry = await promise;
-      // If the stream was destroyed, after readdir is completed
-      if (this.destroyed) return;
-      this.filesToRead--;
-      if (!entry) {
-        continue;
+    // Filter entries we accept (and add dirs to parents list)
+    return entries.filter(entry => {
+      if (entry) {
+        if (this._isDirAndMatchesFilter(entry)) {
+          this._pushNewParentIfLessThanMaxDepth(entry.fullPath, parent.depth + 1);
+          return DIR_TYPES.has(this._entryType);
+        } else if (this._isFileAndMatchesFilter(entry)) {
+          return FILE_TYPES.has(this._entryType);
+        }
       }
-      if (this._isDirAndMatchesFilter(entry)) {
-        this._pushNewParentIfLessThanMaxDepth(entry.fullPath, parent.depth + 1);
-        this._emitPushIfUserWantsDir(entry);
-      } else if (this._isFileAndMatchesFilter(entry)) {
-        this._emitPushIfUserWantsFile(entry);
-      }
-    }
+      return false;
+    });
   }
 
   _isStatOptionsSupported() {
@@ -207,16 +226,6 @@ class ReaddirpStream extends Readable {
     return entry;
   }
 
-  _isQueueEmpty() {
-    return this.parents.length === 0 && this.filesToRead === 0 && this.readable;
-  }
-
-  _endStreamIfQueueIsEmpty() {
-    if (this._isQueueEmpty()) {
-      this.push(null);
-    }
-  }
-
   _pushNewParentIfLessThanMaxDepth(parentPath, depth) {
     if (depth <= this._maxDepth) {
       this.parents.push(new ExploringDir(parentPath, depth));
@@ -235,24 +244,6 @@ class ReaddirpStream extends Readable {
       (this._entryType === EVERYTHING_TYPE && !stats.isDirectory()) ||
       (stats.isFile() || stats.isSymbolicLink());
     return isFileType && this._fileFilter(entry);
-  }
-
-  _emitPushIfUserWantsDir(entry) {
-    if (DIR_TYPES.has(this._entryType)) {
-      // TODO: Understand why this happens.
-      const fn = () => {
-        if (this.destroyed) return;
-        this.push(entry);
-      };
-      if (this._isDirent) setImmediate(fn);
-      else fn();
-    }
-  }
-
-  _emitPushIfUserWantsFile(entry) {
-    if (FILE_TYPES.has(this._entryType)) {
-      this.push(entry);
-    }
   }
 
   _handleError(error) {
@@ -303,8 +294,18 @@ const readdirpPromise = (root, options = {}) => {
     const files = [];
     readdirp(root, options)
       .on('data', entry => files.push(entry))
-      .on('end', () => resolve(files))
-      .on('error', error => reject(error));
+      .on('end', () => {
+        resolve(files);
+        resolve = reject = null;
+      })
+      .on('error', error => {
+        // Should only happen if readdirp's handling of streams is broken
+        if (!reject) {
+          console.error('readdirp() error after stream closed:', error);
+        } else {
+          reject(error);
+        }
+      });
   });
 };
 

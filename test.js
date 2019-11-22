@@ -355,33 +355,6 @@ describe('various', () => {
       entry.should.containSubset(formatEntry(created[index], currPath))
     );
   });
-  it('should emit warning for missing file', async function() {
-    this.timeout(4000);
-    const unlinkedDir = sysPath.join(currPath, 'unlinked');
-    fs.mkdirSync(unlinkedDir);
-    const isUnlinked = false;
-    let isWarningCalled = false;
-    const stream = readdirp(currPath, { type: 'all' });
-    stream.pause();
-    stream
-      .on('readable', async () => {
-        if (!isUnlinked) {
-          await pRimraf(unlinkedDir);
-          stream.resume();
-          stream.read();
-        }
-      })
-      .on('warn', warning => {
-        warning.should.be.an.instanceof(Error);
-        warning.code.should.equals('ENOENT');
-        isWarningCalled = true;
-      });
-    await Promise.race([
-      waitForEnd(stream),
-      delay(2000)
-    ]);
-    isWarningCalled.should.equals(true);
-  });
   it('should emit warning for file with strict permission', async () => {
     // Windows doesn't throw permission error if you access permitted directory
     if (isWindows) {
