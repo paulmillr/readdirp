@@ -6,7 +6,7 @@ const readdirp = require('..');
 
 function logMem(i) {
   const vals = Object.entries(process.memoryUsage()).map(([k, v]) => {
-    return `${k  }=${  (`${(v/1e6).toFixed(1)  }M`).padEnd(7)}`;
+    return `${k}=${(`${(v/1e6).toFixed(1)}M`).padEnd(7)}`;
   });
   console.log(String(i).padStart(6), ...vals);
 }
