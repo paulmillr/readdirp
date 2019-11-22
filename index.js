@@ -18,7 +18,6 @@ const lstat = promisify(fs.lstat);
  * @property {fs.Dirent=} dirent
  * @property {String} basename
  */
-
 const supportsDirent = 'Dirent' in fs;
 const isWindows = process.platform === 'win32';
 const BANG = '!';
@@ -148,7 +147,8 @@ class ReaddirpStream extends Readable {
 
       // Push entries onto the stream until told to stop
       while (this._entryBuffer.length) {
-        if (!this.push(this._entryBuffer.shift())) {
+        const entry = this._entryBuffer.shift();
+        if (!this.push(entry)) {
           this._reading = false;
           return;
         }
