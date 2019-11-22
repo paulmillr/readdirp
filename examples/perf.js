@@ -15,10 +15,9 @@ const read = async (directory) => {
   const stream = readdirp(directory, {type: 'all'});
   let i = 0;
   const start = Date.now();
-  let lap = start;
+  let lap = 0;
 
   for await (const chunk of stream) {
-    i++;
     if (i % 1000 == 0) {
       const now = Date.now();
       if (now - lap > 500) {
@@ -26,6 +25,7 @@ const read = async (directory) => {
         logMem(i);
       }
     }
+    i++;
   }
   logMem(i);
 
