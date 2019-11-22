@@ -4,7 +4,6 @@
 
 const readdirp = require('..');
 
-function meg(v) {return ((v/1e6).toFixed(1) + 'M').padEnd(7);}
 function logMem(i) {
   const vals = Object.entries(process.memoryUsage()).map(([k, v]) => {
     return k + '=' + ((v/1e6).toFixed(1) + 'M').padEnd(7);
