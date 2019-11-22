@@ -23,4 +23,3 @@ const read = async (directory) => {
 };
 
 read('../..');
-
