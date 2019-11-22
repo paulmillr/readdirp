@@ -239,13 +239,7 @@ class ReaddirpStream extends Readable {
 
   _emitPushIfUserWantsDir(entry) {
     if (DIR_TYPES.has(this._entryType)) {
-      // TODO: Understand why this happens.
-      const fn = () => {
-        if (this.destroyed) return;
-        this.push(entry);
-      };
-      if (this._isDirent) setImmediate(fn);
-      else fn();
+      this.push(entry);
     }
   }
 
@@ -303,8 +297,18 @@ const readdirpPromise = (root, options = {}) => {
     const files = [];
     readdirp(root, options)
       .on('data', entry => files.push(entry))
-      .on('end', () => resolve(files))
-      .on('error', error => reject(error));
+      .on('end', () => {
+        resolve(files);
+        resolve = reject = null;
+      })
+      .on('error', error => {
+        // Should only happen if readdirp's handling of streams is broken
+        if (!reject) {
+          console.error('readdirp() error after stream closed:', error);
+        } else {
+          reject(error);
+        }
+      });
   });
 };
 
