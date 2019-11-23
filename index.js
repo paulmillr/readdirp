@@ -89,7 +89,7 @@ class ReaddirpStream extends Readable {
   }
 
   constructor(options = {}) {
-    super({ objectMode: true, highWaterMark: 1, autoDestroy: true });
+    super({ objectMode: true, autoDestroy: true });
     const opts = { ...ReaddirpStream.defaultOptions, ...options };
     const { root } = opts;
 
@@ -107,65 +107,55 @@ class ReaddirpStream extends Readable {
     // Launch stream with one parent, the root dir.
     /** @type Array<[string, number]>  */
     this.parents = [new ExploringDir(root, 0)];
-    this.filesToRead = 0;
+    this.reading = false;
   }
 
   async _read() {
-    do {
-      // If the stream was destroyed, we must not proceed.
-      if (this.destroyed) return;
+    if (this.destroyed || this.reading) return;
 
-      const parent = this.parents.pop();
-      if (!parent) {
-        // ...we have files to process; but not directories.
-        // hence, parent is undefined; and we cannot execute fs.readdir().
-        // The files are being processed anywhere.
-        break;
-      }
-      await this._exploreDirectory(parent);
-    } while (!this.isPaused() && !this._isQueueEmpty());
-
-    this._endStreamIfQueueIsEmpty();
-  }
-
-  async _exploreDirectory(parent) {
-    /** @type Array<fs.Dirent|string> */
-    let files = [];
-
-    // To prevent race conditions, we increase counter while awaiting readdir.
-    this.filesToRead++;
+    this.reading = true;
     try {
-      files = await readdir(parent.path, this._readdir_options);
-    } catch (error) {
-      if (isNormalFlowError(error.code)) {
-        this._handleError(error);
-      } else {
-        this._handleFatalError(error);
+      let keepReading = true;
+      while (keepReading) {
+        const parent = this.parents.pop();
+        if (!parent) {
+          this.push(null);
+          break;
+        }
+          
+        /** @type Array<fs.Dirent|string> */
+        let files = [];
+        try {
+          files = await readdir(parent.path, this._readdir_options);
+        } catch (error) {
+          if (isNormalFlowError(error.code)) {
+            this._handleError(error);
+          } else {
+            this._handleFatalError(error);
+          }
+        }
+        if (this.destroyed) return;
+
+        const promises = files.map(dirent => this._formatEntry(dirent, parent));
+        for (const promise of promises) {
+          const entry = await promise;
+          // If the stream was destroyed, after readdir is completed
+          if (this.destroyed) return;
+          if (!entry) {
+            continue;
+          }
+          if (this._isDirAndMatchesFilter(entry)) {
+            this._pushNewParentIfLessThanMaxDepth(entry.fullPath, parent.depth + 1);
+            keepReading = this._emitPushIfUserWantsDir(entry) && keepReading;
+          } else if (this._isFileAndMatchesFilter(entry)) {
+            keepReading = this._emitPushIfUserWantsFile(entry) && keepReading;
+          }
+        }
       }
-    }
-    this.filesToRead--;
-
-    // If the stream was destroyed, after readdir is completed
-    if (this.destroyed) return;
-
-    this.filesToRead += files.length;
-
-    const promises = files.map(dirent => this._formatEntry(dirent, parent));
-
-    for (const promise of promises) {
-      const entry = await promise;
-      // If the stream was destroyed, after readdir is completed
-      if (this.destroyed) return;
-      this.filesToRead--;
-      if (!entry) {
-        continue;
-      }
-      if (this._isDirAndMatchesFilter(entry)) {
-        this._pushNewParentIfLessThanMaxDepth(entry.fullPath, parent.depth + 1);
-        this._emitPushIfUserWantsDir(entry);
-      } else if (this._isFileAndMatchesFilter(entry)) {
-        this._emitPushIfUserWantsFile(entry);
-      }
+    } catch (err) {
+      this.destroy(err);
+    } finally {
+      this.reading = false;
     }
   }
 
@@ -207,22 +197,10 @@ class ReaddirpStream extends Readable {
     return entry;
   }
 
-  _isQueueEmpty() {
-    return this.parents.length === 0 && this.filesToRead === 0 && this.readable;
-  }
-
-  _endStreamIfQueueIsEmpty() {
-    if (this._isQueueEmpty()) {
-      this.push(null);
-    }
-  }
-
   _pushNewParentIfLessThanMaxDepth(parentPath, depth) {
     if (depth <= this._maxDepth) {
       this.parents.push(new ExploringDir(parentPath, depth));
-      return true;
     }
-    return false;
   }
 
   _isDirAndMatchesFilter(entry) {
@@ -238,21 +216,11 @@ class ReaddirpStream extends Readable {
   }
 
   _emitPushIfUserWantsDir(entry) {
-    if (DIR_TYPES.has(this._entryType)) {
-      // TODO: Understand why this happens.
-      const fn = () => {
-        if (this.destroyed) return;
-        this.push(entry);
-      };
-      if (this._isDirent) setImmediate(fn);
-      else fn();
-    }
+    return !DIR_TYPES.has(this._entryType) || this.push(entry);
   }
 
   _emitPushIfUserWantsFile(entry) {
-    if (FILE_TYPES.has(this._entryType)) {
-      this.push(entry);
-    }
+    return !FILE_TYPES.has(this._entryType) || this.push(entry);
   }
 
   _handleError(error) {
