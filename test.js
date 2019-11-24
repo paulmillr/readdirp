@@ -82,6 +82,7 @@ describe('basic', () => {
 });
 
 describe('symlinks', () => {
+  // not using arrow function, because this.skip
   before(function() {
     // GitHub Actions / default Windows installation disable symlink support unless admin
     if (isWindows) this.skip();
@@ -355,8 +356,13 @@ describe('various', () => {
       entry.should.containSubset(formatEntry(created[index], currPath))
     );
   });
-  it('should emit warning for missing file', async function() {
-    this.timeout(4000);
+  it('should emit warning for missing file', async () => {
+    // readdirp() is initialized on some big root directory
+    // readdirp() receives path a/b/c to its queue
+    // readdirp is reading something else
+    // a/b gets deleted, so stat()-ting a/b/c would now emit enoent
+    // We should emit warnings for this case.
+    // this.timeout(4000);
     const unlinkedDir = sysPath.join(currPath, 'unlinked');
     fs.mkdirSync(unlinkedDir);
     const isUnlinked = false;
@@ -381,7 +387,7 @@ describe('various', () => {
       delay(2000)
     ]);
     isWarningCalled.should.equals(true);
-  });
+  }).timeout(4000);
   it('should emit warning for file with strict permission', async () => {
     // Windows doesn't throw permission error if you access permitted directory
     if (isWindows) {
