@@ -89,7 +89,7 @@ class ReaddirpStream extends Readable {
   }
 
   constructor(options = {}) {
-    super({ objectMode: true, autoDestroy: true });
+    super({ objectMode: true, autoDestroy: true, highWaterMark: 1 });
     const opts = { ...ReaddirpStream.defaultOptions, ...options };
     const { root } = opts;
 
@@ -105,7 +105,7 @@ class ReaddirpStream extends Readable {
     this._readdir_options = { encoding: 'utf8', withFileTypes: this._isDirent };
 
     // Launch stream with one parent, the root dir.
-    /** @type Array<[string, number]>  */
+    /** @type ExploringDir[]  */
     this.parents = [new ExploringDir(root, 0)];
     this.reading = false;
   }
@@ -122,8 +122,8 @@ class ReaddirpStream extends Readable {
           this.push(null);
           break;
         }
-          
-        /** @type Array<fs.Dirent|string> */
+
+        /** @type {fs.Dirent[]|string[]} */
         let files = [];
         try {
           files = await readdir(parent.path, this._readdir_options);
@@ -136,6 +136,7 @@ class ReaddirpStream extends Readable {
         }
         if (this.destroyed) return;
 
+        /** @type {Promise<EntryInfo>[]} */
         const promises = files.map(dirent => this._formatEntry(dirent, parent));
         for (const promise of promises) {
           const entry = await promise;
@@ -146,9 +147,9 @@ class ReaddirpStream extends Readable {
           }
           if (this._isDirAndMatchesFilter(entry)) {
             this._pushNewParentIfLessThanMaxDepth(entry.fullPath, parent.depth + 1);
-            keepReading = this._emitPushIfUserWantsDir(entry) && keepReading;
+            keepReading = this._pushIfUserWantsDir(entry) && keepReading;
           } else if (this._isFileAndMatchesFilter(entry)) {
-            keepReading = this._emitPushIfUserWantsFile(entry) && keepReading;
+            keepReading = this._pushIfUserWantsFile(entry) && keepReading;
           }
         }
       }
@@ -215,12 +216,20 @@ class ReaddirpStream extends Readable {
     return isFileType && this._fileFilter(entry);
   }
 
-  _emitPushIfUserWantsDir(entry) {
-    return !DIR_TYPES.has(this._entryType) || this.push(entry);
+  _pushIfUserWantsDir(entry) {
+    if (DIR_TYPES.has(this._entryType)) {
+      return this.push(entry);
+    } else {
+      return true;
+    }
   }
 
-  _emitPushIfUserWantsFile(entry) {
-    return !FILE_TYPES.has(this._entryType) || this.push(entry);
+  _pushIfUserWantsFile(entry) {
+    if (FILE_TYPES.has(this._entryType)) {
+      return this.push(entry);
+    } else {
+      return true;
+    }
   }
 
   _handleError(error) {
