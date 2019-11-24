@@ -89,7 +89,11 @@ class ReaddirpStream extends Readable {
   }
 
   constructor(options = {}) {
-    super({ objectMode: true, autoDestroy: true, highWaterMark: 1 });
+    super({
+      objectMode: true,
+      autoDestroy: true,
+      highWaterMark: options.highWaterMark
+    });
     const opts = { ...ReaddirpStream.defaultOptions, ...options };
     const { root } = opts;
 
