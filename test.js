@@ -361,7 +361,7 @@ describe('various', () => {
     fs.mkdirSync(unlinkedDir);
     const isUnlinked = false;
     let isWarningCalled = false;
-    const stream = readdirp(currPath, { type: 'all' });
+    const stream = readdirp(currPath, { type: 'all', highWaterMark: 1 });
     stream.pause();
     stream
       .on('readable', async () => {
