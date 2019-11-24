@@ -18,7 +18,7 @@ const read = async (directory) => {
   let lap = 0;
 
   for await (const chunk of stream) {
-    if (i % 1000 == 0) {
+    if (i % 1000 === 0) {
       const now = Date.now();
       if (now - lap > 500) {
         lap = now;
