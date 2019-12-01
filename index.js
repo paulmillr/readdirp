@@ -223,17 +223,17 @@ class ReaddirpStream extends Readable {
   _pushIfUserWantsDir(entry) {
     if (DIR_TYPES.has(this._entryType)) {
       return this.push(entry);
-    } else {
-      return true;
     }
+
+    return true;
   }
 
   _pushIfUserWantsFile(entry) {
     if (FILE_TYPES.has(this._entryType)) {
       return this.push(entry);
-    } else {
-      return true;
     }
+
+    return true;
   }
 
   _handleError(error) {

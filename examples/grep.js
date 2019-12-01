@@ -22,13 +22,13 @@ const findLinesMatching = (searchTerm) => {
       .pipe(es.through(
         (data) => { matchingLines.push(data); },
         () => {
-        // drop files that had no matches
-        if (matchingLines.length) {
-          const result = { file: entry, lines: matchingLines };
-          fileStream.emit('data', result); // pass result on to file stream
-        }
-        this.emit('end');
-      }));
+          // drop files that had no matches
+          if (matchingLines.length) {
+            const result = { file: entry, lines: matchingLines };
+            fileStream.emit('data', result); // pass result on to file stream
+          }
+          this.emit('end');
+        }));
   });
 };
 

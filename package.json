@@ -61,6 +61,7 @@
     ]
   },
   "eslintConfig": {
+    "root": true,
     "extends": "eslint:recommended",
     "parserOptions": {
       "ecmaVersion": 9,
@@ -76,6 +77,12 @@
         "error",
         {
           "allowEmptyCatch": true
+        }
+      ],
+      "no-else-return": [
+        "error",
+        {
+          "allowElseIf": false
         }
       ],
       "no-lonely-if": "error",
