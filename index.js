@@ -19,20 +19,16 @@ const lstat = promisify(fs.lstat);
  * @property {String} basename
  */
 
-const supportsDirent = 'Dirent' in fs;
-const isWindows = process.platform === 'win32';
 const BANG = '!';
+const EMPTY_ARR = [];
 const NORMAL_FLOW_ERRORS = new Set(['ENOENT', 'EPERM', 'EACCES', 'ELOOP']);
-const STAT_OPTIONS_SUPPORT_LENGTH = 3;
 const FILE_TYPE = 'files';
 const DIR_TYPE = 'directories';
 const FILE_DIR_TYPE = 'files_directories';
 const EVERYTHING_TYPE = 'all';
-const FILE_TYPES = new Set([FILE_TYPE, FILE_DIR_TYPE, EVERYTHING_TYPE]);
-const DIR_TYPES = new Set([DIR_TYPE, FILE_DIR_TYPE, EVERYTHING_TYPE]);
 const ALL_TYPES = [FILE_TYPE, DIR_TYPE, FILE_DIR_TYPE, EVERYTHING_TYPE];
 
-const isNormalFlowError = errorCode => NORMAL_FLOW_ERRORS.has(errorCode);
+const isNormalFlowError = error => NORMAL_FLOW_ERRORS.has(error.code);
 
 const normalizeFilter = filter => {
   if (filter === undefined) return;
@@ -81,7 +77,7 @@ class ReaddirpStream extends Readable {
       fileFilter: (path) => true,
       directoryFilter: (path) => true,
       /* eslint-enable no-unused-vars */
-      type: 'files',
+      type: FILE_TYPE,
       lstat: false,
       depth: 2147483648,
       alwaysStat: false
@@ -95,16 +91,22 @@ class ReaddirpStream extends Readable {
       highWaterMark: options.highWaterMark
     });
     const opts = { ...ReaddirpStream.defaultOptions, ...options };
-    const { root } = opts;
+    const { root, type } = opts;
 
     this._fileFilter = normalizeFilter(opts.fileFilter);
     this._directoryFilter = normalizeFilter(opts.directoryFilter);
     this._statMethod = opts.lstat ? lstat : stat;
-    this._statOpts = { bigint: isWindows };
+
+    // Use bigint stats if it's windows and stat() supports options (node 10+).
+    if (process.platform === 'win32' && this._statMethod.length === 3) {
+      this._statOpts = { bigint: true };
+    }
     this._maxDepth = opts.depth;
-    this._entryType = opts.type;
+    this._wantsDir = [DIR_TYPE, FILE_DIR_TYPE, EVERYTHING_TYPE].includes(type);
+    this._wantsFile = [FILE_TYPE, FILE_DIR_TYPE, EVERYTHING_TYPE].includes(type);
+    this._wantsEverything = type === EVERYTHING_TYPE;
     this._root = sysPath.resolve(root);
-    this._isDirent = !opts.alwaysStat && supportsDirent;
+    this._isDirent = !opts.alwaysStat && 'Dirent' in fs;
     this._statsProp = this._isDirent ? 'dirent' : 'stats';
     this._readdir_options = { encoding: 'utf8', withFileTypes: this._isDirent };
 
@@ -128,11 +130,11 @@ class ReaddirpStream extends Readable {
         }
 
         /** @type {fs.Dirent[]|string[]} */
-        let files = [];
+        let files = EMPTY_ARR;
         try {
           files = await readdir(parent.path, this._readdir_options);
         } catch (error) {
-          if (isNormalFlowError(error.code)) {
+          if (isNormalFlowError(error)) {
             this._handleError(error);
           } else {
             this._handleFatalError(error);
@@ -164,12 +166,8 @@ class ReaddirpStream extends Readable {
     }
   }
 
-  _isStatOptionsSupported() {
-    return this._statMethod.length === STAT_OPTIONS_SUPPORT_LENGTH;
-  }
-
   _stat(fullPath) {
-    if (isWindows && this._isStatOptionsSupported()) {
+    if (this._statOpts) {
       return this._statMethod(fullPath, this._statOpts);
     }
     return this._statMethod(fullPath);
@@ -186,7 +184,7 @@ class ReaddirpStream extends Readable {
       try {
         stats = await this._stat(fullPath);
       } catch (error) {
-        if (isNormalFlowError(error.code)) {
+        if (isNormalFlowError(error)) {
           this._handleError(error);
         } else {
           this._handleFatalError(error);
@@ -215,13 +213,13 @@ class ReaddirpStream extends Readable {
   _isFileAndMatchesFilter(entry) {
     const stats = entry[this._statsProp];
     const isFileType =
-      (this._entryType === EVERYTHING_TYPE && !stats.isDirectory()) ||
+      (this._wantsEverything && !stats.isDirectory()) ||
       (stats.isFile() || stats.isSymbolicLink());
     return isFileType && this._fileFilter(entry);
   }
 
   _pushIfUserWantsDir(entry) {
-    if (DIR_TYPES.has(this._entryType)) {
+    if (this._wantsDir) {
       return this.push(entry);
     }
 
@@ -229,7 +227,7 @@ class ReaddirpStream extends Readable {
   }
 
   _pushIfUserWantsFile(entry) {
-    if (FILE_TYPES.has(this._entryType)) {
+    if (this._wantsFile) {
       return this.push(entry);
     }
 
