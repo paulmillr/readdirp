@@ -363,25 +363,20 @@ describe('various', () => {
     // a/b gets deleted, so stat()-ting a/b/c would now emit enoent
     // We should emit warnings for this case.
     // this.timeout(4000);
-    const unlinkedDir = sysPath.join(currPath, 'unlinked');
-    fs.mkdirSync(unlinkedDir);
-    const isUnlinked = false;
+    fs.mkdirSync(sysPath.join(currPath, 'a'));
+    fs.mkdirSync(sysPath.join(currPath, 'b'));
+    fs.mkdirSync(sysPath.join(currPath, 'c'));
     let isWarningCalled = false;
     const stream = readdirp(currPath, { type: 'all', highWaterMark: 1 });
-    stream.pause();
     stream
-      .on('readable', async () => {
-        if (!isUnlinked) {
-          await pRimraf(unlinkedDir);
-          stream.resume();
-          stream.read();
-        }
-      })
-      .on('warn', warning => {
-        warning.should.be.an.instanceof(Error);
-        warning.code.should.equals('ENOENT');
-        isWarningCalled = true;
-      });
+    .on('warn', warning => {
+      warning.should.be.an.instanceof(Error);
+      warning.code.should.equals('ENOENT');
+      isWarningCalled = true;
+    });
+    await delay(1000);
+    await pRimraf(sysPath.join(currPath, 'a'));
+    stream.resume();
     await Promise.race([
       waitForEnd(stream),
       delay(2000)
