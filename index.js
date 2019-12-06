@@ -117,7 +117,6 @@ class ReaddirpStream extends Readable {
 
     try {
       while (!this.destroyed && batch > 0) {
-        const par = this.parent;
         const { path, depth, files = [] } = this.parent || {};
 
         if (files.length > 0) {
