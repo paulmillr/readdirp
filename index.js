@@ -103,54 +103,54 @@ class ReaddirpStream extends Readable {
     this._root = sysPath.resolve(root);
     this._isDirent = !opts.alwaysStat && 'Dirent' in fs;
     this._statsProp = this._isDirent ? 'dirent' : 'stats';
-    this._readdir_options = { encoding: 'utf8', withFileTypes: this._isDirent };
+    this._rdOptions = { encoding: 'utf8', withFileTypes: this._isDirent };
 
     // Launch stream with one parent, the root dir.
-    this.parents = [this._exploreDir(root, 1, this._readdir_options)];
+    this.parents = [this._exploreDir(root, 1)];
     this.reading = false;
-    this.parent = null;
+    this.parent = undefined;
   }
 
-  async _read(n) {
+  async _read(batch) {
     if (this.reading) return;
-
     this.reading = true;
+
     try {
-      while (!this.destroyed && n > 0) {
+      while (!this.destroyed && batch > 0) {
+        const par = this.parent;
         const { path, depth, files = [] } = this.parent || {};
 
-        if (files.length === 0) {
+        if (files.length > 0) {
+          const slice = files.splice(0, batch).map(dirent => this._formatEntry(dirent, path));
+          for (const entry of await Promise.all(slice)) {
+            if (!entry) continue; // Should not happen
+            if (this._isDirAndMatchesFilter(entry)) {
+              if (depth <= this._maxDepth) {
+                this.parents.push(this._exploreDir(entry.fullPath, depth + 1));
+              }
+
+              if (this._wantsDir) {
+                this.push(entry);
+                batch--;
+              }
+            } else if (this._isFileAndMatchesFilter(entry)) {
+              if (this._wantsFile) {
+                this.push(entry);
+                batch--;
+              }
+            }
+          }
+        } else {
           const parent = this.parents.pop();
           if (!parent) {
             this.push(null);
             break;
           }
-  
+
           try {
             this.parent = await parent;
           } catch (err) {
             this._onError(err);
-          }
-        } else {
-          for (const entry of await Promise.all(files
-            .splice(0, n)
-            .map(dirent => this._formatEntry(dirent, path))
-          )) {
-            if (this._isDirAndMatchesFilter(entry)) {
-              if (depth <= this._maxDepth) {
-                this.parents.push(this._exploreDir(entry.fullPath, depth + 1, this._readdir_options));
-              }
-              
-              if (this._wantsDir) {
-                this.push(entry);
-                n--;
-              }
-            } else if (this._isFileAndMatchesFilter(entry)) {
-              if (this._wantsFile) {
-                this.push(entry);
-                n--;
-              }
-            }
           }
         }
       }
@@ -163,7 +163,7 @@ class ReaddirpStream extends Readable {
 
   async _exploreDir(path, depth) {
     return {
-      files: await readdir(path, this._readdir_options),
+      files: await readdir(path, this._rdOptions),
       depth,
       path
     };
@@ -172,19 +172,13 @@ class ReaddirpStream extends Readable {
   async _formatEntry(dirent, path) {
     const basename = this._isDirent ? dirent.name : dirent;
     const fullPath = sysPath.resolve(sysPath.join(path, basename));
-
+    const entry = {path: sysPath.relative(this._root, fullPath), fullPath, basename};
     try {
-      return { 
-        path: sysPath.relative(this._root, fullPath),
-        fullPath,
-        basename,
-        [this._statsProp]: this._isDirent
-          ? dirent
-          : await this._stat(fullPath)
-      };
+      entry[this._statsProp] = this._isDirent ? dirent : await this._stat(fullPath);
     } catch (err) {
       this._onError(err);
     }
+    return entry;
   }
 
   _onError(err) {
@@ -196,11 +190,11 @@ class ReaddirpStream extends Readable {
   }
 
   _isDirAndMatchesFilter(entry) {
-    return entry && entry[this._statsProp].isDirectory() && this._directoryFilter(entry);
+    return entry[this._statsProp].isDirectory() && this._directoryFilter(entry);
   }
 
   _isFileAndMatchesFilter(entry) {
-    const stats = entry && entry[this._statsProp];
+    const stats = entry[this._statsProp];
     const isFileType = stats && (
       (this._wantsEverything && !stats.isDirectory()) ||
       (stats.isFile() || stats.isSymbolicLink())
