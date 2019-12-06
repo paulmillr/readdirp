@@ -106,7 +106,11 @@ class ReaddirpStream extends Readable {
     this._rdOptions = { encoding: 'utf8', withFileTypes: this._isDirent };
 
     // Launch stream with one parent, the root dir.
-    this.parents = [this._exploreDir(root, 1)];
+    try {
+      this.parents = [this._exploreDir(root, 1)];
+    } catch (error) {
+      this.destroy(error);
+    }
     this.reading = false;
     this.parent = undefined;
   }
@@ -145,27 +149,24 @@ class ReaddirpStream extends Readable {
             this.push(null);
             break;
           }
-
-          try {
-            this.parent = await parent;
-          } catch (err) {
-            this._onError(err);
-          }
+          this.parent = await parent;
         }
       }
-    } catch (err) {
-      this.destroy(err);
+    } catch (error) {
+      this.destroy(error);
     } finally {
       this.reading = false;
     }
   }
 
   async _exploreDir(path, depth) {
-    return {
-      files: await readdir(path, this._rdOptions),
-      depth,
-      path
-    };
+    let files;
+    try {
+      files = await readdir(path, this._rdOptions);
+    } catch (error) {
+      this._onError(error);
+    }
+    return {files, depth, path};
   }
 
   async _formatEntry(dirent, path) {
@@ -189,7 +190,8 @@ class ReaddirpStream extends Readable {
   }
 
   _isDirAndMatchesFilter(entry) {
-    return entry[this._statsProp].isDirectory() && this._directoryFilter(entry);
+    const stats = entry[this._statsProp];
+    return stats.isDirectory() && this._directoryFilter(entry);
   }
 
   _isFileAndMatchesFilter(entry) {
