@@ -189,8 +189,10 @@ class ReaddirpStream extends Readable {
   }
 
   _isDirAndMatchesFilter(entry) {
+    // entry may be undefined, because a warning or an error were emitted
+    // and the statsProp is undefined
     const stats = entry && entry[this._statsProp];
-    return stats.isDirectory() && this._directoryFilter(entry);
+    return stats && stats.isDirectory() && this._directoryFilter(entry);
   }
 
   _isFileAndMatchesFilter(entry) {
