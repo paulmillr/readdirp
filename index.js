@@ -126,7 +126,6 @@ class ReaddirpStream extends Readable {
         if (files.length > 0) {
           const slice = files.splice(0, batch).map(dirent => this._formatEntry(dirent, path));
           for (const entry of await Promise.all(slice)) {
-            if (!entry) continue; // Should not happen
             if (this._isDirAndMatchesFilter(entry)) {
               if (depth <= this._maxDepth) {
                 this.parents.push(this._exploreDir(entry.fullPath, depth + 1));
@@ -190,13 +189,12 @@ class ReaddirpStream extends Readable {
   }
 
   _isDirAndMatchesFilter(entry) {
-    const stats = entry[this._statsProp];
-    console.log('stats', this._statsProp);
+    const stats = entry && entry[this._statsProp];
     return stats.isDirectory() && this._directoryFilter(entry);
   }
 
   _isFileAndMatchesFilter(entry) {
-    const stats = entry[this._statsProp];
+    const stats = entry && entry[this._statsProp];
     const isFileType = stats && (
       (this._wantsEverything && !stats.isDirectory()) ||
       (stats.isFile() || stats.isSymbolicLink())
