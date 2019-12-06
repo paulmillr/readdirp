@@ -20,7 +20,6 @@ const lstat = promisify(fs.lstat);
  */
 
 const BANG = '!';
-const EMPTY_ARR = [];
 const NORMAL_FLOW_ERRORS = new Set(['ENOENT', 'EPERM', 'EACCES', 'ELOOP']);
 const FILE_TYPE = 'files';
 const DIR_TYPE = 'directories';
@@ -62,13 +61,6 @@ const normalizeFilter = filter => {
   }
 };
 
-class ExploringDir {
-  constructor(path, depth) {
-    this.path = path;
-    this.depth = depth;
-  }
-}
-
 class ReaddirpStream extends Readable {
   static get defaultOptions() {
     return {
@@ -88,19 +80,22 @@ class ReaddirpStream extends Readable {
     super({
       objectMode: true,
       autoDestroy: true,
-      highWaterMark: options.highWaterMark
+      highWaterMark: options.highWaterMark || 4096
     });
     const opts = { ...ReaddirpStream.defaultOptions, ...options };
     const { root, type } = opts;
 
     this._fileFilter = normalizeFilter(opts.fileFilter);
     this._directoryFilter = normalizeFilter(opts.directoryFilter);
-    this._statMethod = opts.lstat ? lstat : stat;
 
+    const statMethod = opts.lstat ? lstat : stat;
     // Use bigint stats if it's windows and stat() supports options (node 10+).
-    if (process.platform === 'win32' && this._statMethod.length === 3) {
-      this._statOpts = { bigint: true };
+    if (process.platform === 'win32' && stat.length === 3) {
+      this._stat = path => statMethod(path, { bigint: true });
+    } else {
+      this._stat = statMethod;
     }
+
     this._maxDepth = opts.depth;
     this._wantsDir = [DIR_TYPE, FILE_DIR_TYPE, EVERYTHING_TYPE].includes(type);
     this._wantsFile = [FILE_TYPE, FILE_DIR_TYPE, EVERYTHING_TYPE].includes(type);
@@ -111,51 +106,51 @@ class ReaddirpStream extends Readable {
     this._readdir_options = { encoding: 'utf8', withFileTypes: this._isDirent };
 
     // Launch stream with one parent, the root dir.
-    /** @type ExploringDir[]  */
-    this.parents = [new ExploringDir(root, 0)];
+    this.parents = [this._exploreDir(root, 1, this._readdir_options)];
     this.reading = false;
+    this.parent = null;
   }
 
-  async _read() {
-    if (this.destroyed || this.reading) return;
+  async _read(n) {
+    if (this.reading) return;
 
     this.reading = true;
     try {
-      let keepReading = true;
-      while (keepReading) {
-        const parent = this.parents.pop();
-        if (!parent) {
-          this.push(null);
-          break;
-        }
+      while (!this.destroyed && n > 0) {
+        const { path, depth, files = [] } = this.parent || {};
 
-        /** @type {fs.Dirent[]|string[]} */
-        let files = EMPTY_ARR;
-        try {
-          files = await readdir(parent.path, this._readdir_options);
-        } catch (error) {
-          if (isNormalFlowError(error)) {
-            this._handleError(error);
-          } else {
-            this._handleFatalError(error);
+        if (files.length === 0) {
+          const parent = this.parents.pop();
+          if (!parent) {
+            this.push(null);
+            break;
           }
-        }
-        if (this.destroyed) return;
-
-        /** @type {Promise<EntryInfo>[]} */
-        const promises = files.map(dirent => this._formatEntry(dirent, parent));
-        for (const promise of promises) {
-          const entry = await promise;
-          // If the stream was destroyed, after readdir is completed
-          if (this.destroyed) return;
-          if (!entry) {
-            continue;
+  
+          try {
+            this.parent = await parent;
+          } catch (err) {
+            this._onError(err);
           }
-          if (this._isDirAndMatchesFilter(entry)) {
-            this._pushNewParentIfLessThanMaxDepth(entry.fullPath, parent.depth + 1);
-            keepReading = this._pushIfUserWantsDir(entry) && keepReading;
-          } else if (this._isFileAndMatchesFilter(entry)) {
-            keepReading = this._pushIfUserWantsFile(entry) && keepReading;
+        } else {
+          for (const entry of await Promise.all(files
+            .splice(0, n)
+            .map(dirent => this._formatEntry(dirent, path))
+          )) {
+            if (this._isDirAndMatchesFilter(entry)) {
+              if (depth <= this._maxDepth) {
+                this.parents.push(this._exploreDir(entry.fullPath, depth + 1, this._readdir_options));
+              }
+              
+              if (this._wantsDir) {
+                this.push(entry);
+                n--;
+              }
+            } else if (this._isFileAndMatchesFilter(entry)) {
+              if (this._wantsFile) {
+                this.push(entry);
+                n--;
+              }
+            }
           }
         }
       }
@@ -166,82 +161,51 @@ class ReaddirpStream extends Readable {
     }
   }
 
-  _stat(fullPath) {
-    if (this._statOpts) {
-      return this._statMethod(fullPath, this._statOpts);
-    }
-    return this._statMethod(fullPath);
+  async _exploreDir(path, depth) {
+    return {
+      files: await readdir(path, this._readdir_options),
+      depth,
+      path
+    };
   }
 
-  async _formatEntry(dirent, parent) {
+  async _formatEntry(dirent, path) {
     const basename = this._isDirent ? dirent.name : dirent;
-    const fullPath = sysPath.resolve(sysPath.join(parent.path, basename));
+    const fullPath = sysPath.resolve(sysPath.join(path, basename));
 
-    let stats;
-    if (this._isDirent) {
-      stats = dirent;
-    } else {
-      try {
-        stats = await this._stat(fullPath);
-      } catch (error) {
-        if (isNormalFlowError(error)) {
-          this._handleError(error);
-        } else {
-          this._handleFatalError(error);
-        }
-        return;
-      }
+    try {
+      return { 
+        path: sysPath.relative(this._root, fullPath),
+        fullPath,
+        basename,
+        [this._statsProp]: this._isDirent
+          ? dirent
+          : await this._stat(fullPath)
+      };
+    } catch (err) {
+      this._onError(err);
     }
-    const path = sysPath.relative(this._root, fullPath);
-
-    /** @type {EntryInfo} */
-    const entry = { path, fullPath, basename, [this._statsProp]: stats };
-
-    return entry;
   }
 
-  _pushNewParentIfLessThanMaxDepth(parentPath, depth) {
-    if (depth <= this._maxDepth) {
-      this.parents.push(new ExploringDir(parentPath, depth));
+  _onError(err) {
+    if (isNormalFlowError(err) && !this.destroyed) {
+      this.emit('warn', err);
+    } else {
+      throw err;
     }
   }
 
   _isDirAndMatchesFilter(entry) {
-    return entry[this._statsProp].isDirectory() && this._directoryFilter(entry);
+    return entry && entry[this._statsProp].isDirectory() && this._directoryFilter(entry);
   }
 
   _isFileAndMatchesFilter(entry) {
-    const stats = entry[this._statsProp];
-    const isFileType =
+    const stats = entry && entry[this._statsProp];
+    const isFileType = stats && (
       (this._wantsEverything && !stats.isDirectory()) ||
-      (stats.isFile() || stats.isSymbolicLink());
+      (stats.isFile() || stats.isSymbolicLink())
+    );
     return isFileType && this._fileFilter(entry);
-  }
-
-  _pushIfUserWantsDir(entry) {
-    if (this._wantsDir) {
-      return this.push(entry);
-    }
-
-    return true;
-  }
-
-  _pushIfUserWantsFile(entry) {
-    if (this._wantsFile) {
-      return this.push(entry);
-    }
-
-    return true;
-  }
-
-  _handleError(error) {
-    if (!this.destroyed) {
-      this.emit('warn', error);
-    }
-  }
-
-  _handleFatalError(error) {
-    this.destroy(error);
   }
 }
 
