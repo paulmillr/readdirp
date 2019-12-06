@@ -101,7 +101,7 @@ class ReaddirpStream extends Readable {
     this._wantsFile = [FILE_TYPE, FILE_DIR_TYPE, EVERYTHING_TYPE].includes(type);
     this._wantsEverything = type === EVERYTHING_TYPE;
     this._root = sysPath.resolve(root);
-    this._isDirent = !opts.alwaysStat && 'Dirent' in fs;
+    this._isDirent = ('Dirent' in fs) && !opts.alwaysStat;
     this._statsProp = this._isDirent ? 'dirent' : 'stats';
     this._rdOptions = { encoding: 'utf8', withFileTypes: this._isDirent };
 
@@ -191,6 +191,7 @@ class ReaddirpStream extends Readable {
 
   _isDirAndMatchesFilter(entry) {
     const stats = entry[this._statsProp];
+    console.log('stats', this._statsProp);
     return stats.isDirectory() && this._directoryFilter(entry);
   }
 
