@@ -106,11 +106,7 @@ class ReaddirpStream extends Readable {
     this._rdOptions = { encoding: 'utf8', withFileTypes: this._isDirent };
 
     // Launch stream with one parent, the root dir.
-    try {
-      this.parents = [this._exploreDir(root, 1)];
-    } catch (error) {
-      this.destroy(error);
-    }
+    this.parents = [this._exploreDir(root, 1)];
     this.reading = false;
     this.parent = undefined;
   }
@@ -126,6 +122,8 @@ class ReaddirpStream extends Readable {
         if (files.length > 0) {
           const slice = files.splice(0, batch).map(dirent => this._formatEntry(dirent, path));
           for (const entry of await Promise.all(slice)) {
+            if (this.destroyed) return;
+
             if (this._isDirAndMatchesFilter(entry)) {
               if (depth <= this._maxDepth) {
                 this.parents.push(this._exploreDir(entry.fullPath, depth + 1));
@@ -149,6 +147,7 @@ class ReaddirpStream extends Readable {
             break;
           }
           this.parent = await parent;
+          if (this.destroyed) return;
         }
       }
     } catch (error) {
@@ -169,10 +168,11 @@ class ReaddirpStream extends Readable {
   }
 
   async _formatEntry(dirent, path) {
-    const basename = this._isDirent ? dirent.name : dirent;
-    const fullPath = sysPath.resolve(sysPath.join(path, basename));
-    const entry = {path: sysPath.relative(this._root, fullPath), fullPath, basename};
+    let entry;
     try {
+      const basename = this._isDirent ? dirent.name : dirent;
+      const fullPath = sysPath.resolve(sysPath.join(path, basename));
+      entry = {path: sysPath.relative(this._root, fullPath), fullPath, basename};
       entry[this._statsProp] = this._isDirent ? dirent : await this._stat(fullPath);
     } catch (err) {
       this._onError(err);
@@ -184,7 +184,7 @@ class ReaddirpStream extends Readable {
     if (isNormalFlowError(err) && !this.destroyed) {
       this.emit('warn', err);
     } else {
-      throw err;
+      this.destroy(err);
     }
   }
 
