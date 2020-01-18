@@ -17,6 +17,7 @@ chai.should();
 const pRimraf = promisify(rimraf);
 const mkdir = promisify(fs.mkdir);
 const symlink = promisify(fs.symlink);
+const readdir = promisify(fs.readdir);
 const readFile = promisify(fs.readFile);
 const writeFile = promisify(fs.writeFile);
 
@@ -96,6 +97,16 @@ describe('symlinks', () => {
     first.should.containSubset(formatEntry('test-symlinked.js', currPath));
     const contents = await readFile(first.fullPath);
     contents.should.match(/handles symlinks/); // name of this test
+  });
+
+  it('handles symlinked directories', async () => {
+    const originalPath = sysPath.join(__dirname, 'examples');
+    const originalFiles = await readdir(originalPath);
+    const newPath = sysPath.join(currPath, 'examples');
+    await symlink(originalPath, newPath);
+    const res = await read();
+    const symlinkedFiles = res.map(entry => entry.basename);
+    symlinkedFiles.should.eql(originalFiles);
   });
 
   it('should use lstat instead of stat', async () => {
