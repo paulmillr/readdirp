@@ -99,7 +99,7 @@ describe('symlinks', () => {
     contents.should.match(/handles symlinks/); // name of this test
   });
 
-  it.only('handles symlinked directories', async () => {
+  it('handles symlinked directories', async () => {
     const originalPath = sysPath.join(__dirname, 'examples');
     const originalFiles = await readdir(originalPath);
     const newPath = sysPath.join(currPath, 'examples');
