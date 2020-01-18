@@ -188,18 +188,42 @@ class ReaddirpStream extends Readable {
     }
   }
 
+  _isDirectory(entry, stats) {
+    if (stats.isDirectory()) {
+      return true;
+    }
+    if (stats.isSymbolicLink()) {
+      const realPath = fs.realpathSync(entry.fullPath);
+      if (fs.lstatSync(realPath).isDirectory()) {
+        return true;
+      }
+    }
+  }
+
+  _isFile(entry, stats) {
+    if (stats.isFile()) {
+      return true;
+    }
+    if (stats.isSymbolicLink()) {
+      const realPath = fs.realpathSync(entry.fullPath);
+      if (fs.lstatSync(realPath).isFile()) {
+        return true;
+      }
+    }
+  }
+
   _isDirAndMatchesFilter(entry) {
     // entry may be undefined, because a warning or an error were emitted
     // and the statsProp is undefined
     const stats = entry && entry[this._statsProp];
-    return stats && stats.isDirectory() && this._directoryFilter(entry);
+    return stats && this._isDirectory(entry, stats) && this._directoryFilter(entry);
   }
 
   _isFileAndMatchesFilter(entry) {
     const stats = entry && entry[this._statsProp];
     const isFileType = stats && (
       (this._wantsEverything && !stats.isDirectory()) ||
-      (stats.isFile() || stats.isSymbolicLink())
+      this._isFile(entry, stats)
     );
     return isFileType && this._fileFilter(entry);
   }
