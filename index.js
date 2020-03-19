@@ -9,6 +9,7 @@ const picomatch = require('picomatch');
 const readdir = promisify(fs.readdir);
 const stat = promisify(fs.stat);
 const lstat = promisify(fs.lstat);
+const realpath = promisify(fs.realpath);
 
 /**
  * @typedef {Object} EntryInfo
@@ -124,7 +125,8 @@ class ReaddirpStream extends Readable {
           for (const entry of await Promise.all(slice)) {
             if (this.destroyed) return;
 
-            if (this._isDirAndMatchesFilter(entry)) {
+            const entryType = await this._getEntryType(entry);
+            if (entryType === 'directory' && this._directoryFilter(entry)) {
               if (depth <= this._maxDepth) {
                 this.parents.push(this._exploreDir(entry.fullPath, depth + 1));
               }
@@ -133,7 +135,7 @@ class ReaddirpStream extends Readable {
                 this.push(entry);
                 batch--;
               }
-            } else if (this._isFileAndMatchesFilter(entry)) {
+            } else if ((entryType === 'file' || this._includeAsFile(entry)) && this._fileFilter(entry)) {
               if (this._wantsFile) {
                 this.push(entry);
                 batch--;
@@ -188,20 +190,35 @@ class ReaddirpStream extends Readable {
     }
   }
 
-  _isDirAndMatchesFilter(entry) {
+  async _getEntryType(entry) {
     // entry may be undefined, because a warning or an error were emitted
     // and the statsProp is undefined
     const stats = entry && entry[this._statsProp];
-    return stats && stats.isDirectory() && this._directoryFilter(entry);
+    if (!stats) {
+      return;
+    }
+    if (stats.isFile()) {
+      return 'file';
+    }
+    if (stats.isDirectory()) {
+      return 'directory';
+    }
+    if (stats && stats.isSymbolicLink()) {
+      const entryRealPath = await realpath(entry.fullPath);
+      const entryRealPathStats = await lstat(entryRealPath);
+      if (entryRealPathStats.isFile()) {
+        return 'file';
+      }
+      if (entryRealPathStats.isDirectory()) {
+        return 'directory';
+      }
+    }
   }
 
-  _isFileAndMatchesFilter(entry) {
+  _includeAsFile(entry) {
     const stats = entry && entry[this._statsProp];
-    const isFileType = stats && (
-      (this._wantsEverything && !stats.isDirectory()) ||
-      (stats.isFile() || stats.isSymbolicLink())
-    );
-    return isFileType && this._fileFilter(entry);
+
+    return stats && this._wantsEverything && !stats.isDirectory();
   }
 }
 
