@@ -94,6 +94,7 @@ Has the following properties:
 
 ## Changelog
 
+- 3.4 (Mar 19, 2020) adds support for directory-based symlinks.
 - 3.3 (Dec 6, 2019) stabilizes RAM consumption and enables perf management with `highWaterMark` option. Fixes race conditions related to `for-await` looping.
 - 3.2 (Oct 14, 2019) improves performance by 250% and makes streams implementation more idiomatic.
 - 3.1 (Jul 7, 2019) brings `bigint` support to `stat` output on Windows. This is backwards-incompatible for some cases. Be careful. It you use it incorrectly, you'll see "TypeError: Cannot mix BigInt and other types, use explicit conversions".
