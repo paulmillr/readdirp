@@ -204,13 +204,17 @@ class ReaddirpStream extends Readable {
       return 'directory';
     }
     if (stats && stats.isSymbolicLink()) {
-      const entryRealPath = await realpath(entry.fullPath);
-      const entryRealPathStats = await lstat(entryRealPath);
-      if (entryRealPathStats.isFile()) {
-        return 'file';
-      }
-      if (entryRealPathStats.isDirectory()) {
-        return 'directory';
+      try {
+        const entryRealPath = await realpath(entry.fullPath);
+        const entryRealPathStats = await lstat(entryRealPath);
+        if (entryRealPathStats.isFile()) {
+          return 'file';
+        }
+        if (entryRealPathStats.isDirectory()) {
+          return 'directory';
+        }
+      } catch (error) {
+        this._onError(error);
       }
     }
   }
