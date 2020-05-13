@@ -45,7 +45,7 @@
     "picomatch": "^2.2.1"
   },
   "devDependencies": {
-    "@types/node": "^13",
+    "@types/node": "^14",
     "chai": "^4.2",
     "chai-subset": "^1.6",
     "dtslint": "^3.3.0",
