@@ -93,6 +93,8 @@ Has the following properties:
 
 ## Changelog
 
+- 3.5 (Oct 13, 2020) disallows recursive directory-based symlinks.
+  Before, it could have entered infinite loop.
 - 3.4 (Mar 19, 2020) adds support for directory-based symlinks.
 - 3.3 (Dec 6, 2019) stabilizes RAM consumption and enables perf management with `highWaterMark` option. Fixes race conditions related to `for-await` looping.
 - 3.2 (Oct 14, 2019) improves performance by 250% and makes streams implementation more idiomatic.
