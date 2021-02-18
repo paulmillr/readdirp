@@ -21,7 +21,8 @@ const realpath = promisify(fs.realpath);
  */
 
 const BANG = '!';
-const NORMAL_FLOW_ERRORS = new Set(['ENOENT', 'EPERM', 'EACCES', 'ELOOP']);
+const RECURSIVE_ERROR_CODE = 'READDIRP_RECURSIVE_ERROR';
+const NORMAL_FLOW_ERRORS = new Set(['ENOENT', 'EPERM', 'EACCES', 'ELOOP', RECURSIVE_ERROR_CODE]);
 const FILE_TYPE = 'files';
 const DIR_TYPE = 'directories';
 const FILE_DIR_TYPE = 'files_directories';
@@ -214,9 +215,11 @@ class ReaddirpStream extends Readable {
         if (entryRealPathStats.isDirectory()) {
           const len = entryRealPath.length;
           if (full.startsWith(entryRealPath) && full.substr(len, 1) === sysPath.sep) {
-            return this._onError(new Error(
+            const recursiveError = new Error(
               `Circular symlink detected: "${full}" points to "${entryRealPath}"`
-            ));
+            );
+            recursiveError.code = RECURSIVE_ERROR_CODE;
+            return this._onError(recursiveError);
           }
           return 'directory';
         }
