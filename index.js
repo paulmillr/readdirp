@@ -30,6 +30,10 @@ const EVERYTHING_TYPE = 'all';
 const ALL_TYPES = [FILE_TYPE, DIR_TYPE, FILE_DIR_TYPE, EVERYTHING_TYPE];
 
 const isNormalFlowError = error => NORMAL_FLOW_ERRORS.has(error.code);
+const fsStatSupportsBigInt = () => {
+    const versionParts = process.versions.node.split('.').slice(0,2).map(Number);
+    return versionParts[0] > 10 || (versionParts[0] == 10 && versionParts[1] >= 5);
+};
 
 const normalizeFilter = filter => {
   if (filter === undefined) return;
@@ -92,7 +96,7 @@ class ReaddirpStream extends Readable {
 
     const statMethod = opts.lstat ? lstat : stat;
     // Use bigint stats if it's windows and stat() supports options (node 10+).
-    if (process.platform === 'win32' && stat.length === 3) {
+    if (process.platform === 'win32' && fsStatSupportsBigInt()) {
       this._stat = path => statMethod(path, { bigint: true });
     } else {
       this._stat = statMethod;
