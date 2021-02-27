@@ -31,7 +31,7 @@ const ALL_TYPES = [FILE_TYPE, DIR_TYPE, FILE_DIR_TYPE, EVERYTHING_TYPE];
 
 const isNormalFlowError = error => NORMAL_FLOW_ERRORS.has(error.code);
 const [maj, min] = process.versions.node.split('.').slice(0, 2).map(n => Number.parseInt(n));
-const wantBigintFsStats = process.platform === 'win32' && (maj > 10 || maj === 10 && min >= 5));
+const wantBigintFsStats = process.platform === 'win32' && (maj > 10 || (maj === 10 && min >= 5));
 
 const normalizeFilter = filter => {
   if (filter === undefined) return;
