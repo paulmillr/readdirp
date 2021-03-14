@@ -169,7 +169,7 @@ class ReaddirpStream extends Readable {
     } catch (error) {
       this._onError(error);
     }
-    return {files, depth, path};
+    return { files, depth, path };
   }
 
   async _formatEntry(dirent, path) {
@@ -177,7 +177,7 @@ class ReaddirpStream extends Readable {
     try {
       const basename = this._isDirent ? dirent.name : dirent;
       const fullPath = sysPath.resolve(sysPath.join(path, basename));
-      entry = {path: sysPath.relative(this._root, fullPath), fullPath, basename};
+      entry = { path: sysPath.relative(this._root, fullPath), fullPath, basename };
       entry[this._statsProp] = this._isDirent ? dirent : await this._stat(fullPath);
     } catch (err) {
       this._onError(err);
