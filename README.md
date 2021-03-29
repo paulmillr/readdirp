@@ -36,7 +36,7 @@ console.log(files.map(file => file.path));
 // Other options.
 readdirp('test', {
   fileFilter: '*.js',
-  directoryFilter: ['!.git', '!*modules']
+  directoryFilter: ['!.git', '!*modules'],
   // directoryFilter: (di) => di.basename.length === 9
   type: 'files_directories',
   depth: 1
