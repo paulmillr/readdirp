@@ -1,0 +1,19 @@
+version: 2
+updates:
+- package-ecosystem: npm
+  directory: "/"
+  schedule:
+    interval: daily
+    time: "11:00"
+  open-pull-requests-limit: 10
+  ignore:
+  - dependency-name: dtslint
+    versions:
+    - "> 3.3.0"
+  - dependency-name: mocha
+    versions:
+    - ">= 8.a, < 9"
+  - dependency-name: "@types/node"
+    versions:
+    - 15.0.0
+    - 15.0.1
