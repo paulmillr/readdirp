@@ -4,7 +4,6 @@ const fs = require('fs');
 const { Readable } = require('stream');
 const sysPath = require('path');
 const { promisify } = require('util');
-const picomatch = require('picomatch');
 
 const readdir = promisify(fs.readdir);
 const stat = promisify(fs.stat);
@@ -20,7 +19,6 @@ const realpath = promisify(fs.realpath);
  * @property {String} basename
  */
 
-const BANG = '!';
 const RECURSIVE_ERROR_CODE = 'READDIRP_RECURSIVE_ERROR';
 const NORMAL_FLOW_ERRORS = new Set(['ENOENT', 'EPERM', 'EACCES', 'ELOOP', RECURSIVE_ERROR_CODE]);
 const FILE_TYPE = 'files';
@@ -38,30 +36,17 @@ const normalizeFilter = filter => {
   if (typeof filter === 'function') return filter;
 
   if (typeof filter === 'string') {
-    const glob = picomatch(filter.trim());
-    return entry => glob(entry.basename);
+    const fl = filter.trim();
+    return entry => (entry.basename) === fl;
   }
 
   if (Array.isArray(filter)) {
     const positive = [];
-    const negative = [];
     for (const item of filter) {
       const trimmed = item.trim();
-      if (trimmed.charAt(0) === BANG) {
-        negative.push(picomatch(trimmed.slice(1)));
-      } else {
-        positive.push(picomatch(trimmed));
-      }
+      positive.push(trimmed);
     }
-
-    if (negative.length > 0) {
-      if (positive.length > 0) {
-        return entry =>
-          positive.some(f => f(entry.basename)) && !negative.some(f => f(entry.basename));
-      }
-      return entry => !negative.some(f => f(entry.basename));
-    }
-    return entry => positive.some(f => f(entry.basename));
+    return entry => positive.some(f => entry.basename === f);
   }
 };
 

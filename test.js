@@ -238,62 +238,9 @@ describe('filtering', () => {
   beforeEach(async () => {
     await touch(['a.js', 'b.txt', 'c.js', 'd.js', 'e.rb']);
   });
-  it('glob', async () => {
-    const expect1 = ['a.js', 'c.js', 'd.js'];
-    const res = await read({fileFilter: '*.js'});
-    res.should.have.lengthOf(expect1.length);
-    res.forEach((entry, index) =>
-      entry.should.containSubset(formatEntry(expect1[index], currPath))
-    );
-
-    const res2 = await read({fileFilter: ['*.js']});
-    res2.should.have.lengthOf(expect1.length);
-    res2.forEach((entry, index) =>
-      entry.should.containSubset(formatEntry(expect1[index], currPath))
-    );
-
-    const expect2 = ['b.txt'];
-    const res3 = await read({fileFilter: ['*.txt']});
-    res3.should.have.lengthOf(expect2.length);
-    res3.forEach((entry, index) =>
-      entry.should.containSubset(formatEntry(expect2[index], currPath))
-    );
-  });
   it('leading and trailing spaces', async () => {
     const expect = ['a.js', 'c.js', 'd.js', 'e.rb'];
-    const res = await read({fileFilter: [' *.js', '*.rb ']});
-    res.should.have.lengthOf(expect.length);
-    res.forEach((entry, index) =>
-      entry.should.containSubset(formatEntry(expect[index], currPath))
-    );
-  });
-  it('multiple glob', async () => {
-    const expect = ['a.js', 'b.txt', 'c.js', 'd.js'];
-    const res = await read({fileFilter: ['*.js', '*.txt']});
-    res.should.have.lengthOf(expect.length);
-    res.forEach((entry, index) =>
-      entry.should.containSubset(formatEntry(expect[index], currPath))
-    );
-  });
-  it('negated glob', async () => {
-    const expect = ['a.js', 'b.txt', 'c.js', 'e.rb'];
-    const res = await read({fileFilter: ['!d.js']});
-    res.should.have.lengthOf(expect.length);
-    res.forEach((entry, index) =>
-      entry.should.containSubset(formatEntry(expect[index], currPath))
-    );
-  });
-  it('glob & negated glob', async () => {
-    const expect = ['a.js', 'c.js'];
-    const res = await read({fileFilter: ['*.js', '!d.js']});
-    res.should.have.lengthOf(expect.length);
-    res.forEach((entry, index) =>
-      entry.should.containSubset(formatEntry(expect[index], currPath))
-    );
-  });
-  it('two negated glob', async () => {
-    const expect = ['b.txt'];
-    const res = await read({fileFilter: ['!*.js', '!*.rb']});
+    const res = await read({fileFilter: (a => a.basename.endsWith('.js') || a.basename.endsWith('.rb'))});
     res.should.have.lengthOf(expect.length);
     res.forEach((entry, index) =>
       entry.should.containSubset(formatEntry(expect[index], currPath))
