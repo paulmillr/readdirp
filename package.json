@@ -1,7 +1,7 @@
 {
   "name": "readdirp",
   "description": "Recursive version of fs.readdir with streaming API.",
-  "version": "3.6.0",
+  "version": "4.0.0-beta1",
   "homepage": "https://github.com/paulmillr/readdirp",
   "repository": {
     "type": "git",
