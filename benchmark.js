@@ -1,8 +1,4 @@
-/* eslint-disable no-unused-vars */
-
-'use strict';
-
-const readdirp = require('..');
+const {readdirp} = require('./index.js');
 
 function logMem(i) {
   const vals = Object.entries(process.memoryUsage()).map(([k, v]) => {
@@ -16,10 +12,11 @@ const read = async (directory) => {
   let i = 0;
   const start = Date.now();
   let lap = 0;
+  let now = Date.now();
 
   for await (const chunk of stream) {
-    if (i % 1000 === 0) {
-      const now = Date.now();
+    if (i % 10000 === 0) {
+      now = Date.now();
       if (now - lap > 500) {
         lap = now;
         logMem(i);

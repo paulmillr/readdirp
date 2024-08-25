@@ -1,14 +1,13 @@
 {
+  "extends": "@paulmillr/jsbt/tsconfig.cjs.json",
   "compilerOptions": {
-    "module": "commonjs",
-    "lib": ["es2018", "esnext.asynciterable"],
-    "noImplicitAny": true,
-    "noImplicitThis": true,
-    "strictNullChecks": true,
-    "strictFunctionTypes": true,
-    "noEmit": true,
-    "esModuleInterop": true,
     "baseUrl": ".",
-    "paths": { "readdirp": ["."] }
-  }
+    "outDir": "."
+  },
+  "include": [
+    "index.ts"
+  ],
+  "exclude": [
+    "node_modules"
+  ]
 }

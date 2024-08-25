@@ -1,39 +1,22 @@
 name: Lint
-on: [push, pull_request]
-env:
-  CI: true
 
+on:
+  - push
+  - pull_request
 jobs:
-  dtslint:
-    runs-on: ubuntu-latest
-
+  test:
+    name: v${{ matrix.version }} @ ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        version: [22]
+        os: [ubuntu-latest]
     steps:
-      - name: Clone repository
-        uses: actions/checkout@v1
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v1
+      - uses: actions/checkout@1e31de5234b9f8995739874a8ce0492dc87873e2 # v4
+      - name: Use Node.js ${{ matrix.node }}
+        uses: actions/setup-node@8f152de45cc393bb48ce5d89d36b731f54556e65 # v4
         with:
-          node-version: "14"
-
+          node-version: ${{ matrix.node }}
       - run: npm install
-
-      - name: Run dtslint
-        run: npm run dtslint
-
-  eslint:
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Clone repository
-        uses: actions/checkout@v1
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v1
-        with:
-          node-version: "14"
-
-      - run: npm install
-
-      - name: Run ESLint
-        run: npm run lint
+      - run: npm run build
+      - run: npm run lint

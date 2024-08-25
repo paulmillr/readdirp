@@ -1,5 +1,3 @@
-/* eslint-env mocha */
-
 'use strict';
 
 const fs = require('fs');
@@ -9,7 +7,7 @@ const {promisify} = require('util');
 const chai = require('chai');
 const chaiSubset = require('chai-subset');
 const rimraf = require('rimraf');
-const readdirp = require('.');
+const {readdirp, readdirpPromise, ReaddirpStream} = require('.');
 
 chai.use(chaiSubset);
 chai.should();
@@ -28,7 +26,7 @@ const root = sysPath.join(__dirname, 'test-fixtures');
 let testCount = 0;
 let currPath;
 
-const read = async (options) => readdirp.promise(currPath, options);
+const read = async (options) => readdirpPromise(currPath, options);
 
 const touch = async (files = [], dirs = []) => {
   for (const name of files) {
@@ -100,9 +98,9 @@ describe('symlinks', () => {
   });
 
   it('handles symlinked directories', async () => {
-    const originalPath = sysPath.join(__dirname, 'examples');
+    const originalPath = sysPath.join(__dirname, 'esm');
     const originalFiles = await readdir(originalPath);
-    const newPath = sysPath.join(currPath, 'examples');
+    const newPath = sysPath.join(currPath, 'esm');
     await symlink(originalPath, newPath);
     const res = await read();
     const symlinkedFiles = res.map(entry => entry.basename);
@@ -286,7 +284,7 @@ describe('various', () => {
   it('emits readable stream', () => {
     const stream = readdirp(currPath);
     stream.should.be.an.instanceof(Readable);
-    stream.should.be.an.instanceof(readdirp.ReaddirpStream);
+    stream.should.be.an.instanceof(ReaddirpStream);
   });
 
   it('fails without root option passed', async () => {
@@ -308,7 +306,7 @@ describe('various', () => {
   it('exposes promise API', async () => {
     const created = ['a.txt', 'c.txt'];
     await touch(created);
-    const result = await readdirp.promise(currPath);
+    const result = await readdirpPromise(currPath);
     result.should.have.lengthOf(created.length);
     result.forEach((entry, index) =>
       entry.should.containSubset(formatEntry(created[index], currPath))
