@@ -35,6 +35,7 @@
       "require": "./index.js"
     }
   },
+  "sideEffects": false,
   "keywords": [
     "recursive",
     "fs",

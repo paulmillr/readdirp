@@ -93,6 +93,9 @@ Has the following properties:
 
 ## Changelog
 
+- 4.0 (Aug 25, 2024) rewritten in typescript, producing hybrid common.js / esm module.
+    - Min nodejs requirement has been increased to v14, but it's mostly backwards compatible
+    - Make sure you're using `let {readdirp} = require('readdirp')` in common.js
 - 3.5 (Oct 13, 2020) disallows recursive directory-based symlinks.
   Before, it could have entered infinite loop.
 - 3.4 (Mar 19, 2020) adds support for directory-based symlinks.
@@ -112,6 +115,7 @@ Has the following properties:
         - Renamed `name` to `basename`
         - Removed `parentDir` and `fullParentDir` properties
 - Supported node.js versions:
+    - 4.x: node 14+
     - 3.x: node 8+
     - 2.x: node 0.6+
 
