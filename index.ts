@@ -57,7 +57,7 @@ const normalizeFilter = (filter: Predicate | undefined) => {
     return (entry: EntryInfo) => entry.basename === fl;
   }
   if (Array.isArray(filter)) {
-    const trItems = filter.map(item => item.trim())
+    const trItems = filter.map((item) => item.trim());
     return (entry: EntryInfo) => trItems.some((f) => entry.basename === f);
   }
   return emptyFn;
@@ -141,10 +141,7 @@ export class ReaddirpStream extends Readable {
             if (this.destroyed) return;
 
             const entryType = await this._getEntryType(entry);
-            if (
-              entryType === 'directory' &&
-              this._directoryFilter(entry)
-            ) {
+            if (entryType === 'directory' && this._directoryFilter(entry)) {
               if (depth <= this._maxDepth) {
                 this.parents.push(this._exploreDir(entry.fullPath, depth + 1));
               }
@@ -275,7 +272,6 @@ export const readdirp = (root: Path, options: Partial<ReaddirpOptions> = {}) => 
   options.root = root;
   return new ReaddirpStream(options);
 };
-
 
 export const readdirpPromise = (root: Path, options: Partial<ReaddirpOptions> = {}) => {
   return new Promise((resolve, reject) => {
