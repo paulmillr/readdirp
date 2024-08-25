@@ -6,13 +6,13 @@ const {Readable} = require('stream');
 const {promisify} = require('util');
 const chai = require('chai');
 const chaiSubset = require('chai-subset');
-const rimraf = require('rimraf');
+const {rimraf: pRimraf} = require('rimraf');
 const {readdirp, readdirpPromise, ReaddirpStream} = require('.');
 
 chai.use(chaiSubset);
 chai.should();
 
-const pRimraf = promisify(rimraf);
+// const pRimraf = promisify(rimraf);
 const mkdir = promisify(fs.mkdir);
 const symlink = promisify(fs.symlink);
 const readdir = promisify(fs.readdir);

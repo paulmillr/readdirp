@@ -58,11 +58,11 @@
     "@paulmillr/jsbt": "0.2.1",
     "@types/node": "20.14.8",
     "chai": "4.3.4",
-    "chai-subset": "1.6",
+    "chai-subset": "1.6.0",
     "mocha": "10.7.3",
-    "nyc": "15.1.0",
+    "nyc": "17.0.0",
     "prettier": "3.1.1",
-    "rimraf": "3.0.2",
+    "rimraf": "6.0.1",
     "typescript": "5.5.2"
   },
   "nyc": {
