@@ -8,10 +8,9 @@ npm install readdirp
 ```
 
 ```javascript
-const readdirp = require('readdirp');
-
 // Use streams to achieve small RAM & CPU footprint.
 // 1) Streams example with for-await.
+import readdirp from 'readdirp';
 for await (const entry of readdirp('.')) {
   const {path} = entry;
   console.log(`${JSON.stringify({path})}`);
@@ -19,6 +18,7 @@ for await (const entry of readdirp('.')) {
 
 // 2) Streams example, non for-await.
 // Print out all JS files along with their size within the current folder & subfolders.
+import readdirp from 'readdirp';
 readdirp('.', {fileFilter: '*.js', alwaysStat: true})
   .on('data', (entry) => {
     const {path, stats: {size}} = entry;
@@ -30,10 +30,12 @@ readdirp('.', {fileFilter: '*.js', alwaysStat: true})
   .on('end', () => console.log('done'));
 
 // 3) Promise example. More RAM and CPU than streams / for-await.
-const files = await readdirp.promise('.');
+import { readdirpPromise } from 'readdirp';
+const files = await readdirpPromise('.');
 console.log(files.map(file => file.path));
 
 // Other options.
+import readdirp from 'readdirp';
 readdirp('test', {
   fileFilter: '*.js',
   directoryFilter: ['!.git', '!*modules'],
@@ -42,8 +44,6 @@ readdirp('test', {
   depth: 1
 });
 ```
-
-For more examples, check out `examples` directory.
 
 ## API
 
@@ -67,15 +67,11 @@ First argument is awalys `root`, path in which to start reading and recursing in
 
 ### options
 
-- `fileFilter: ["*.js"]`: filter to include or exclude files. A `Function`, Glob string or Array of glob strings.
+- `fileFilter: ["*.js"]`: filter to include or exclude files. A `Function`, string or Array of strings.
     - **Function**: a function that takes an entry info as a parameter and returns true to include or false to exclude the entry
-    - **Glob string**: a string (e.g., `*.js`) which is matched using [picomatch](https://github.com/micromatch/picomatch), so go there for more
-        information. Globstars (`**`) are not supported since specifying a recursive pattern for an already recursive function doesn't make sense. Negated globs (as explained in the minimatch documentation) are allowed, e.g., `!*.txt` matches everything but text files.
-    - **Array of glob strings**: either need to be all inclusive or all exclusive (negated) patterns otherwise an error is thrown.
-        `['*.json', '*.js']` includes all JavaScript and Json files.
-        `['!.git', '!node_modules']` includes all directories except the '.git' and 'node_modules'.
-    - Directories that do not pass a filter will not be recursed into.
-- `directoryFilter: ['!.git']`: filter to include/exclude directories found and to recurse into. Directories that do not pass a filter will not be recursed into.
+    - **string**: a string (e.g., `index.js`)
+    - **Array of strings**: 
+- `directoryFilter: ['.git']`: filter to include/exclude directories found and to recurse into. Directories that do not pass a filter will not be recursed into.
 - `depth: 5`: depth at which to stop recursing even if more subdirectories are found
 - `type: 'files'`: determines if data events on the stream should be emitted for `'files'` (default), `'directories'`, `'files_directories'`, or `'all'`. Setting to `'all'` will also include entries for other types of file descriptors like character devices, unix sockets and named pipes.
 - `alwaysStat: false`: always return `stats` property for every file. Default is `false`, readdirp will return `Dirent` entries. Setting it to `true` can double readdir execution time - use it only when you need file `size`, `mtime` etc. Cannot be enabled on node <10.10.0.
@@ -94,7 +90,7 @@ Has the following properties:
 ## Changelog
 
 - 4.0 (Aug 25, 2024) rewritten in typescript, producing hybrid common.js / esm module.
-    - Min nodejs requirement has been increased to v14, but it's mostly backwards compatible
+    - Remove glob support and all dependencies
     - Make sure you're using `let {readdirp} = require('readdirp')` in common.js
 - 3.5 (Oct 13, 2020) disallows recursive directory-based symlinks.
   Before, it could have entered infinite loop.
