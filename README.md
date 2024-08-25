@@ -19,7 +19,7 @@ for await (const entry of readdirp('.')) {
 // 2) Streams example, non for-await.
 // Print out all JS files along with their size within the current folder & subfolders.
 import readdirp from 'readdirp';
-readdirp('.', {fileFilter: '*.js', alwaysStat: true})
+readdirp('.', {alwaysStat: true, fileFilter: (f) => f.basename.endsWith('.js')})
   .on('data', (entry) => {
     const {path, stats: {size}} = entry;
     console.log(`${JSON.stringify({path, size})}`);
@@ -37,8 +37,8 @@ console.log(files.map(file => file.path));
 // Other options.
 import readdirp from 'readdirp';
 readdirp('test', {
-  fileFilter: '*.js',
-  directoryFilter: ['!.git', '!*modules'],
+  fileFilter: (f) => f.basename.endsWith('.js'),
+  directoryFilter: (d) => d.basename !== '.git',
   // directoryFilter: (di) => di.basename.length === 9
   type: 'files_directories',
   depth: 1
@@ -67,11 +67,11 @@ First argument is awalys `root`, path in which to start reading and recursing in
 
 ### options
 
-- `fileFilter: ["*.js"]`: filter to include or exclude files. A `Function`, string or Array of strings.
+- `fileFilter`: filter to include or exclude files. A `Function`, string or Array of strings.
     - **Function**: a function that takes an entry info as a parameter and returns true to include or false to exclude the entry
     - **string**: a string (e.g., `index.js`)
     - **Array of strings**: 
-- `directoryFilter: ['.git']`: filter to include/exclude directories found and to recurse into. Directories that do not pass a filter will not be recursed into.
+- `directoryFilter`: filter to include/exclude directories found and to recurse into. Directories that do not pass a filter will not be recursed into.
 - `depth: 5`: depth at which to stop recursing even if more subdirectories are found
 - `type: 'files'`: determines if data events on the stream should be emitted for `'files'` (default), `'directories'`, `'files_directories'`, or `'all'`. Setting to `'all'` will also include entries for other types of file descriptors like character devices, unix sockets and named pipes.
 - `alwaysStat: false`: always return `stats` property for every file. Default is `false`, readdirp will return `Dirent` entries. Setting it to `true` can double readdir execution time - use it only when you need file `size`, `mtime` etc. Cannot be enabled on node <10.10.0.
