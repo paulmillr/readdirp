@@ -2,6 +2,7 @@
 
 Recursive version of [fs.readdir](https://nodejs.org/api/fs.html#fs_fs_readdir_path_options_callback). Exposes a **stream API** and a **promise API**.
 
+Supports both ESM and common.js.
 
 ```sh
 npm install readdirp
