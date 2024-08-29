@@ -68,10 +68,8 @@ First argument is awalys `root`, path in which to start reading and recursing in
 
 ### options
 
-- `fileFilter`: filter to include or exclude files. A `Function`, string or Array of strings.
+- `fileFilter`: filter to include or exclude files
     - **Function**: a function that takes an entry info as a parameter and returns true to include or false to exclude the entry
-    - **string**: a string (e.g., `index.js`)
-    - **Array of strings**: 
 - `directoryFilter`: filter to include/exclude directories found and to recurse into. Directories that do not pass a filter will not be recursed into.
 - `depth: 5`: depth at which to stop recursing even if more subdirectories are found
 - `type: 'files'`: determines if data events on the stream should be emitted for `'files'` (default), `'directories'`, `'files_directories'`, or `'all'`. Setting to `'all'` will also include entries for other types of file descriptors like character devices, unix sockets and named pipes.
