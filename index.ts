@@ -274,7 +274,7 @@ export const readdirp = (root: Path, options: Partial<ReaddirpOptions> = {}) => 
 };
 
 export const readdirpPromise = (root: Path, options: Partial<ReaddirpOptions> = {}) => {
-  return new Promise((resolve, reject) => {
+  return new Promise<Path[]>((resolve, reject) => {
     const files: Path[] = [];
     readdirp(root, options)
       .on('data', (entry) => files.push(entry))
