@@ -2,7 +2,9 @@
   "extends": "@paulmillr/jsbt/tsconfig.cjs.json",
   "compilerOptions": {
     "baseUrl": ".",
-    "outDir": "."
+    "outDir": ".",
+    "sourceMap": false,
+    "declarationMap": false
   },
   "include": [
     "index.ts"
