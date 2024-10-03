@@ -1,6 +1,5 @@
 import type { Stats, Dirent } from 'fs';
-import { statSync, lstatSync } from 'fs';
-import { readdir, realpath } from 'fs/promises';
+import { stat, lstat, readdir, realpath } from 'fs/promises';
 import { Readable } from 'stream';
 import {
   resolve as pathResolve,
@@ -8,6 +7,9 @@ import {
   join as pathJoin,
   sep as pathSep,
 } from 'path';
+
+// We can't use statSync, lstatSync, because some users may want to
+// use graceful-fs, which doesn't support sync methods.
 
 export type Path = string;
 export interface EntryInfo {
@@ -98,7 +100,7 @@ export class ReaddirpStream extends Readable {
     this._fileFilter = normalizeFilter(opts.fileFilter);
     this._directoryFilter = normalizeFilter(opts.directoryFilter);
 
-    const statMethod = opts.lstat ? lstatSync : statSync;
+    const statMethod = opts.lstat ? lstat : stat;
     // Use bigint stats if it's windows and stat() supports options (node 10+).
     if (wantBigintFsStats) {
       this._stat = (path: Path) => statMethod(path, { bigint: true });
@@ -133,7 +135,8 @@ export class ReaddirpStream extends Readable {
         if (fil && fil.length > 0) {
           const { path, depth } = par;
           const slice = fil.splice(0, batch).map((dirent) => this._formatEntry(dirent, path));
-          for (const entry of slice) {
+          const awaited = await Promise.all(slice);
+          for (const entry of awaited) {
             if (!entry) {
               batch--;
               return;
@@ -187,13 +190,13 @@ export class ReaddirpStream extends Readable {
     return { files, depth, path };
   }
 
-  _formatEntry(dirent: PathOrDirent, path: Path): EntryInfo | undefined {
+  async _formatEntry(dirent: PathOrDirent, path: Path): Promise<EntryInfo | undefined> {
     let entry: EntryInfo;
     const basename = this._isDirent ? (dirent as Dirent).name : (dirent as string);
     try {
       const fullPath = pathResolve(pathJoin(path, basename));
       entry = { path: pathRelative(this._root, fullPath), fullPath, basename };
-      entry[this._statsProp] = this._isDirent ? dirent : this._stat(fullPath);
+      entry[this._statsProp] = this._isDirent ? dirent : await this._stat(fullPath);
     } catch (err) {
       this._onError(err as Error);
       return;
@@ -222,7 +225,7 @@ export class ReaddirpStream extends Readable {
       const full = entry.fullPath;
       try {
         const entryRealPath = await realpath(full);
-        const entryRealPathStats = lstatSync(entryRealPath);
+        const entryRealPathStats = await lstat(entryRealPath);
         if (entryRealPathStats.isFile()) {
           return 'file';
         }
