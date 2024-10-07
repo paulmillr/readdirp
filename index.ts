@@ -302,9 +302,9 @@ export function readdirp(root: Path, options: Partial<ReaddirpOptions> = {}): Re
 export function readdirpPromise(
   root: Path,
   options: Partial<ReaddirpOptions> = {}
-): Promise<Path[]> {
-  return new Promise<Path[]>((resolve, reject) => {
-    const files: Path[] = [];
+): Promise<EntryInfo[]> {
+  return new Promise<EntryInfo[]>((resolve, reject) => {
+    const files: EntryInfo[] = [];
     readdirp(root, options)
       .on('data', (entry) => files.push(entry))
       .on('end', () => resolve(files))
