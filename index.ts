@@ -22,7 +22,7 @@ export interface EntryInfo {
 export type PathOrDirent = Dirent | Path;
 export type Tester = (entryInfo: EntryInfo) => boolean;
 export type Predicate = string[] | string | Tester;
-export enum EntryTypes {
+export const enum EntryTypes {
   FILE_TYPE = 'files',
   DIR_TYPE = 'directories',
   FILE_DIR_TYPE = 'files_directories',
