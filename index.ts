@@ -22,17 +22,18 @@ export interface EntryInfo {
 export type PathOrDirent = Dirent | Path;
 export type Tester = (entryInfo: EntryInfo) => boolean;
 export type Predicate = string[] | string | Tester;
-export const enum EntryTypes {
-  FILE_TYPE = 'files',
-  DIR_TYPE = 'directories',
-  FILE_DIR_TYPE = 'files_directories',
-  EVERYTHING_TYPE = 'all',
-}
+export const EntryTypes = {
+  FILE_TYPE: 'files',
+  DIR_TYPE: 'directories',
+  FILE_DIR_TYPE: 'files_directories',
+  EVERYTHING_TYPE: 'all',
+} as const;
+export type EntryType = (typeof EntryTypes)[keyof typeof EntryTypes];
 export type ReaddirpOptions = {
   root: string;
   fileFilter?: Predicate;
   directoryFilter?: Predicate;
-  type?: EntryTypes | 'files' | 'directories' | 'files_directories' | 'all';
+  type?: EntryType;
   lstat?: boolean;
   depth?: number;
   alwaysStat?: boolean;
@@ -281,7 +282,7 @@ export class ReaddirpStream extends Readable {
  * @param root Root directory
  * @param options Options to specify root (start directory), filters and recursion depth
  */
-export const readdirp = (root: Path, options: Partial<ReaddirpOptions> = {}) => {
+export function readdirp(root: Path, options: Partial<ReaddirpOptions> = {}): ReaddirpStream {
   // @ts-ignore
   let type = options.entryType || options.type;
   if (type === 'both') type = EntryTypes.FILE_DIR_TYPE; // backwards-compatibility
@@ -296,9 +297,12 @@ export const readdirp = (root: Path, options: Partial<ReaddirpOptions> = {}) => 
 
   options.root = root;
   return new ReaddirpStream(options);
-};
+}
 
-export const readdirpPromise = (root: Path, options: Partial<ReaddirpOptions> = {}) => {
+export function readdirpPromise(
+  root: Path,
+  options: Partial<ReaddirpOptions> = {}
+): Promise<Path[]> {
   return new Promise<Path[]>((resolve, reject) => {
     const files: Path[] = [];
     readdirp(root, options)
@@ -306,6 +310,6 @@ export const readdirpPromise = (root: Path, options: Partial<ReaddirpOptions> = 
       .on('end', () => resolve(files))
       .on('error', (error) => reject(error));
   });
-};
+}
 
 export default readdirp;
