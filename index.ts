@@ -53,29 +53,21 @@ Object.freeze(defaultOptions);
 
 const RECURSIVE_ERROR_CODE = 'READDIRP_RECURSIVE_ERROR';
 const NORMAL_FLOW_ERRORS = new Set(['ENOENT', 'EPERM', 'EACCES', 'ELOOP', RECURSIVE_ERROR_CODE]);
-const ALL_TYPES = [
+const ALL_TYPES: string[] = [
   EntryTypes.DIR_TYPE,
   EntryTypes.EVERYTHING_TYPE,
   EntryTypes.FILE_DIR_TYPE,
   EntryTypes.FILE_TYPE,
-  'files',
-  'directories',
-  'files_directories',
-  'all',
 ];
-const DIR_TYPES = new Set([
+const DIR_TYPES = new Set<string>([
   EntryTypes.DIR_TYPE,
   EntryTypes.EVERYTHING_TYPE,
   EntryTypes.FILE_DIR_TYPE,
-  'directories',
-  'files_directories',
 ]);
-const FILE_TYPES = new Set([
+const FILE_TYPES = new Set<string>([
   EntryTypes.EVERYTHING_TYPE,
   EntryTypes.FILE_DIR_TYPE,
   EntryTypes.FILE_TYPE,
-  'files',
-  'files_directories',
 ]);
 
 const isNormalFlowError = (error: any) => NORMAL_FLOW_ERRORS.has(error.code);
