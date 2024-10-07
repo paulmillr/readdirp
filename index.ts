@@ -50,6 +50,7 @@ const defaultOptions: ReaddirpOptions = {
   alwaysStat: false,
   highWaterMark: 4096,
 };
+Object.freeze(defaultOptions)
 
 const RECURSIVE_ERROR_CODE = 'READDIRP_RECURSIVE_ERROR';
 const NORMAL_FLOW_ERRORS = new Set(['ENOENT', 'EPERM', 'EACCES', 'ELOOP', RECURSIVE_ERROR_CODE]);
