@@ -20,38 +20,47 @@ export interface EntryInfo {
   basename: string;
 }
 export type PathOrDirent = Dirent | Path;
-export type Tester = (path: EntryInfo) => boolean;
+export type Tester = (entryInfo: EntryInfo) => boolean;
 export type Predicate = string[] | string | Tester;
-
-function defaultOptions() {
-  return {
-    root: '.',
-    fileFilter: (_path: EntryInfo) => true,
-    directoryFilter: (_path: EntryInfo) => true,
-    type: FILE_TYPE,
-    lstat: false,
-    depth: 2147483648,
-    alwaysStat: false,
-    highWaterMark: 4096,
-  };
+export enum EntryTypes {
+  FILE_TYPE = 'files',
+  DIR_TYPE = 'directories',
+  FILE_DIR_TYPE = 'files_directories',
+  EVERYTHING_TYPE = 'all',
 }
+export type ReaddirpOptions = {
+  root: string;
+  fileFilter?: Predicate;
+  directoryFilter?: Predicate;
+  // avoid breaking change by forcing enum value
+  type?: EntryTypes;
+  lstat?: boolean;
+  depth?: number;
+  alwaysStat?: boolean;
+  highWaterMark?: number;
+};
 
-export type ReaddirpOptions = ReturnType<typeof defaultOptions>;
+const defaultOptions: ReaddirpOptions = {
+  root: '.',
+  fileFilter: (_entryInfo: EntryInfo) => true,
+  directoryFilter: (_entryInfo: EntryInfo) => true,
+  type: EntryTypes.FILE_TYPE,
+  lstat: false,
+  depth: 2147483648,
+  alwaysStat: false,
+  highWaterMark: 4096,
+};
 
 const RECURSIVE_ERROR_CODE = 'READDIRP_RECURSIVE_ERROR';
 const NORMAL_FLOW_ERRORS = new Set(['ENOENT', 'EPERM', 'EACCES', 'ELOOP', RECURSIVE_ERROR_CODE]);
-const FILE_TYPE = 'files';
-const DIR_TYPE = 'directories';
-const FILE_DIR_TYPE = 'files_directories';
-const EVERYTHING_TYPE = 'all';
-const ALL_TYPES = [FILE_TYPE, DIR_TYPE, FILE_DIR_TYPE, EVERYTHING_TYPE];
-const DIR_TYPES = new Set([DIR_TYPE, FILE_DIR_TYPE, EVERYTHING_TYPE]);
-const FILE_TYPES = new Set([FILE_TYPE, FILE_DIR_TYPE, EVERYTHING_TYPE]);
+const ALL_TYPES = [EntryTypes.DIR_TYPE, EntryTypes.EVERYTHING_TYPE, EntryTypes.FILE_DIR_TYPE, EntryTypes.FILE_TYPE];
+const DIR_TYPES = new Set([EntryTypes.DIR_TYPE, EntryTypes.EVERYTHING_TYPE, EntryTypes.FILE_DIR_TYPE]);
+const FILE_TYPES = new Set([EntryTypes.EVERYTHING_TYPE, EntryTypes.FILE_DIR_TYPE, EntryTypes.FILE_TYPE]);
 
 const isNormalFlowError = (error: any) => NORMAL_FLOW_ERRORS.has(error.code);
 const wantBigintFsStats = process.platform === 'win32';
-const emptyFn = (_path: EntryInfo) => true;
-const normalizeFilter = (filter: Predicate | undefined) => {
+const emptyFn = (_entryInfo: EntryInfo) => true;
+const normalizeFilter = (filter?: Predicate) => {
   if (filter === undefined) return emptyFn;
   if (typeof filter === 'function') return filter;
   if (typeof filter === 'string') {
@@ -94,7 +103,7 @@ export class ReaddirpStream extends Readable {
       autoDestroy: true,
       highWaterMark: options.highWaterMark,
     });
-    const opts = { ...defaultOptions(), ...options };
+    const opts = { ...defaultOptions, ...options };
     const { root, type } = opts;
 
     this._fileFilter = normalizeFilter(opts.fileFilter);
@@ -108,10 +117,10 @@ export class ReaddirpStream extends Readable {
       this._stat = statMethod;
     }
 
-    this._maxDepth = opts.depth;
-    this._wantsDir = DIR_TYPES.has(type);
-    this._wantsFile = FILE_TYPES.has(type);
-    this._wantsEverything = type === EVERYTHING_TYPE;
+    this._maxDepth = opts.depth ?? defaultOptions.depth!;
+    this._wantsDir = type ? DIR_TYPES.has(type) : false;
+    this._wantsFile = type ? FILE_TYPES.has(type) : false;
+    this._wantsEverything = type === EntryTypes.EVERYTHING_TYPE;
     this._root = pathResolve(root);
     this._isDirent = !opts.alwaysStat;
     this._statsProp = this._isDirent ? 'dirent' : 'stats';
@@ -262,7 +271,7 @@ export class ReaddirpStream extends Readable {
 export const readdirp = (root: Path, options: Partial<ReaddirpOptions> = {}) => {
   // @ts-ignore
   let type = options.entryType || options.type;
-  if (type === 'both') type = FILE_DIR_TYPE; // backwards-compatibility
+  if (type === 'both') type = EntryTypes.FILE_DIR_TYPE; // backwards-compatibility
   if (type) options.type = type;
   if (!root) {
     throw new Error('readdirp: root argument is required. Usage: readdirp(root, options)');
