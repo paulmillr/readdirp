@@ -4,7 +4,8 @@
     "baseUrl": ".",
     "outDir": ".",
     "sourceMap": false,
-    "declarationMap": false
+    "declarationMap": false,
+    "isolatedDeclarations": true
   },
   "include": [
     "index.ts"

@@ -1,12 +1,27 @@
-import type { Stats, Dirent } from 'fs';
-import { stat, lstat, readdir, realpath } from 'fs/promises';
-import { Readable } from 'stream';
+/**
+ * Recursive version of readdir. Exposes a streaming API and promise API.
+ * Streaming API allows to use a small amount of RAM.
+ *
+ * @module
+ * @example
+```js
+import readdirp from 'readdirp';
+for await (const entry of readdirp('.')) {
+  const {path} = entry;
+  console.log(`${JSON.stringify({path})}`);
+}
+```
+ */
+/*! readdirp - MIT License (c) 2012-2019 Thorsten Lorenz, Paul Miller (https://paulmillr.com) */
+import type { Stats, Dirent } from 'node:fs';
+import { stat, lstat, readdir, realpath } from 'node:fs/promises';
+import { Readable } from 'node:stream';
 import {
   resolve as pathResolve,
   relative as pathRelative,
   join as pathJoin,
   sep as pathSep,
-} from 'path';
+} from 'node:path';
 
 // We can't use statSync, lstatSync, because some users may want to
 // use graceful-fs, which doesn't support sync methods.
@@ -29,6 +44,10 @@ export const EntryTypes = {
   EVERYTHING_TYPE: 'all',
 } as const;
 export type EntryType = (typeof EntryTypes)[keyof typeof EntryTypes];
+
+/**
+ * Options for readdirp.
+ */
 export type ReaddirpOptions = {
   root: string;
   fileFilter?: Predicate;
@@ -88,6 +107,7 @@ const normalizeFilter = (filter?: Predicate) => {
   return emptyFn;
 };
 
+/** Directory entry. Contains path, depth count, and files. */
 export interface DirEntry {
   files: PathOrDirent[];
   depth: number;
@@ -146,7 +166,7 @@ export class ReaddirpStream extends Readable {
     this.parent = undefined;
   }
 
-  async _read(batch: number) {
+  async _read(batch: number): Promise<void> {
     if (this.reading) return;
     this.reading = true;
 
@@ -203,7 +223,14 @@ export class ReaddirpStream extends Readable {
     }
   }
 
-  async _exploreDir(path: Path, depth: number) {
+  async _exploreDir(
+    path: Path,
+    depth: number
+  ): Promise<{
+    files: string[] | undefined;
+    depth: number;
+    path: string;
+  }> {
     let files;
     try {
       files = await readdir(path, this._rdOptions as any);
@@ -227,7 +254,7 @@ export class ReaddirpStream extends Readable {
     return entry;
   }
 
-  _onError(err: Error) {
+  _onError(err: Error): void {
     if (isNormalFlowError(err) && !this.destroyed) {
       this.emit('warn', err);
     } else {
@@ -235,7 +262,7 @@ export class ReaddirpStream extends Readable {
     }
   }
 
-  async _getEntryType(entry: EntryInfo) {
+  async _getEntryType(entry: EntryInfo): Promise<void | '' | 'file' | 'directory'> {
     // entry may be undefined, because a warning or an error were emitted
     // and the statsProp is undefined
     if (!entry && this._statsProp in entry) {
@@ -271,14 +298,15 @@ export class ReaddirpStream extends Readable {
     }
   }
 
-  _includeAsFile(entry: EntryInfo) {
+  _includeAsFile(entry: EntryInfo): boolean | undefined {
     const stats = entry && entry[this._statsProp];
     return stats && this._wantsEverything && !stats.isDirectory();
   }
 }
 
 /**
- * Main function which ends up calling readdirRec and reads all files and directories in given root recursively.
+ * Streaming version: Reads all files and directories in given root recursively.
+ * Consumes ~constant small amount of RAM.
  * @param root Root directory
  * @param options Options to specify root (start directory), filters and recursion depth
  */
@@ -299,6 +327,11 @@ export function readdirp(root: Path, options: Partial<ReaddirpOptions> = {}): Re
   return new ReaddirpStream(options);
 }
 
+/**
+ * Promise version: Reads all files and directories in given root recursively.
+ * Compared to streaming version, will consume a lot of RAM e.g. when 1 million files are listed.
+ * @returns array of paths and their entry infos
+ */
 export function readdirpPromise(
   root: Path,
   options: Partial<ReaddirpOptions> = {}

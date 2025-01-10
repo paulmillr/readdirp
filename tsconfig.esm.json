@@ -6,7 +6,8 @@
     "module": "es2020",
     "moduleResolution": "bundler",
     "sourceMap": false,
-    "declarationMap": false
+    "declarationMap": false,
+    "isolatedDeclarations": true
   },
   "include": [
     "index.ts"
