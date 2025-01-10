@@ -20,7 +20,10 @@ const root = sysPath.join(tmpdir(), 'readdirp-' + Date.now());
 let testCount = 0;
 let currPath;
 
-const read = (options) => readdirpPromise(currPath, options).then(res => res.sort((a, b) => a.path.localeCompare(b.path)));
+const read = (options) =>
+  readdirpPromise(currPath, options).then((res) =>
+    res.sort((a, b) => a.path.localeCompare(b.path))
+  );
 
 const touch = async (files = [], dirs = []) => {
   for (const name of files) {
@@ -44,21 +47,21 @@ const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 const waitForEnd = (stream) => new Promise((resolve) => stream.on('end', resolve));
 
-async function beforeEach () {
+async function beforeEach() {
   testCount++;
   const i = testCount.toString();
   currPath = sysPath.join(root, i);
   try {
-    await rmdir(currPath, {recursive: true});
+    await rmdir(currPath, { recursive: true });
   } catch (e) {}
   await mkdir(currPath, { recursive: true });
   return true;
-};
+}
 
-let afterEach = (async () => {
+let afterEach = async () => {
   // await pRimraf(currPath);
-  await rmdir(currPath, {recursive: true})
-});
+  await rmdir(currPath, { recursive: true });
+};
 
 describe('readdirp', () => {
   describe('basic', () => {
@@ -129,7 +132,9 @@ describe('readdirp', () => {
       await touch(files, dirs);
       const res = await read({ type: 'files' });
       res.should.have.lengthOf(files.length);
-      res.forEach((entry, index) => entry.should.containSubset(formatEntry(files[index], currPath)));
+      res.forEach((entry, index) =>
+        entry.should.containSubset(formatEntry(files[index], currPath))
+      );
     });
 
     it('directories', async () => {
@@ -179,14 +184,16 @@ describe('readdirp', () => {
       await touch(depth0, subdirs);
       await touch(depth1, deepSubdirs);
       await touch(depth2);
-    };
+    }
 
     it('0', async () => {
       await beforeEach();
       await cleanupDepth();
       const res = await read({ depth: 0 });
       res.should.have.lengthOf(depth0.length);
-      res.forEach((entry, index) => entry.should.containSubset(formatEntry(depth0[index], currPath)));
+      res.forEach((entry, index) =>
+        entry.should.containSubset(formatEntry(depth0[index], currPath))
+      );
     });
 
     it('1', async () => {
@@ -197,7 +204,9 @@ describe('readdirp', () => {
       res.should.have.lengthOf(expect.length);
       res
         .sort((a, b) => (a.basename > b.basename ? 1 : -1))
-        .forEach((entry, index) => entry.should.containSubset(formatEntry(expect[index], currPath)));
+        .forEach((entry, index) =>
+          entry.should.containSubset(formatEntry(expect[index], currPath))
+        );
     });
 
     it('2', async () => {
@@ -208,7 +217,9 @@ describe('readdirp', () => {
       res.should.have.lengthOf(expect.length);
       res
         .sort((a, b) => (a.basename > b.basename ? 1 : -1))
-        .forEach((entry, index) => entry.should.containSubset(formatEntry(expect[index], currPath)));
+        .forEach((entry, index) =>
+          entry.should.containSubset(formatEntry(expect[index], currPath))
+        );
     });
 
     it('default', async () => {
@@ -219,7 +230,9 @@ describe('readdirp', () => {
       res.should.have.lengthOf(expect.length);
       res
         .sort((a, b) => (a.basename > b.basename ? 1 : -1))
-        .forEach((entry, index) => entry.should.containSubset(formatEntry(expect[index], currPath)));
+        .forEach((entry, index) =>
+          entry.should.containSubset(formatEntry(expect[index], currPath))
+        );
     });
   });
 
@@ -235,14 +248,18 @@ describe('readdirp', () => {
         fileFilter: (a) => a.basename.endsWith('.js') || a.basename.endsWith('.rb'),
       });
       res.should.have.lengthOf(expect.length);
-      res.forEach((entry, index) => entry.should.containSubset(formatEntry(expect[index], currPath)));
+      res.forEach((entry, index) =>
+        entry.should.containSubset(formatEntry(expect[index], currPath))
+      );
     });
     it('function', async () => {
       await cleanupFilter();
       const expect = ['a.js', 'c.js', 'd.js'];
       const res = await read({ fileFilter: (entry) => sysPath.extname(entry.fullPath) === '.js' });
       res.should.have.lengthOf(expect.length);
-      res.forEach((entry, index) => entry.should.containSubset(formatEntry(expect[index], currPath)));
+      res.forEach((entry, index) =>
+        entry.should.containSubset(formatEntry(expect[index], currPath))
+      );
 
       if (supportsDirent) {
         const expect2 = ['a.js', 'b.txt', 'c.js', 'd.js', 'e.rb'];
@@ -332,7 +349,7 @@ describe('readdirp', () => {
         isWarningCalled = true;
       });
       await delay(1000);
-      await rmdir(sysPath.join(currPath, 'a'), {recursive: true});
+      await rmdir(sysPath.join(currPath, 'a'), { recursive: true });
       stream.resume();
       await Promise.race([waitForEnd(stream), delay(2000)]);
       isWarningCalled.should.equals(true);
@@ -344,11 +361,10 @@ describe('readdirp', () => {
       }
       await beforeEach();
       const permitedDir = sysPath.join(currPath, 'permited');
-      await mkdir(permitedDir, {mode: 0o333});
+      await mkdir(permitedDir, { mode: 0o333 });
       let isWarningCalled = false;
       const stream = readdirp(currPath, { type: 'all' })
-        .on('data', (d) => {
-        })
+        .on('data', (d) => {})
         .on('warn', (warning) => {
           warning.should.be.an.instanceof(Error);
           warning.code.should.equals('EACCES');
@@ -367,7 +383,7 @@ describe('readdirp', () => {
       const subdir = sysPath.join(currPath, 'subdir');
       const permitedDir = sysPath.join(subdir, 'permited');
       await mkdir(subdir);
-      await mkdir(permitedDir, { mode: 0o333});
+      await mkdir(permitedDir, { mode: 0o333 });
       let isWarningCalled = false;
       let isEnded = false;
       let timer;
@@ -396,7 +412,7 @@ describe('readdirp', () => {
   await mkdir(root, { recursive: true });
   // Declare last task here
   it('clean-up', async () => {
-    await rmdir(root, {recursive: true, force: true});
+    await rmdir(root, { recursive: true, force: true });
   });
   it.run();
 })();
