@@ -1,4 +1,4 @@
-const {readdirp} = require('./index.js');
+import readdirp from './esm/index.js';
 
 function logMem(i) {
   const vals = Object.entries(process.memoryUsage()).map(([k, v]) => {
