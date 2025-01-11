@@ -16,17 +16,14 @@ for await (const entry of readdirp('.')) {
 import type { Stats, Dirent } from 'node:fs';
 import { stat, lstat, readdir, realpath } from 'node:fs/promises';
 import { Readable } from 'node:stream';
-import {
-  resolve as pathResolve,
-  relative as pathRelative,
-  join as pathJoin,
-  sep as pathSep,
-} from 'node:path';
+import { resolve as presolve, relative as prelative, join as pjoin, sep as psep } from 'node:path';
 
 // We can't use statSync, lstatSync, because some users may want to
 // use graceful-fs, which doesn't support sync methods.
 
+/** Path in file system. */
 export type Path = string;
+/** Emitted entry. Contains relative & absolute path, basename, and either stats or dirent. */
 export interface EntryInfo {
   path: string;
   fullPath: string;
@@ -34,7 +31,9 @@ export interface EntryInfo {
   dirent?: Dirent;
   basename: string;
 }
+/** Path or dir entries (files) */
 export type PathOrDirent = Dirent | Path;
+/** Filterer for files */
 export type Tester = (entryInfo: EntryInfo) => boolean;
 export type Predicate = string[] | string | Tester;
 export const EntryTypes = {
@@ -47,6 +46,11 @@ export type EntryType = (typeof EntryTypes)[keyof typeof EntryTypes];
 
 /**
  * Options for readdirp.
+ * * type: files, directories, or both
+ * * lstat: whether to use symlink-friendly stat
+ * * depth: max depth
+ * * alwaysStat: whether to use stat (more resources) or dirent
+ * * highWaterMark: streaming param, specifies max amount of resources per entry
  */
 export type ReaddirpOptions = {
   root: string;
@@ -114,6 +118,7 @@ export interface DirEntry {
   path: Path;
 }
 
+/** Readable readdir stream, emitting new files as they're being listed. */
 export class ReaddirpStream extends Readable {
   parents: any[];
   reading: boolean;
@@ -155,7 +160,7 @@ export class ReaddirpStream extends Readable {
     this._wantsDir = type ? DIR_TYPES.has(type) : false;
     this._wantsFile = type ? FILE_TYPES.has(type) : false;
     this._wantsEverything = type === EntryTypes.EVERYTHING_TYPE;
-    this._root = pathResolve(root);
+    this._root = presolve(root);
     this._isDirent = !opts.alwaysStat;
     this._statsProp = this._isDirent ? 'dirent' : 'stats';
     this._rdOptions = { encoding: 'utf8', withFileTypes: this._isDirent };
@@ -244,8 +249,8 @@ export class ReaddirpStream extends Readable {
     let entry: EntryInfo;
     const basename = this._isDirent ? (dirent as Dirent).name : (dirent as string);
     try {
-      const fullPath = pathResolve(pathJoin(path, basename));
-      entry = { path: pathRelative(this._root, fullPath), fullPath, basename };
+      const fullPath = presolve(pjoin(path, basename));
+      entry = { path: prelative(this._root, fullPath), fullPath, basename };
       entry[this._statsProp] = this._isDirent ? dirent : await this._stat(fullPath);
     } catch (err) {
       this._onError(err as Error);
@@ -281,7 +286,7 @@ export class ReaddirpStream extends Readable {
         }
         if (entryRealPathStats.isDirectory()) {
           const len = entryRealPath.length;
-          if (full.startsWith(entryRealPath) && full.substr(len, 1) === pathSep) {
+          if (full.startsWith(entryRealPath) && full.substr(len, 1) === psep) {
             const recursiveError = new Error(
               `Circular symlink detected: "${full}" points to "${entryRealPath}"`
             );
