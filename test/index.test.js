@@ -6,7 +6,7 @@ import { describe, it } from 'micro-should';
 import { tmpdir } from 'node:os';
 import chai from 'chai';
 import chaiSubset from 'chai-subset';
-import { readdirp, readdirpPromise, ReaddirpStream } from './esm/index.js';
+import { readdirp, readdirpPromise, ReaddirpStream } from '../esm/index.js';
 
 chai.use(chaiSubset);
 chai.should();
@@ -94,7 +94,7 @@ describe('readdirp', () => {
 
     it('handles symlinked directories', async () => {
       await beforeEach();
-      const originalPath = sysPath.join(__dirname, 'esm');
+      const originalPath = sysPath.join(__dirname, '..', 'esm');
       const originalFiles = await readdir(originalPath);
       const newPath = sysPath.join(currPath, 'esm');
       await symlink(originalPath, newPath);

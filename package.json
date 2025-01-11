@@ -1,7 +1,7 @@
 {
   "name": "readdirp",
   "description": "Recursive version of fs.readdir with small RAM & CPU footprint.",
-  "version": "4.1.0",
+  "version": "4.1.1",
   "homepage": "https://github.com/paulmillr/readdirp",
   "repository": {
     "type": "git",
@@ -48,10 +48,10 @@
   ],
   "scripts": {
     "build": "tsc && tsc -p tsconfig.esm.json",
-    "lint": "prettier --check index.ts index.test.js",
-    "format": "prettier --write index.ts index.test.js",
-    "test": "node index.test.js",
-    "test:coverage": "c8 node index.test.js"
+    "lint": "prettier --check index.ts test/index.test.js",
+    "format": "prettier --write index.ts test/index.test.js",
+    "test": "node test/index.test.js",
+    "test:coverage": "c8 node test/index.test.js"
   },
   "devDependencies": {
     "@paulmillr/jsbt": "0.2.1",
