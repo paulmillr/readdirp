@@ -1,0 +1,6 @@
+{
+  "name": "@paulmillr/readdirp",
+  "version": "4.1.0-beta",
+  "license": "MIT",
+  "exports": "./index.ts"
+}
