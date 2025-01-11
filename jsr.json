@@ -1,6 +1,6 @@
 {
   "name": "@paulmillr/readdirp",
-  "version": "4.1.0-beta",
+  "version": "4.1.0",
   "exports": "./index.ts",
   "publish": {
     "include": [
