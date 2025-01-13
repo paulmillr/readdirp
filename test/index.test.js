@@ -1,4 +1,4 @@
-import { chmod, rmdir, mkdir, symlink, readdir, readFile, writeFile } from 'node:fs/promises';
+import { chmod, rm, mkdir, symlink, readdir, readFile, writeFile } from 'node:fs/promises';
 import sysPath from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { Readable } from 'node:stream';
@@ -52,7 +52,7 @@ async function beforeEach() {
   const i = testCount.toString();
   currPath = sysPath.join(root, i);
   try {
-    await rmdir(currPath, { recursive: true });
+    await rm(currPath, { recursive: true });
   } catch (e) {}
   await mkdir(currPath, { recursive: true });
   return true;
@@ -60,7 +60,7 @@ async function beforeEach() {
 
 let afterEach = async () => {
   // await pRimraf(currPath);
-  await rmdir(currPath, { recursive: true });
+  await rm(currPath, { recursive: true });
 };
 
 describe('readdirp', () => {
@@ -349,7 +349,7 @@ describe('readdirp', () => {
         isWarningCalled = true;
       });
       await delay(1000);
-      await rmdir(sysPath.join(currPath, 'a'), { recursive: true });
+      await rm(sysPath.join(currPath, 'a'), { recursive: true });
       stream.resume();
       await Promise.race([waitForEnd(stream), delay(2000)]);
       isWarningCalled.should.equals(true);
@@ -412,7 +412,7 @@ describe('readdirp', () => {
   await mkdir(root, { recursive: true });
   // Declare last task here
   it('clean-up', async () => {
-    await rmdir(root, { recursive: true, force: true });
+    await rm(root, { recursive: true, force: true });
   });
-  it.run();
+  it.run(true);
 })();
