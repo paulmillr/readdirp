@@ -185,10 +185,7 @@ export class ReaddirpStream extends Readable {
           const slice = fil.splice(0, batch).map((dirent) => this._formatEntry(dirent, path));
           const awaited = await Promise.all(slice);
           for (const entry of awaited) {
-            if (!entry) {
-              batch--;
-              return;
-            }
+            if (!entry) continue;
             if (this.destroyed) return;
 
             const entryType = await this._getEntryType(entry);
