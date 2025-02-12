@@ -330,7 +330,7 @@ describe('readdirp', () => {
         entry.should.containSubset(formatEntry(created[index], currPath))
       );
     });
-    it('should emit warning for missing file', async () => {
+    it('should emit warning for missing directory', async () => {
       await beforeEach();
       // readdirp() is initialized on some big root directory
       // readdirp() receives path a/b/c to its queue
@@ -354,6 +354,33 @@ describe('readdirp', () => {
       await Promise.race([waitForEnd(stream), delay(2000)]);
       isWarningCalled.should.equals(true);
     }); //.timeout(4000);
+    it('should emit warning for missing file', async () => {
+      await beforeEach();
+      // readdirp() is initialized on some big root directory
+      // readdirp() receives files f1, f2, f3 to its queue
+      // readdirp is reading something else
+      // f1 gets deleted, so stat()-ting f1 would now emit enoent
+      // We should emit warnings for this case and properly process f2 and f3
+      // this.timeout(4000);
+      await touch(['f1', 'f2', 'f3']);
+      let isWarningCalled = false;
+      const stream = readdirp(currPath, { type: 'all', highWaterMark: 1, alwaysStat: true });
+      stream.on('warn', (warning) => {
+        warning.should.be.an.instanceof(Error);
+        warning.code.should.equals('ENOENT');
+        isWarningCalled = true;
+      });
+      await delay(1000);
+      await rm(sysPath.join(currPath, 'f1'), { recursive: true });
+      const detected = [];
+      stream.on('data', (file) => {
+        detected.push(file.path);
+      });
+      await Promise.race([waitForEnd(stream), delay(2000)]);
+
+      chai.expect(detected).to.deep.equal(['f2', 'f3']);
+      isWarningCalled.should.equals(true);
+    });
     it('should emit warning for file with strict permission', async () => {
       // Windows doesn't throw permission error if you access permitted directory
       if (isWindows) {
