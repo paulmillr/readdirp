@@ -1,7 +1,7 @@
 {
   "name": "readdirp",
   "description": "Recursive version of fs.readdir with small RAM & CPU footprint.",
-  "version": "4.1.1",
+  "version": "4.1.2",
   "homepage": "https://github.com/paulmillr/readdirp",
   "repository": {
     "type": "git",
