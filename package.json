@@ -47,14 +47,14 @@
     "filter"
   ],
   "scripts": {
-    "build": "tsc && tsc -p tsconfig.esm.json",
+    "build": "tsc && tsc -p tsconfig.cjs.json",
     "lint": "prettier --check index.ts test/index.test.js",
     "format": "prettier --write index.ts test/index.test.js",
     "test": "node test/index.test.js",
     "test:coverage": "c8 node test/index.test.js"
   },
   "devDependencies": {
-    "@paulmillr/jsbt": "0.2.1",
+    "@paulmillr/jsbt": "0.3.1",
     "@types/node": "20.14.8",
     "c8": "10.1.3",
     "chai": "4.3.4",

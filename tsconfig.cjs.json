@@ -1,10 +1,8 @@
 {
-  "extends": "@paulmillr/jsbt/tsconfig.esm.json",
+  "extends": "@paulmillr/jsbt/tsconfig.cjs.json",
   "compilerOptions": {
     "baseUrl": ".",
-    "outDir": "esm",
-    "module": "es2020",
-    "moduleResolution": "bundler",
+    "outDir": ".",
     "sourceMap": false,
     "declarationMap": false
   },
