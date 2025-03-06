@@ -13,10 +13,10 @@ for await (const entry of readdirp('.')) {
 ```
  */
 /*! readdirp - MIT License (c) 2012-2019 Thorsten Lorenz, Paul Miller (https://paulmillr.com) */
-import type { Stats, Dirent } from 'node:fs';
-import { stat, lstat, readdir, realpath } from 'node:fs/promises';
+import type { Dirent, Stats } from 'node:fs';
+import { lstat, readdir, realpath, stat } from 'node:fs/promises';
+import { join as pjoin, relative as prelative, resolve as presolve, sep as psep } from 'node:path';
 import { Readable } from 'node:stream';
-import { resolve as presolve, relative as prelative, join as pjoin, sep as psep } from 'node:path';
 
 // We can't use statSync, lstatSync, because some users may want to
 // use graceful-fs, which doesn't support sync methods.
@@ -156,7 +156,8 @@ export class ReaddirpStream extends Readable {
       this._stat = statMethod;
     }
 
-    this._maxDepth = opts.depth ?? defaultOptions.depth!;
+    this._maxDepth =
+      opts.depth != null && Number.isSafeInteger(opts.depth) ? opts.depth : defaultOptions.depth!;
     this._wantsDir = type ? DIR_TYPES.has(type) : false;
     this._wantsFile = type ? FILE_TYPES.has(type) : false;
     this._wantsEverything = type === EntryTypes.EVERYTHING_TYPE;
