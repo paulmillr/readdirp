@@ -5,7 +5,7 @@
   "homepage": "https://github.com/paulmillr/readdirp",
   "repository": {
     "type": "git",
-    "url": "git://github.com/paulmillr/readdirp.git"
+    "url": "https://github.com/paulmillr/readdirp.git"
   },
   "license": "MIT",
   "bugs": {
