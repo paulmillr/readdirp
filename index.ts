@@ -140,10 +140,12 @@ export class ReaddirpStream extends Readable {
     super({
       objectMode: true,
       autoDestroy: true,
-      highWaterMark: options.highWaterMark,
+      highWaterMark: options.highWaterMark ?? defaultOptions.highWaterMark,
     });
     const opts = { ...defaultOptions, ...options };
-    const { root, type } = opts;
+    // Use ?? so an explicit `undefined` in user options doesn't shadow defaults.
+    const root = opts.root ?? defaultOptions.root!;
+    const type = opts.type ?? defaultOptions.type!;
 
     this._fileFilter = normalizeFilter(opts.fileFilter);
     this._directoryFilter = normalizeFilter(opts.directoryFilter);
@@ -158,8 +160,8 @@ export class ReaddirpStream extends Readable {
 
     this._maxDepth =
       opts.depth != null && Number.isSafeInteger(opts.depth) ? opts.depth : defaultOptions.depth!;
-    this._wantsDir = type ? DIR_TYPES.has(type) : false;
-    this._wantsFile = type ? FILE_TYPES.has(type) : false;
+    this._wantsDir = DIR_TYPES.has(type);
+    this._wantsFile = FILE_TYPES.has(type);
     this._wantsEverything = type === EntryTypes.EVERYTHING_TYPE;
     this._root = presolve(root);
     this._isDirent = !opts.alwaysStat;
@@ -167,7 +169,9 @@ export class ReaddirpStream extends Readable {
     this._rdOptions = { encoding: 'utf8', withFileTypes: this._isDirent };
 
     // Launch stream with one parent, the root dir.
-    this.parents = [this._exploreDir(root, 1)];
+    // Explore the resolved root so all parent paths stay absolute
+    // even if process.cwd() changes mid-iteration.
+    this.parents = [this._exploreDir(this._root, 1)];
     this.reading = false;
     this.parent = undefined;
   }
@@ -184,12 +188,18 @@ export class ReaddirpStream extends Readable {
         if (fil && fil.length > 0) {
           const { path, depth } = par;
           const slice = fil.splice(0, batch).map((dirent) => this._formatEntry(dirent, path));
-          const awaited = await Promise.all(slice);
+          // In dirent mode _formatEntry is synchronous: skip Promise.all and
+          // its per-entry microtask overhead.
+          const awaited = this._isDirent
+            ? (slice as (EntryInfo | undefined)[])
+            : await Promise.all(slice);
           for (const entry of awaited) {
             if (!entry) continue;
             if (this.destroyed) return;
 
-            const entryType = await this._getEntryType(entry);
+            // Only symlinks require async work; plain files / dirs resolve synchronously.
+            let entryType = this._getEntryType(entry);
+            if (typeof entryType !== 'string') entryType = await entryType;
             if (entryType === 'directory' && this._directoryFilter(entry)) {
               if (depth <= this._maxDepth) {
                 this.parents.push(this._exploreDir(entry.fullPath, depth + 1));
@@ -243,18 +253,31 @@ export class ReaddirpStream extends Readable {
     return { files, depth, path };
   }
 
-  async _formatEntry(dirent: PathOrDirent, path: Path): Promise<EntryInfo | undefined> {
-    let entry: EntryInfo;
+  // Synchronous in dirent mode; returns a promise only when stats are needed.
+  _formatEntry(
+    dirent: PathOrDirent,
+    path: Path
+  ): EntryInfo | undefined | Promise<EntryInfo | undefined> {
     const basename = this._isDirent ? (dirent as Dirent).name : (dirent as string);
-    try {
-      const fullPath = presolve(pjoin(path, basename));
-      entry = { path: prelative(this._root, fullPath), fullPath, basename };
-      entry[this._statsProp] = this._isDirent ? dirent : await this._stat(fullPath);
-    } catch (err) {
-      this._onError(err as Error);
-      return;
+    // `path` is always an absolute, normalized parent dir (see _exploreDir
+    // seeding in the constructor), so a plain join is enough — resolve()
+    // would re-read cwd on every entry.
+    const fullPath = pjoin(path, basename);
+    const entry: EntryInfo = { path: prelative(this._root, fullPath), fullPath, basename };
+    if (this._isDirent) {
+      entry.dirent = dirent as Dirent;
+      return entry;
     }
-    return entry;
+    return this._stat(fullPath).then(
+      (stats: Stats) => {
+        entry.stats = stats;
+        return entry;
+      },
+      (err: Error) => {
+        this._onError(err);
+        return undefined;
+      }
+    );
   }
 
   _onError(err: Error): void {
@@ -265,40 +288,46 @@ export class ReaddirpStream extends Readable {
     }
   }
 
-  async _getEntryType(entry: EntryInfo): Promise<void | '' | 'file' | 'directory'> {
+  // Synchronous for regular files and directories; returns a promise only for
+  // symlinks, which need realpath() to be classified.
+  _getEntryType(entry: EntryInfo): '' | 'file' | 'directory' | Promise<'' | 'file' | 'directory'> {
     // entry may be undefined, because a warning or an error were emitted
     // and the statsProp is undefined
-    if (!entry && this._statsProp in entry) {
+    if (!entry || !(this._statsProp in entry)) {
       return '';
     }
     const stats = entry[this._statsProp]!;
     if (stats.isFile()) return 'file';
     if (stats.isDirectory()) return 'directory';
-    if (stats && stats.isSymbolicLink()) {
-      const full = entry.fullPath;
-      try {
-        const entryRealPath = await realpath(full);
-        const entryRealPathStats = await lstat(entryRealPath);
-        if (entryRealPathStats.isFile()) {
-          return 'file';
-        }
-        if (entryRealPathStats.isDirectory()) {
-          const len = entryRealPath.length;
-          if (full.startsWith(entryRealPath) && full.substr(len, 1) === psep) {
-            const recursiveError = new Error(
-              `Circular symlink detected: "${full}" points to "${entryRealPath}"`
-            );
-            // @ts-ignore
-            recursiveError.code = RECURSIVE_ERROR_CODE;
-            return this._onError(recursiveError);
-          }
-          return 'directory';
-        }
-      } catch (error) {
-        this._onError(error as Error);
-        return '';
+    if (stats.isSymbolicLink()) return this._getSymlinkEntryType(entry);
+    return '';
+  }
+
+  async _getSymlinkEntryType(entry: EntryInfo): Promise<'' | 'file' | 'directory'> {
+    const full = entry.fullPath;
+    try {
+      const entryRealPath = await realpath(full);
+      const entryRealPathStats = await lstat(entryRealPath);
+      if (entryRealPathStats.isFile()) {
+        return 'file';
       }
+      if (entryRealPathStats.isDirectory()) {
+        const len = entryRealPath.length;
+        if (full.startsWith(entryRealPath) && full[len] === psep) {
+          const recursiveError = new Error(
+            `Circular symlink detected: "${full}" points to "${entryRealPath}"`
+          );
+          // @ts-ignore
+          recursiveError.code = RECURSIVE_ERROR_CODE;
+          this._onError(recursiveError);
+          return '';
+        }
+        return 'directory';
+      }
+    } catch (error) {
+      this._onError(error as Error);
     }
+    return '';
   }
 
   _includeAsFile(entry: EntryInfo): boolean | undefined {
@@ -317,7 +346,6 @@ export function readdirp(root: Path, options: Partial<ReaddirpOptions> = {}): Re
   // @ts-ignore
   let type = options.entryType || options.type;
   if (type === 'both') type = EntryTypes.FILE_DIR_TYPE; // backwards-compatibility
-  if (type) options.type = type;
   if (!root) {
     throw new Error('readdirp: root argument is required. Usage: readdirp(root, options)');
   } else if (typeof root !== 'string') {
@@ -326,8 +354,10 @@ export function readdirp(root: Path, options: Partial<ReaddirpOptions> = {}): Re
     throw new Error(`readdirp: Invalid type passed. Use one of ${ALL_TYPES.join(', ')}`);
   }
 
-  options.root = root;
-  return new ReaddirpStream(options);
+  // Copy options instead of mutating the caller's object.
+  const opts: Partial<ReaddirpOptions> = { ...options, root };
+  if (type) opts.type = type;
+  return new ReaddirpStream(opts);
 }
 
 /**
