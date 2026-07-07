@@ -293,6 +293,43 @@ describe('readdirp', () => {
     });
   });
 
+  describe('options handling', () => {
+    it('applies default highWaterMark of 256', async () => {
+      await beforeEach();
+      const stream = readdirp(currPath);
+      stream.readableHighWaterMark.should.equal(256);
+      stream.destroy();
+    });
+
+    it('respects custom highWaterMark', async () => {
+      await beforeEach();
+      const stream = readdirp(currPath, { highWaterMark: 1 });
+      stream.readableHighWaterMark.should.equal(1);
+      stream.destroy();
+    });
+
+    it('does not mutate the passed options object', async () => {
+      await beforeEach();
+      await touch(['a.txt']);
+      const options = Object.freeze({ type: 'both' });
+      const res = await readdirpPromise(currPath, options);
+      res.should.have.lengthOf(1);
+      chai.expect(options.root).to.equal(undefined);
+      chai.expect(options.type).to.equal('both');
+    });
+
+    it('treats explicitly undefined options as defaults', async () => {
+      await beforeEach();
+      const files = ['a.txt', 'b.txt'];
+      await touch(files);
+      const res = await read({ type: undefined, root: undefined, fileFilter: undefined });
+      res.should.have.lengthOf(files.length);
+      res.forEach((entry, index) =>
+        entry.should.containSubset(formatEntry(files[index], currPath))
+      );
+    });
+  });
+
   describe('various', () => {
     it('emits readable stream', async () => {
       await beforeEach();
