@@ -294,10 +294,10 @@ describe('readdirp', () => {
   });
 
   describe('options handling', () => {
-    it('applies documented default highWaterMark of 4096', async () => {
+    it('applies default highWaterMark of 256', async () => {
       await beforeEach();
       const stream = readdirp(currPath);
-      stream.readableHighWaterMark.should.equal(4096);
+      stream.readableHighWaterMark.should.equal(256);
       stream.destroy();
     });
 
