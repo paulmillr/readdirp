@@ -21,9 +21,7 @@
   },
   "files": [
     "index.js",
-    "index.d.ts",
-    "index.d.ts.map",
-    "index.js.map"
+    "index.d.ts"
   ],
   "type": "module",
   "main": "./index.js",
@@ -45,10 +43,8 @@
   ],
   "scripts": {
     "build": "tsc",
-    "lint": "prettier --check index.ts test/index.test.js",
     "format": "prettier --write index.ts test/index.test.js",
-    "test": "node test/index.test.js",
-    "test:coverage": "c8 node test/index.test.js"
+    "test": "node test/index.test.js"
   },
   "devDependencies": {
     "@paulmillr/jsbt": "0.6.1",
