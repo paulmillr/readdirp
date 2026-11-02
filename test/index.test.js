@@ -293,6 +293,29 @@ describe('readdirp', () => {
     });
   });
 
+  describe('symlinked directory filtering', () => {
+    for (const [name, options] of [
+      ['dirent', {}],
+      ['stat', { alwaysStat: true }],
+      ['lstat', { alwaysStat: true, lstat: true }],
+    ]) {
+      it(`excludes rejected directories in all mode with ${name}`, async () => {
+        await beforeEach();
+        await touch(['a.txt'], ['real']);
+        await writeFile(sysPath.join(currPath, 'real', 'nested.txt'), 'nested');
+        await symlink(
+          sysPath.join(currPath, 'real'),
+          sysPath.join(currPath, 'link'),
+          isWindows ? 'junction' : 'dir'
+        );
+
+        const res = await read({ ...options, type: 'all', directoryFilter: () => false });
+        res.map((entry) => entry.path).should.eql(['a.txt']);
+        await afterEach();
+      });
+    }
+  });
+
   describe('options handling', () => {
     it('applies default highWaterMark of 256', async () => {
       await beforeEach();

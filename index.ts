@@ -234,6 +234,7 @@ export class ReaddirpStream extends Readable {
                 batch--;
               }
             } else if (
+              entryType !== 'directory' &&
               (entryType === 'file' || this._includeAsFile(entry)) &&
               this._fileFilter(entry)
             ) {
