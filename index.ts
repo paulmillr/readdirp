@@ -113,18 +113,25 @@ const normalizeFilter = (filter?: Predicate) => {
   return emptyFn;
 };
 
+interface SymlinkAncestor {
+  path: Path;
+  parent?: SymlinkAncestor;
+}
+
 /** Directory entry. Contains path, depth count, and files. */
 export interface DirEntry {
   /** Undefined when the directory could not be read (a 'warn' was emitted). */
   files: PathOrDirent[] | undefined;
   depth: number;
   path: Path;
+  symlinkAncestors?: SymlinkAncestor;
 }
 
 /** Readable readdir stream, emitting new files as they're being listed. */
 interface PendingDir {
   path: Path;
   depth: number;
+  symlinkAncestors?: SymlinkAncestor;
   // Set when this dir's readdir was started ahead of time (prefetch).
   pending?: Promise<DirEntry>;
 }
@@ -146,11 +153,13 @@ export class ReaddirpStream extends Readable {
   _wantsEverything: boolean;
   _root: Path;
   _isDirent: boolean;
+  _useLstat: boolean;
   _statsProp: 'dirent' | 'stats';
   _rdOptions: { encoding: 'utf8'; withFileTypes: boolean };
   _fileFilter: Tester;
   _directoryFilter: Tester;
   _relStart: number;
+  _symlinkAncestors: WeakMap<EntryInfo, SymlinkAncestor> = new WeakMap();
 
   constructor(options: Partial<ReaddirpOptions> = {}) {
     super({
@@ -167,6 +176,7 @@ export class ReaddirpStream extends Readable {
     this._directoryFilter = normalizeFilter(opts.directoryFilter);
 
     const statMethod = opts.lstat ? lstat : stat;
+    this._useLstat = Boolean(opts.lstat);
     // Use bigint stats if it's windows and stat() supports options (node 10+).
     if (wantBigintFsStats) {
       this._stat = (path: Path) => statMethod(path, { bigint: true });
@@ -226,7 +236,11 @@ export class ReaddirpStream extends Readable {
               if (depth <= this._maxDepth) {
                 // Lazy: don't readdir until this dir is popped. Keeping whole
                 // listings for every queued dir would balloon RAM on wide trees.
-                this.parents.push({ path: entry.fullPath, depth: depth + 1 });
+                this.parents.push({
+                  path: entry.fullPath,
+                  depth: depth + 1,
+                  symlinkAncestors: this._symlinkAncestors.get(entry) ?? par.symlinkAncestors,
+                });
               }
 
               if (this._wantsDir) {
@@ -249,13 +263,14 @@ export class ReaddirpStream extends Readable {
             this.push(null);
             break;
           }
-          const dir = parent.pending ?? this._exploreDir(parent.path, parent.depth);
+          const dir =
+            parent.pending ?? this._exploreDir(parent.path, parent.depth, parent.symlinkAncestors);
           // Prefetch the next dir so its readdir overlaps with processing
           // this one's entries. Only the stack top is prefetched, keeping at
           // most a handful of listings (~tree depth) in RAM at once.
           const next = this.parents[this.parents.length - 1];
           if (next && !next.pending) {
-            next.pending = this._exploreDir(next.path, next.depth);
+            next.pending = this._exploreDir(next.path, next.depth, next.symlinkAncestors);
           }
           this.parent = await dir;
           if (this.destroyed) return;
@@ -280,14 +295,18 @@ export class ReaddirpStream extends Readable {
   //   directoryFilter rejects, doesn't follow symlinked dirs, and fails
   //   wholesale (all entries lost) if anything in the subtree is unreadable,
   //   instead of emitting a 'warn' and continuing.
-  async _exploreDir(path: Path, depth: number): Promise<DirEntry> {
+  async _exploreDir(
+    path: Path,
+    depth: number,
+    symlinkAncestors?: SymlinkAncestor
+  ): Promise<DirEntry> {
     let files;
     try {
       files = await readdir(path, this._rdOptions as any);
     } catch (error) {
       this._onError(error as Error);
     }
-    return { files, depth, path };
+    return { files, depth, path, symlinkAncestors };
   }
 
   // Synchronous in dirent mode; returns a promise only when stats are needed.
@@ -337,9 +356,23 @@ export class ReaddirpStream extends Readable {
     }
     const stats = entry[this._statsProp]!;
     if (stats.isFile()) return 'file';
-    if (stats.isDirectory()) return 'directory';
+    if (stats.isDirectory()) {
+      return !this._isDirent && !this._useLstat
+        ? this._getStatDirectoryEntryType(entry)
+        : 'directory';
+    }
     if (stats.isSymbolicLink()) return this._getSymlinkEntryType(entry);
     return '';
+  }
+
+  async _getStatDirectoryEntryType(entry: EntryInfo): Promise<'' | 'file' | 'directory'> {
+    try {
+      const stats = await lstat(entry.fullPath);
+      return stats.isSymbolicLink() ? this._getSymlinkEntryType(entry) : 'directory';
+    } catch (error) {
+      this._onError(error as Error);
+      return '';
+    }
   }
 
   async _getSymlinkEntryType(entry: EntryInfo): Promise<'' | 'file' | 'directory'> {
@@ -351,8 +384,15 @@ export class ReaddirpStream extends Readable {
         return 'file';
       }
       if (entryRealPathStats.isDirectory()) {
-        const len = entryRealPath.length;
-        if (full.startsWith(entryRealPath) && full[len] === psep) {
+        const parentRealPath = await realpath(presolve(full, '..'));
+        const prefix = entryRealPath.endsWith(psep) ? entryRealPath : entryRealPath + psep;
+        const contains = (path: Path) => path === entryRealPath || path.startsWith(prefix);
+        let recursive = contains(parentRealPath);
+        const ancestors = this.parent?.symlinkAncestors;
+        for (let ancestor = ancestors; !recursive && ancestor; ancestor = ancestor.parent) {
+          recursive = contains(ancestor.path);
+        }
+        if (recursive) {
           const recursiveError = new Error(
             `Circular symlink detected: "${full}" points to "${entryRealPath}"`
           );
@@ -361,6 +401,9 @@ export class ReaddirpStream extends Readable {
           this._onError(recursiveError);
           return '';
         }
+        // Remember the ordinary ancestors of each segment before following a
+        // link. Share this history only within the current traversal branch.
+        this._symlinkAncestors.set(entry, { path: parentRealPath, parent: ancestors });
         return 'directory';
       }
     } catch (error) {

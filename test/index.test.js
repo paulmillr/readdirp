@@ -1,7 +1,7 @@
 import { describe, it } from '@paulmillr/jsbt/test.js';
 import chai from 'chai';
 import chaiSubset from 'chai-subset';
-import { chmod, mkdir, readdir, readFile, rm, symlink, writeFile } from 'node:fs/promises';
+import { chmod, mkdir, readdir, readFile, rm, symlink, unlink, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import sysPath from 'node:path';
 import { Readable } from 'node:stream';
@@ -121,6 +121,116 @@ describe('readdirp', () => {
         }
       });
     });
+  });
+
+  describe('canonical symlink ancestry', () => {
+    for (const [mode, options] of [
+      ['dirent', {}],
+      ['stat', { alwaysStat: true }],
+      ['lstat', { alwaysStat: true, lstat: true }],
+    ]) {
+      for (const topology of [
+        'direct root',
+        'aliased root',
+        'case-variant root',
+        'filesystem root',
+        'external self-loop',
+        'external two-directory loop',
+        'returning to the initial root',
+        'returning to the aliased initial root',
+        'returning to a nested external parent',
+        'shared non-cyclic target',
+      ]) {
+        if (topology === 'case-variant root' && !isWindows) continue;
+        it(`handles ${topology} with ${mode}`, async () => {
+          await beforeEach();
+          const links = [];
+          const makeLink = async (target, name) => {
+            const link = sysPath.join(currPath, name);
+            await symlink(target, link, isWindows ? 'junction' : 'dir');
+            links.push(link);
+          };
+          let scanRoot = currPath;
+          let depth = 4;
+          let expected;
+          let expectedWarnings = 1;
+          try {
+            await touch([], ['scan', 'target', 'other']);
+            await touch(['target/leaf.txt', 'other/other.txt']);
+            const target = sysPath.join(currPath, 'target');
+            if (
+              topology === 'direct root' ||
+              topology === 'aliased root' ||
+              topology === 'case-variant root'
+            ) {
+              await makeLink(target, 'target/loop');
+              if (topology === 'aliased root') {
+                await makeLink(target, 'alias');
+                scanRoot = sysPath.join(currPath, 'alias');
+              } else if (topology === 'case-variant root') {
+                scanRoot = target.toLowerCase();
+              } else {
+                scanRoot = target;
+              }
+              expected = ['leaf.txt'];
+            } else if (topology === 'filesystem root') {
+              scanRoot = sysPath.join(currPath, 'scan');
+              await makeLink(sysPath.parse(currPath).root, 'scan/root');
+              depth = 0;
+              expected = [];
+            } else if (
+              topology === 'returning to the initial root' ||
+              topology === 'returning to the aliased initial root'
+            ) {
+              scanRoot = sysPath.join(currPath, 'scan');
+              await touch(['scan/root.txt']);
+              await makeLink(target, 'scan/outside');
+              await makeLink(scanRoot, 'target/back');
+              if (topology === 'returning to the aliased initial root') {
+                await makeLink(scanRoot, 'alias');
+                scanRoot = sysPath.join(currPath, 'alias');
+              }
+              expected = ['root.txt', 'outside/leaf.txt'];
+            } else {
+              scanRoot = sysPath.join(currPath, 'scan');
+              await makeLink(target, 'scan/entry');
+              if (topology === 'external self-loop') {
+                await makeLink(target, 'target/loop');
+                expected = ['entry/leaf.txt'];
+              } else if (topology === 'external two-directory loop') {
+                await makeLink(sysPath.join(currPath, 'other'), 'target/to-other');
+                await makeLink(target, 'other/to-target');
+                expected = ['entry/leaf.txt', 'entry/to-other/other.txt'];
+              } else if (topology === 'returning to a nested external parent') {
+                await touch([], ['target/nested']);
+                await touch(['target/nested/node.txt']);
+                await makeLink(sysPath.join(currPath, 'other'), 'target/nested/outside');
+                await makeLink(sysPath.join(target, 'nested'), 'other/back');
+                expected = [
+                  'entry/leaf.txt',
+                  'entry/nested/node.txt',
+                  'entry/nested/outside/other.txt',
+                ];
+              } else {
+                await makeLink(target, 'scan/second');
+                expected = ['entry/leaf.txt', 'second/leaf.txt'];
+                expectedWarnings = 0;
+              }
+            }
+            const warnings = [];
+            const paths = [];
+            const stream = readdirp(scanRoot, { ...options, depth });
+            stream.on('warn', (error) => warnings.push(error.code));
+            for await (const entry of stream) paths.push(entry.path);
+            paths.sort().should.eql(expected.map((path) => sysPath.normalize(path)).sort());
+            warnings.should.eql(Array(expectedWarnings).fill('READDIRP_RECURSIVE_ERROR'));
+          } finally {
+            for (const link of links.reverse()) await unlink(link);
+            await afterEach();
+          }
+        });
+      }
+    }
   });
 
   describe('type', () => {
