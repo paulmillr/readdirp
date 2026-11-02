@@ -1,7 +1,18 @@
 import { describe, it } from '@paulmillr/jsbt/test.js';
 import chai from 'chai';
 import chaiSubset from 'chai-subset';
-import { chmod, mkdir, readdir, readFile, rm, symlink, unlink, writeFile } from 'node:fs/promises';
+import { once } from 'node:events';
+import {
+  chmod,
+  mkdir,
+  readdir,
+  readFile,
+  rm,
+  rmdir,
+  symlink,
+  unlink,
+  writeFile,
+} from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import sysPath from 'node:path';
 import { Readable } from 'node:stream';
@@ -441,6 +452,86 @@ describe('readdirp', () => {
   });
 
   describe('various', () => {
+    it('does not filter a symlink after destruction during classification', async () => {
+      await beforeEach();
+      await touch([], ['scan', 'target']);
+      const link = sysPath.join(currPath, 'scan', 'link');
+      await symlink(sysPath.join(currPath, 'target'), link, isWindows ? 'junction' : 'dir');
+      let started;
+      let release;
+      let classification;
+      const entered = new Promise((resolve) => (started = resolve));
+      const pending = new Promise((resolve) => (release = resolve));
+      let lateFilters = 0;
+      const stream = readdirp(sysPath.join(currPath, 'scan'), {
+        directoryFilter: () => {
+          if (stream.destroyed) lateFilters++;
+          return true;
+        },
+      });
+      const classify = stream._getSymlinkEntryType.bind(stream);
+      stream._getSymlinkEntryType = (entry) => {
+        classification = (async () => {
+          started();
+          await pending;
+          return classify(entry);
+        })();
+        return classification;
+      };
+      let timeout;
+      try {
+        stream.resume();
+        await Promise.race([
+          entered,
+          new Promise((_, reject) => {
+            timeout = setTimeout(() => reject(new Error('Classification did not start')), 2000);
+          }),
+        ]);
+        const closed = once(stream, 'close');
+        stream.destroy();
+        await closed;
+        release();
+        await classification;
+        await new Promise((resolve) => setImmediate(resolve));
+        lateFilters.should.equal(0);
+      } finally {
+        clearTimeout(timeout);
+        release();
+        stream.destroy();
+        if (classification) await classification;
+        await unlink(link);
+        await afterEach();
+      }
+    });
+
+    it('does not filter a symlink after a warning handler destroys the stream', async () => {
+      await beforeEach();
+      await touch([], ['scan', 'target']);
+      const link = sysPath.join(currPath, 'scan', 'link');
+      await symlink(sysPath.join(currPath, 'target'), link, isWindows ? 'junction' : 'dir');
+      await rmdir(sysPath.join(currPath, 'target'));
+      let lateFilters = 0;
+      const stream = readdirp(sysPath.join(currPath, 'scan'), {
+        type: 'all',
+        fileFilter: () => {
+          if (stream.destroyed) lateFilters++;
+          return true;
+        },
+      });
+      stream.on('warn', () => stream.destroy());
+      try {
+        const closed = once(stream, 'close');
+        stream.resume();
+        await closed;
+        await new Promise((resolve) => setImmediate(resolve));
+        lateFilters.should.equal(0);
+      } finally {
+        stream.destroy();
+        await unlink(link);
+        await afterEach();
+      }
+    });
+
     it('emits readable stream', async () => {
       await beforeEach();
       const stream = readdirp(currPath);

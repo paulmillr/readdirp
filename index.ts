@@ -231,7 +231,10 @@ export class ReaddirpStream extends Readable {
 
             // Only symlinks require async work; plain files / dirs resolve synchronously.
             let entryType = this._getEntryType(entry);
-            if (typeof entryType !== 'string') entryType = await entryType;
+            if (typeof entryType !== 'string') {
+              entryType = await entryType;
+              if (this.destroyed) return;
+            }
             if (entryType === 'directory' && this._directoryFilter(entry)) {
               if (depth <= this._maxDepth) {
                 // Lazy: don't readdir until this dir is popped. Keeping whole
