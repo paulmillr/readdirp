@@ -229,7 +229,7 @@ export class ReaddirpStream extends Readable {
             if (!entry) continue;
             if (this.destroyed) return;
 
-            // Only symlinks require async work; plain files / dirs resolve synchronously.
+            // Symlinks and directories returned by stat() need async classification.
             let entryType = this._getEntryType(entry);
             if (typeof entryType !== 'string') {
               entryType = await entryType;
@@ -349,8 +349,8 @@ export class ReaddirpStream extends Readable {
     }
   }
 
-  // Synchronous for regular files and directories; returns a promise only for
-  // symlinks, which need realpath() to be classified.
+  // Regular files and directories identified by Dirent or lstat are synchronous.
+  // Symlinks and directories returned by stat require async metadata work.
   _getEntryType(entry: EntryInfo): '' | 'file' | 'directory' | Promise<'' | 'file' | 'directory'> {
     // entry may be undefined, because a warning or an error were emitted
     // and the statsProp is undefined
