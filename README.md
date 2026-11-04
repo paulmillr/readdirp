@@ -85,7 +85,7 @@ Has the following properties:
 - `fullPath: '/Users/dev/projects/app/assets/javascripts/react.js'`: full path to the file/directory found
 - `basename: 'react.js'`: name of the file/directory
 - `dirent: fs.Dirent`: built-in [dir entry object](https://nodejs.org/api/fs.html#fs_class_fs_dirent) - only with `alwaysStat: false`
-- `stats: fs.Stats`: built in [stat object](https://nodejs.org/api/fs.html#fs_class_fs_stats) - only with `alwaysStat: true`
+- `stats: fs.Stats | fs.BigIntStats`: built in [stat object](https://nodejs.org/api/fs.html#fs_class_fs_stats) - only with `alwaysStat: true`. On Windows it is a `BigIntStats`, whose numeric fields (`ino`, `size`, `mtimeMs`, ...) are bigints
 
 ## Changelog
 

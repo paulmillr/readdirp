@@ -13,7 +13,7 @@ for await (const entry of readdirp('.')) {
 ```
  */
 /*! readdirp - MIT License (c) 2012-2019 Thorsten Lorenz, Paul Miller (https://paulmillr.com) */
-import type { Dirent, Stats } from 'node:fs';
+import type { BigIntStats, Dirent, Stats } from 'node:fs';
 import { lstat, readdir, realpath, stat } from 'node:fs/promises';
 import { join as pjoin, resolve as presolve, sep as psep } from 'node:path';
 import { Readable } from 'node:stream';
@@ -27,7 +27,7 @@ export type Path = string;
 export interface EntryInfo {
   path: string;
   fullPath: string;
-  stats?: Stats;
+  stats?: Stats | BigIntStats;
   dirent?: Dirent;
   basename: string;
 }
@@ -308,7 +308,7 @@ export class ReaddirpStream extends Readable {
       return entry;
     }
     return this._stat(fullPath).then(
-      (stats: Stats) => {
+      (stats: Stats | BigIntStats) => {
         entry.stats = stats;
         return entry;
       },
