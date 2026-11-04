@@ -329,6 +329,49 @@ describe('readdirp', () => {
       stream.destroy();
     });
 
+    for (const consumer of ['iterator', 'data', 'readable']) {
+      for (const empty of [false, true]) {
+        it(`finishes with highWaterMark zero using ${consumer} (${
+          empty ? 'empty' : 'nested'
+        })`, async () => {
+          await beforeEach();
+          if (!empty) {
+            await touch(['a.txt'], ['nested']);
+            await touch(['nested/b.txt']);
+          }
+          const stream = readdirp(currPath, { highWaterMark: 0 });
+          const timeout = setTimeout(
+            () => stream.destroy(new Error('Stream did not finish')),
+            2000
+          );
+          const paths = [];
+          try {
+            stream.readableHighWaterMark.should.equal(0);
+            if (consumer === 'iterator') {
+              for await (const entry of stream) paths.push(entry.path);
+            } else {
+              await new Promise((resolve, reject) => {
+                stream.on('end', resolve).on('error', reject);
+                if (consumer === 'data') {
+                  stream.on('data', (entry) => paths.push(entry.path));
+                } else {
+                  stream.on('readable', () => {
+                    let entry;
+                    while ((entry = stream.read()) !== null) paths.push(entry.path);
+                  });
+                }
+              });
+            }
+            paths.sort().should.eql(empty ? [] : ['a.txt', sysPath.join('nested', 'b.txt')]);
+          } finally {
+            clearTimeout(timeout);
+            stream.destroy();
+            await afterEach();
+          }
+        });
+      }
+    }
+
     it('does not mutate the passed options object', async () => {
       await beforeEach();
       await touch(['a.txt']);

@@ -200,6 +200,8 @@ export class ReaddirpStream extends Readable {
 
   async _read(batch: number): Promise<void> {
     if (this.reading) return;
+    // A zero highWaterMark still requests one entry at a time.
+    batch = Math.max(1, batch);
     this.reading = true;
 
     try {
