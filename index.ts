@@ -78,7 +78,7 @@ const defaultOptions: ReaddirpOptions = {
 Object.freeze(defaultOptions);
 
 const RECURSIVE_ERROR_CODE = 'READDIRP_RECURSIVE_ERROR';
-const NORMAL_FLOW_ERRORS = new Set(['ENOENT', 'EPERM', 'EACCES', 'ELOOP', RECURSIVE_ERROR_CODE]);
+const NORMAL_FLOW_ERRORS = new Set(['ENOENT', 'ENOTDIR', 'EPERM', 'EACCES', 'ELOOP', RECURSIVE_ERROR_CODE]);
 const ALL_TYPES: string[] = [
   EntryTypes.DIR_TYPE,
   EntryTypes.EVERYTHING_TYPE,

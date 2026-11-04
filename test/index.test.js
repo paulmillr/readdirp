@@ -81,6 +81,27 @@ describe('readdirp', () => {
   describe('symlinks', () => {
     if (isWindows) return;
 
+    for (const alwaysStat of [false, true]) {
+      it(`skips ENOTDIR symlinks (alwaysStat=${alwaysStat})`, async () => {
+        await beforeEach();
+        try {
+          await touch(['a.txt', 'b.txt']);
+          await symlink(sysPath.join(currPath, 'a.txt', 'missing'), sysPath.join(currPath, 'link'));
+          const warnings = [];
+          const stream = readdirp(currPath, { alwaysStat });
+          stream.on('warn', (warning) => warnings.push(warning));
+          const files = [];
+          for await (const entry of stream) files.push(entry.path);
+          files.sort().should.eql(['a.txt', 'b.txt']);
+          warnings.map((warning) => warning.code).should.eql(['ENOTDIR']);
+          const entries = await read({ alwaysStat });
+          entries.map((entry) => entry.path).should.eql(['a.txt', 'b.txt']);
+        } finally {
+          await afterEach();
+        }
+      });
+    }
+
     it('handles symlinks', async () => {
       await beforeEach();
       const newPath = sysPath.join(currPath, 'test-symlinked.js');
